@@ -3,7 +3,6 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Webhook, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth.js";
-import { api } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
@@ -42,10 +41,6 @@ export function SignupPage() {
     setSubmitting(true);
     try {
       await signUp(trimmedName, email.trim().toLowerCase(), password);
-
-      // Create a project in the Rust backend after BetterAuth signup
-      await api.auth.register(trimmedName);
-
       navigate("/events", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
