@@ -136,6 +136,9 @@ function RouteCard({
           <Badge variant="secondary" className="font-mono text-[10px] uppercase">
             {route.mode}
           </Badge>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {route.timeout_seconds}s
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs text-muted-foreground">
@@ -186,6 +189,7 @@ export function RoutesPage() {
 
   const [pathPrefix, setPathPrefix] = useState("");
   const [mode, setMode] = useState<"passthrough" | "queue">("passthrough");
+  const [timeoutSeconds, setTimeoutSeconds] = useState(30);
   const [creating, setCreating] = useState(false);
 
   const fetchRoutes = async () => {
@@ -211,10 +215,11 @@ export function RoutesPage() {
     e.preventDefault();
     setCreating(true);
     try {
-      await api.routes.create({ path_prefix: pathPrefix, mode });
+      await api.routes.create({ path_prefix: pathPrefix, mode, timeout_seconds: timeoutSeconds });
       toast.success("Route created");
       setDialogOpen(false);
       setPathPrefix("");
+      setTimeoutSeconds(30);
       setMode("passthrough");
       fetchRoutes();
     } catch {
@@ -297,7 +302,7 @@ export function RoutesPage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setMode("passthrough")}
+                    onClick={() => { setMode("passthrough"); setTimeoutSeconds(30); }}
                     className={`flex-1 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
                       mode === "passthrough"
                         ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
@@ -311,7 +316,7 @@ export function RoutesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setMode("queue")}
+                    onClick={() => { setMode("queue"); setTimeoutSeconds(5); }}
                     className={`flex-1 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
                       mode === "queue"
                         ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
@@ -327,6 +332,22 @@ export function RoutesPage() {
               </div>
 
               <ModeExplainer mode={mode} />
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="timeout">Timeout (seconds)</Label>
+                <Input
+                  id="timeout"
+                  type="number"
+                  min={1}
+                  max={300}
+                  value={timeoutSeconds}
+                  onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
+                  className="w-32 font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  How long to wait for your app to respond. Max 300s.
+                </p>
+              </div>
 
               <DialogFooter>
                 <Button type="submit" disabled={!pathPrefix.trim() || creating}>

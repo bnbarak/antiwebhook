@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // Connect to simplehook — webhooks flow through this connection
-const connection = listen(app, process.env.SIMPLEHOOK_KEY, {
+const connection = listen(app, "ak_sev2wk9abp05yvoxb8gkn1ca", {
   serverUrl: process.env.SIMPLEHOOK_URL || undefined,
   forceEnable: true,
 });
@@ -38,7 +38,7 @@ app.all("*", (req, res) => {
   res.json({ received: true, path: req.url, method: req.method });
 });
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3002;
 app.listen(port, () => {
   console.log(`Express test app listening on :${port}`);
   console.log("Waiting for webhooks via simplehook...");

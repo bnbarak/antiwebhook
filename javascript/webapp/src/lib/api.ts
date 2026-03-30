@@ -34,7 +34,7 @@ export interface Route {
   project_id: string;
   path_prefix: string;
   mode: "queue" | "passthrough";
-  target_url: string | null;
+  timeout_seconds: number;
   created_at: string;
 }
 
@@ -139,6 +139,7 @@ export const api = {
     create(data: {
       path_prefix: string;
       mode: "queue" | "passthrough";
+      timeout_seconds?: number;
     }): Promise<Route> {
       return request("/routes", {
         method: "POST",

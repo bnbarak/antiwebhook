@@ -33,11 +33,14 @@ pub async fn handle_webhook(
         ).into_response());
     }
 
-    // 2. Determine route mode (longest prefix match, default: queue)
+    // 2. Determine route mode + timeout (longest prefix match, default: queue 5s)
     let full_path = format!("/{}", path);
-    let mode = db::match_route(&state.db, &project_id, &full_path)
+    let route_match = db::match_route(&state.db, &project_id, &full_path)
         .await?
-        .unwrap_or(db::RouteMode::Queue);
+        .unwrap_or(db::RouteMatch {
+            mode: db::RouteMode::Queue,
+            timeout_seconds: 5,
+        });
 
     // 3. Serialize headers
     let header_map = serialize_headers(&headers);
@@ -68,9 +71,10 @@ pub async fn handle_webhook(
     };
 
     // 6. Forward based on mode
-    match mode {
-        db::RouteMode::Passthrough => handle_passthrough(&state, &project_id, &event_id, frame).await,
-        db::RouteMode::Queue => handle_queue(&state, &project_id, &event_id, frame).await,
+    let timeout = Duration::from_secs(route_match.timeout_seconds);
+    match route_match.mode {
+        db::RouteMode::Passthrough => handle_passthrough(&state, &project_id, &event_id, frame, timeout).await,
+        db::RouteMode::Queue => handle_queue(&state, &project_id, &event_id, frame, timeout).await,
     }
 }
 
@@ -79,10 +83,11 @@ async fn handle_passthrough(
     project_id: &str,
     event_id: &str,
     frame: RequestFrame,
+    timeout: Duration,
 ) -> Result<Response, AppError> {
     match state
         .tunnels
-        .send_request(project_id, frame, Duration::from_secs(30))
+        .send_request(project_id, frame, timeout)
         .await
     {
         Some(resp) => {
@@ -107,6 +112,7 @@ async fn handle_queue(
     project_id: &str,
     event_id: &str,
     frame: RequestFrame,
+    timeout: Duration,
 ) -> Result<Response, AppError> {
     // Try instant delivery in background
     let state = state.clone();
@@ -116,7 +122,7 @@ async fn handle_queue(
     tokio::spawn(async move {
         match state
             .tunnels
-            .send_request(&pid, frame, Duration::from_secs(5))
+            .send_request(&pid, frame, timeout)
             .await
         {
             Some(resp) => {

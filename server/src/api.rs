@@ -151,6 +151,7 @@ pub async fn list_routes(
 pub struct CreateRouteRequest {
     pub path_prefix: String,
     pub mode: String,
+    pub timeout_seconds: Option<i32>,
 }
 
 pub async fn create_route(
@@ -161,7 +162,9 @@ pub async fn create_route(
     if body.mode != "passthrough" && body.mode != "queue" {
         return Err(AppError::BadRequest("mode must be 'passthrough' or 'queue'"));
     }
-    let route = db::create_route(&state.db, &project.id, &body.path_prefix, &body.mode).await?;
+    let default_timeout = if body.mode == "passthrough" { 30 } else { 5 };
+    let timeout = body.timeout_seconds.unwrap_or(default_timeout).clamp(1, 300);
+    let route = db::create_route(&state.db, &project.id, &body.path_prefix, &body.mode, timeout).await?;
     Ok(Json(route))
 }
 

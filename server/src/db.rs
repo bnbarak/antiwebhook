@@ -25,6 +25,7 @@ pub struct Route {
     pub project_id: String,
     pub path_prefix: String,
     pub mode: String,
+    pub timeout_seconds: i32,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }
@@ -119,11 +120,16 @@ pub async fn deactivate_by_customer(pool: &PgPool, customer_id: &str) -> Result<
 
 // --- Route queries ---
 
+pub struct RouteMatch {
+    pub mode: RouteMode,
+    pub timeout_seconds: u64,
+}
+
 pub async fn match_route(
     pool: &PgPool,
     project_id: &str,
     path: &str,
-) -> Result<Option<RouteMode>, sqlx::Error> {
+) -> Result<Option<RouteMatch>, sqlx::Error> {
     let row: Option<Route> = sqlx::query_as(
         "SELECT * FROM routes WHERE project_id = $1 AND deleted_at IS NULL AND $2 LIKE path_prefix || '%'
          ORDER BY LENGTH(path_prefix) DESC LIMIT 1",
@@ -133,9 +139,12 @@ pub async fn match_route(
     .fetch_optional(pool)
     .await?;
 
-    Ok(row.map(|r| match r.mode.as_str() {
-        "passthrough" => RouteMode::Passthrough,
-        _ => RouteMode::Queue,
+    Ok(row.map(|r| RouteMatch {
+        mode: match r.mode.as_str() {
+            "passthrough" => RouteMode::Passthrough,
+            _ => RouteMode::Queue,
+        },
+        timeout_seconds: r.timeout_seconds.max(1) as u64,
     }))
 }
 
@@ -158,13 +167,15 @@ pub async fn create_route(
     project_id: &str,
     path_prefix: &str,
     mode: &str,
+    timeout_seconds: i32,
 ) -> Result<Route, sqlx::Error> {
     sqlx::query_as(
-        "INSERT INTO routes (project_id, path_prefix, mode) VALUES ($1, $2, $3) RETURNING *",
+        "INSERT INTO routes (project_id, path_prefix, mode, timeout_seconds) VALUES ($1, $2, $3, $4) RETURNING *",
     )
     .bind(project_id)
     .bind(path_prefix)
     .bind(mode)
+    .bind(timeout_seconds)
     .fetch_one(pool)
     .await
 }
