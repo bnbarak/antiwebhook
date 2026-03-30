@@ -1,5 +1,6 @@
 use axum::{http::StatusCode, response::IntoResponse, Json};
 
+#[derive(Debug)]
 pub enum AppError {
     NotFound(&'static str),
     Unauthorized,

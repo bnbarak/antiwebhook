@@ -8,6 +8,7 @@ mod error;
 mod proxy;
 mod queue;
 mod tunnel;
+mod user_auth;
 
 use std::sync::Arc;
 

@@ -6,7 +6,7 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use crate::{api, billing, config::Config, proxy, tunnel::TunnelManager};
+use crate::{api, billing, config::Config, proxy, tunnel::TunnelManager, user_auth};
 
 pub struct AppState {
     pub db: PgPool,
@@ -30,11 +30,18 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/billing/checkout", post(billing::create_checkout))
         .route("/billing/portal", post(billing::create_portal));
 
+    let auth_routes = Router::new()
+        .route("/sign-up/email", post(user_auth::sign_up))
+        .route("/sign-in/email", post(user_auth::sign_in))
+        .route("/get-session", get(user_auth::get_session))
+        .route("/sign-out", post(user_auth::sign_out));
+
     Router::new()
         .route("/", get(|| async { axum::Json(serde_json::json!({"name": "simplehook", "version": "0.1.0", "docs": "https://simplehook.dev/docs"})) }))
         .route("/health", get(|| async { "ok" }))
         .route("/hooks/{project_id}/{*path}", any(proxy::handle_webhook))
         .route("/tunnel", get(crate::tunnel::ws_upgrade))
+        .nest("/auth", auth_routes)
         .nest("/api", api_routes)
         .route("/billing/stripe-webhook", post(billing::stripe_webhook))
         .layer(TraceLayer::new_for_http())
