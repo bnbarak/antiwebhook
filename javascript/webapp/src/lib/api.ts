@@ -134,7 +134,7 @@ export const api = {
       return request("/routes");
     },
     listDeleted(): Promise<Route[]> {
-      return request("/routes/deleted");
+      return request("/routes/trash");
     },
     create(data: {
       path_prefix: string;
