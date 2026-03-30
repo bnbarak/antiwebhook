@@ -2,10 +2,28 @@
   "name": "antiwebhooks",
   "version": "0.1.0",
   "description": "Stable webhook URLs for localhost. One line of code.",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
-    "ws": "^8.0.0"
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   },
   "keywords": ["webhooks", "tunnel", "ngrok", "development", "express"],
   "license": "MIT"
