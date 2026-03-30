@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/auth/:path*", "destination": "https://simplehook-server.fly.dev/auth/:path*" },
+    { "source": "/api/:path*", "destination": "https://simplehook-server.fly.dev/api/:path*" },
+    { "source": "/hooks/:path*", "destination": "https://simplehook-server.fly.dev/hooks/:path*" },
+    { "source": "/tunnel", "destination": "https://simplehook-server.fly.dev/tunnel" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}
