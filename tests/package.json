@@ -1,0 +1,8 @@
+{
+  "name": "antiwebhooks-e2e-tests",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "ws": "^8.0.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "antiwebhooks",
+  "version": "0.1.0",
+  "description": "Stable webhook URLs for localhost. One line of code.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "ws": "^8.0.0"
+  },
+  "keywords": ["webhooks", "tunnel", "ngrok", "development", "express"],
+  "license": "MIT"
+}

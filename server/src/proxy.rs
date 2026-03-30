@@ -1,0 +1,192 @@
+use axum::{
+    body::Bytes,
+    extract::{Path, State},
+    http::{HeaderMap, Method, StatusCode},
+    response::{IntoResponse, Response},
+};
+use base64::Engine;
+use std::{collections::HashMap, sync::Arc, time::Duration};
+
+use crate::{app::AppState, db, error::AppError, tunnel::RequestFrame};
+
+pub async fn handle_webhook(
+    State(state): State<Arc<AppState>>,
+    Path((project_id, path)): Path<(String, String)>,
+    method: Method,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<Response, AppError> {
+    // 1. Verify project exists
+    let _project = db::get_project_by_id(&state.db, &project_id)
+        .await?
+        .ok_or(AppError::NotFound("project not found"))?;
+
+    // 2. Determine route mode (longest prefix match, default: queue)
+    let full_path = format!("/{}", path);
+    let mode = db::match_route(&state.db, &project_id, &full_path)
+        .await?
+        .unwrap_or(db::RouteMode::Queue);
+
+    // 3. Serialize headers
+    let header_map = serialize_headers(&headers);
+
+    // 4. Store event
+    let event_id = db::generate_id("evt_", 16);
+    let body_bytes = if body.is_empty() { None } else { Some(body.as_ref()) };
+    db::insert_event(
+        &state.db,
+        &event_id,
+        &project_id,
+        &full_path,
+        method.as_str(),
+        &header_map,
+        body_bytes,
+    )
+    .await?;
+
+    // 5. Build request frame
+    let frame = RequestFrame {
+        frame_type: "request".into(),
+        id: event_id.clone(),
+        method: method.to_string(),
+        path: full_path,
+        headers: header_map,
+        body: body_bytes
+            .map(|b| base64::engine::general_purpose::STANDARD.encode(b)),
+    };
+
+    // 6. Forward based on mode
+    match mode {
+        db::RouteMode::Passthrough => handle_passthrough(&state, &project_id, &event_id, frame).await,
+        db::RouteMode::Queue => handle_queue(&state, &project_id, &event_id, frame).await,
+    }
+}
+
+async fn handle_passthrough(
+    state: &Arc<AppState>,
+    project_id: &str,
+    event_id: &str,
+    frame: RequestFrame,
+) -> Result<Response, AppError> {
+    match state
+        .tunnels
+        .send_request(project_id, frame, Duration::from_secs(30))
+        .await
+    {
+        Some(resp) => {
+            let body_bytes = resp.body.as_ref().and_then(|b| {
+                base64::engine::general_purpose::STANDARD.decode(b).ok()
+            });
+            let _ = db::mark_delivered(
+                &state.db,
+                event_id,
+                resp.status as i16,
+                body_bytes.as_deref(),
+            )
+            .await;
+            Ok(build_response(resp.status, resp.headers, body_bytes))
+        }
+        None => Ok((StatusCode::BAD_GATEWAY, "SDK not connected or timed out").into_response()),
+    }
+}
+
+async fn handle_queue(
+    state: &Arc<AppState>,
+    project_id: &str,
+    event_id: &str,
+    frame: RequestFrame,
+) -> Result<Response, AppError> {
+    // Try instant delivery in background
+    let state = state.clone();
+    let pid = project_id.to_string();
+    let eid = event_id.to_string();
+
+    tokio::spawn(async move {
+        match state
+            .tunnels
+            .send_request(&pid, frame, Duration::from_secs(5))
+            .await
+        {
+            Some(resp) => {
+                let body_bytes = resp.body.as_ref().and_then(|b| {
+                    base64::engine::general_purpose::STANDARD.decode(b).ok()
+                });
+                let _ = db::mark_delivered(&state.db, &eid, resp.status as i16, body_bytes.as_deref()).await;
+            }
+            None => {
+                let _ = db::schedule_retry(&state.db, &eid, 0).await;
+            }
+        }
+    });
+
+    Ok((StatusCode::OK, "accepted").into_response())
+}
+
+fn build_response(
+    status: u16,
+    headers: Option<HashMap<String, String>>,
+    body: Option<Vec<u8>>,
+) -> Response {
+    let mut builder = Response::builder().status(status);
+    if let Some(hdrs) = headers {
+        for (k, v) in hdrs {
+            if let (Ok(name), Ok(val)) = (
+                axum::http::header::HeaderName::from_bytes(k.as_bytes()),
+                axum::http::header::HeaderValue::from_str(&v),
+            ) {
+                builder = builder.header(name, val);
+            }
+        }
+    }
+    builder
+        .body(axum::body::Body::from(body.unwrap_or_default()))
+        .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+}
+
+fn serialize_headers(headers: &HeaderMap) -> HashMap<String, String> {
+    headers
+        .iter()
+        .filter_map(|(k, v)| {
+            v.to_str().ok().map(|val| (k.as_str().to_string(), val.to_string()))
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_serialize_headers() {
+        let mut hm = HeaderMap::new();
+        hm.insert("content-type", "application/json".parse().unwrap());
+        hm.insert("x-custom", "hello".parse().unwrap());
+
+        let result = serialize_headers(&hm);
+        assert_eq!(result.get("content-type").unwrap(), "application/json");
+        assert_eq!(result.get("x-custom").unwrap(), "hello");
+    }
+
+    #[test]
+    fn test_build_response_200() {
+        let resp = build_response(200, None, Some(b"ok".to_vec()));
+        assert_eq!(resp.status(), 200);
+    }
+
+    #[test]
+    fn test_build_response_with_headers() {
+        let headers = HashMap::from([
+            ("content-type".to_string(), "text/xml".to_string()),
+        ]);
+        let body = b"<Response><Hangup/></Response>".to_vec();
+        let resp = build_response(200, Some(headers), Some(body));
+        assert_eq!(resp.status(), 200);
+        assert_eq!(resp.headers().get("content-type").unwrap(), "text/xml");
+    }
+
+    #[test]
+    fn test_build_response_empty_body() {
+        let resp = build_response(204, None, None);
+        assert_eq!(resp.status(), 204);
+    }
+}
