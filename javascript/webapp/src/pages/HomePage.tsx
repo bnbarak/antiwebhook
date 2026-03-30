@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -20,6 +21,127 @@ function Kicker({ children }: { children: React.ReactNode }) {
 
 function SectionDivider() {
   return <div className="border-t border-border" />;
+}
+
+const STEPS = [
+  {
+    num: "1",
+    title: "Set your webhook URL",
+    desc: "Point Stripe, GitHub, Twilio — any provider — to your simplehook URL. Set it once, never change it.",
+    code: `# Your stable webhook URL\n\nhttps://api.simplehook.dev\n  /hooks/<your-project-id>\n  /stripe/events`,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="size-5">
+        <path d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-4.828a4.5 4.5 0 0 0-1.242-7.244l4.5-4.5a4.5 4.5 0 1 0 6.364 6.364l-1.757 1.757" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    num: "2",
+    title: "Add one line of code",
+    desc: "Import the SDK and call listen(). Works with Express, Fastify, Hono, Flask, and more.",
+    code: `import { listen } from 'simplehook'\n\nlisten(app, process.env.SIMPLEHOOK_KEY)\n\n// That's it. Your routes work as normal.`,
+    icon: (
+      <svg viewBox="0 0 256 292" className="size-5" fill="currentColor">
+        <path d="M116.504 3.58c6.962-3.985 16.03-4.003 22.986 0 34.995 19.774 70.001 39.517 104.99 59.303 6.581 3.707 10.983 11.031 10.916 18.614v118.968c.049 7.897-4.788 15.396-11.731 19.019-34.88 19.665-69.742 39.354-104.616 59.019-7.106 4.063-16.356 3.75-23.24-.646-10.457-6.062-20.932-12.094-31.39-18.15-2.137-1.274-4.546-2.288-6.055-4.36 1.334-1.798 3.719-2.022 5.657-2.807 4.428-1.621 8.532-3.908 12.6-6.234.643-.32 1.46-.163 2.07.235 8.964 5.282 17.946 10.537 26.908 15.822 1.378.703 2.622-.358 3.783-1.054 34.007-19.166 68.03-38.3 102.038-57.469 1.097-.587 1.567-1.874 1.48-3.086V82.305c.133-1.338-.517-2.686-1.727-3.347-34.87-19.698-69.726-39.425-104.6-59.115-.781-.442-1.804-.443-2.59.009-34.875 19.69-69.739 39.398-104.617 59.106-1.218.65-1.876 2.014-1.735 3.347v119.417c.086 1.18.556 2.432 1.612 3.042 9.498 5.408 19.014 10.784 28.52 16.18.606.279 1.298.551 1.98.467 4.407-.572 9.157-.849 13.053-3.2 2.572-1.464 3.774-4.455 3.664-7.37V82.652c-.06-1.27 1.042-2.36 2.296-2.298h10.015c1.217-.048 2.293.975 2.253 2.195v120.58c0 7.693-3.643 16.11-10.727 19.872-8.23 4.527-18.222 4.578-27.199 2.885-7.988-1.43-15.725-4.89-22.176-9.57-1.061-.722-2.064-1.537-3.166-2.178-5.702-3.347-10.04-9.31-10.09-16.043V81.49c-.052-7.604 4.352-14.946 10.963-18.643C46.503 43.089 81.49 23.394 116.504 3.58z" />
+      </svg>
+    ),
+  },
+  {
+    num: "3",
+    title: "Run your app",
+    desc: "Webhooks flow through a WebSocket to your local server. If you go offline, events queue and replay when you reconnect.",
+    code: `$ npm run dev\n\n[simplehook] connected ✓\n[simplehook] POST /stripe/events → 200\n[simplehook] POST /github/push  → 200`,
+    icon: <Terminal className="size-5" />,
+  },
+];
+
+const STEP_DURATION = 5000;
+
+function HowItWorksSteps() {
+  const [active, setActive] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  const goTo = useCallback((idx: number) => {
+    setActive(idx);
+    setProgress(0);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          setActive((a) => (a + 1) % STEPS.length);
+          return 0;
+        }
+        return p + 100 / (STEP_DURATION / 50);
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  const step = STEPS[active];
+
+  return (
+    <div className="grid items-start gap-8 md:grid-cols-[280px_1fr]">
+      {/* Step tabs (left) */}
+      <div className="flex flex-col gap-1">
+        {STEPS.map((s, i) => (
+          <button
+            key={s.num}
+            onClick={() => goTo(i)}
+            className={`group relative flex items-start gap-3.5 rounded-lg px-4 py-3.5 text-left transition-colors ${
+              i === active
+                ? "bg-card border border-border-strong"
+                : "hover:bg-card/50"
+            }`}
+          >
+            <div
+              className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-xs transition-colors ${
+                i === active
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {s.num}
+            </div>
+            <div>
+              <div className="text-[13px] font-medium">{s.title}</div>
+              <div className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">
+                {s.desc}
+              </div>
+            </div>
+            {/* Progress bar */}
+            {i === active && (
+              <div className="absolute bottom-0 left-4 right-4 h-[2px] overflow-hidden rounded-full bg-border">
+                <div
+                  className="h-full bg-foreground/60 transition-none"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Code panel (right) */}
+      <div className="overflow-hidden rounded-xl shadow-lg transition-all">
+        <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-5 py-3.5">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+            <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+            <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+          </div>
+          <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">
+            Step {step.num}
+          </span>
+          <div className="w-[52px]" />
+        </div>
+        <pre className="min-h-[200px] bg-[#1e1834] px-6 py-6 font-mono text-[14px] leading-[1.9] text-[#e0dce8]">
+          <code>{step.code}</code>
+        </pre>
+      </div>
+    </div>
+  );
 }
 
 export function HomePage() {
@@ -137,56 +259,12 @@ export function HomePage() {
           <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
             Three steps. Zero infrastructure.
           </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+          <p className="mb-10 max-w-[560px] text-[15px] text-muted-foreground">
             No tunnels, no public servers, no webhook infrastructure to manage.
             Just your code and a WebSocket.
           </p>
 
-          <div className="grid gap-5 md:grid-cols-3">
-            {[
-              {
-                num: "1",
-                title: "Set your webhook URLs",
-                desc: "Point Stripe, GitHub, etc. to your simplehook URL. Do this once.",
-                code: "https://hook.simplehook.dev\n/<project-id>/stripe",
-              },
-              {
-                num: "2",
-                title: "Add one line of code",
-                desc: "Import the SDK and call listen(). That's the entire integration.",
-                code: "import { webhooks }\n  from 'simplehook'\nwebhooks.listen(3000)",
-              },
-              {
-                num: "3",
-                title: "Run your app",
-                desc: "Webhooks flow through a WebSocket to your local server. Instantly.",
-                code: "$ npm run dev\n\n[simplehook] connected\n[simplehook] POST -> 200",
-              },
-            ].map((step) => (
-              <div
-                key={step.num}
-                className="flex flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:border-border-strong"
-              >
-                <div className="mb-3 flex size-6 items-center justify-center rounded-full bg-foreground font-mono text-xs text-background">
-                  {step.num}
-                </div>
-                <h3 className="mb-2 text-sm font-medium">{step.title}</h3>
-                <p className="mb-4 flex-1 text-[13px] text-muted-foreground">
-                  {step.desc}
-                </p>
-                <div className="overflow-hidden rounded-lg shadow">
-                  <div className="flex items-center gap-1.5 bg-[#2d2640] px-3 py-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#ff5f56]" />
-                    <span className="h-2 w-2 rounded-full bg-[#ffbd2e]" />
-                    <span className="h-2 w-2 rounded-full bg-[#27c93f]" />
-                  </div>
-                  <pre className="bg-[#1e1834] px-3.5 py-3 font-mono text-[11.5px] leading-[1.7] text-[#e0dce8]">
-                    <code>{step.code}</code>
-                  </pre>
-                </div>
-              </div>
-            ))}
-          </div>
+          <HowItWorksSteps />
         </div>
       </section>
 
