@@ -13,7 +13,7 @@ RUN touch src/main.rs && cargo build --release
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates libssl3 && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/antiwebhooks-server /usr/local/bin/
+COPY --from=builder /app/target/release/simplehook-server /usr/local/bin/
 COPY --from=builder /app/migrations /app/migrations
 WORKDIR /app
-CMD ["antiwebhooks-server"]
+CMD ["simplehook-server"]

@@ -21,7 +21,7 @@ export function DocsPage() {
         <div className="mx-auto max-w-[960px]">
           <Kicker>Documentation</Kicker>
           <h1 className="mb-4 text-[clamp(28px,4vw,38px)] font-normal leading-[1.15] tracking-[-0.015em]">
-            antiwebhooks docs
+            simplehook docs
           </h1>
           <p className="max-w-[560px] text-[17px] font-light leading-relaxed text-muted-foreground">
             Everything you need to receive webhooks locally with one line of code.
@@ -46,18 +46,18 @@ export function DocsPage() {
             <div>
               <h3 className="mb-3 text-sm font-medium">1. Install the package</h3>
               <CodeBlock label="Terminal">
-                {`npm install antiwebhooks`}
+                {`npm install simplehook`}
               </CodeBlock>
             </div>
 
             <div>
               <h3 className="mb-3 text-sm font-medium">2. Add to your app</h3>
               <CodeBlock label="Your app" filename="app.ts">
-                {`import { webhooks } from 'antiwebhooks'
+                {`import { webhooks } from 'simplehook'
 
 // Start receiving webhooks on port 3000
 webhooks.listen(3000, {
-  apiKey: 'aw_live_...',  // or set ANTIWEBHOOKS_API_KEY env var
+  apiKey: 'aw_live_...',  // or set SIMPLEHOOK_API_KEY env var
 })`}
               </CodeBlock>
             </div>
@@ -68,7 +68,7 @@ webhooks.listen(3000, {
                 In your webhook provider's dashboard (Stripe, GitHub, etc.), set the webhook URL to:
               </p>
               <CodeBlock label="Webhook URL">
-                {`https://hook.antiwebhooks.com/<your-project-id>/stripe/events`}
+                {`https://hook.simplehook.dev/<your-project-id>/stripe/events`}
               </CodeBlock>
               <p className="mt-2 text-xs text-muted-foreground">
                 Replace <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">&lt;your-project-id&gt;</code> with
@@ -81,9 +81,9 @@ webhooks.listen(3000, {
               <CodeBlock label="Terminal">
                 {`$ npm run dev
 
-[antiwebhooks] connected to wss://ws.antiwebhooks.com
-[antiwebhooks] listening on port 3000
-[antiwebhooks] POST /stripe/events -> forwarded -> 200 OK`}
+[simplehook] connected to wss://ws.simplehook.dev
+[simplehook] listening on port 3000
+[simplehook] POST /stripe/events -> forwarded -> 200 OK`}
               </CodeBlock>
             </div>
           </div>
@@ -100,7 +100,7 @@ webhooks.listen(3000, {
             Node.js SDK
           </h2>
           <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            The antiwebhooks SDK connects to the platform over WebSocket and forwards
+            The simplehook SDK connects to the platform over WebSocket and forwards
             events to your local server.
           </p>
 
@@ -113,16 +113,16 @@ webhooks.listen(3000, {
                 Start listening for webhook events and forward them to the specified port.
               </p>
               <CodeBlock label="Example">
-                {`import { webhooks } from 'antiwebhooks'
+                {`import { webhooks } from 'simplehook'
 
 const client = webhooks.listen(3000, {
-  // API key — defaults to ANTIWEBHOOKS_API_KEY env var
+  // API key — defaults to SIMPLEHOOK_API_KEY env var
   apiKey: 'aw_live_...',
 
   // Host to forward to — defaults to localhost
   host: 'localhost',
 
-  // Called when connected to antiwebhooks
+  // Called when connected to simplehook
   onConnect: () => console.log('connected'),
 
   // Called when disconnected
@@ -246,7 +246,7 @@ process.on('SIGINT', () => client.close())`}
             <div>
               <h3 className="mb-3 text-sm font-medium">Connection</h3>
               <CodeBlock label="WebSocket">
-                {`wss://ws.antiwebhooks.com/connect?api_key=aw_live_...`}
+                {`wss://ws.simplehook.dev/connect?api_key=aw_live_...`}
               </CodeBlock>
               <p className="mt-2 text-xs text-muted-foreground">
                 The SDK authenticates on connect. The server sends a ping every 30 seconds
@@ -373,7 +373,7 @@ process.on('SIGINT', () => client.close())`}
             <h3 className="mb-3 text-sm font-medium">Authentication</h3>
             <CodeBlock label="Example request">
               {`curl -H "Authorization: Bearer aw_live_..." \\
-  https://api.antiwebhooks.com/api/events`}
+  https://api.simplehook.dev/api/events`}
             </CodeBlock>
           </div>
         </div>
@@ -397,7 +397,7 @@ process.on('SIGINT', () => client.close())`}
               <h3 className="mb-3 text-sm font-medium">Stripe</h3>
               <CodeBlock label="Express + Stripe" filename="server.ts">
                 {`import express from 'express'
-import { webhooks } from 'antiwebhooks'
+import { webhooks } from 'simplehook'
 import Stripe from 'stripe'
 
 const app = express()
@@ -427,7 +427,7 @@ webhooks.listen(3000)`}
               <h3 className="mb-3 text-sm font-medium">GitHub</h3>
               <CodeBlock label="GitHub webhooks" filename="server.ts">
                 {`import express from 'express'
-import { webhooks } from 'antiwebhooks'
+import { webhooks } from 'simplehook'
 
 const app = express()
 app.use(express.json())
@@ -451,7 +451,7 @@ webhooks.listen(3000)`}
               <h3 className="mb-3 text-sm font-medium">Generic webhook handler</h3>
               <CodeBlock label="Any provider" filename="server.ts">
                 {`import express from 'express'
-import { webhooks } from 'antiwebhooks'
+import { webhooks } from 'simplehook'
 
 const app = express()
 app.use(express.json())

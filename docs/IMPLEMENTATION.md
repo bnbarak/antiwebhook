@@ -5,8 +5,8 @@
 | Deliverable | Language | Description |
 |-------------|----------|-------------|
 | Cloud server | Rust | Receives webhooks, manages tunnels, dashboard, billing |
-| Node.js SDK | JavaScript | `antiwebhooks.listen(app, key)` — ~100 lines |
-| Landing page | HTML | Static page at antiwebhooks.dev |
+| Node.js SDK | JavaScript | `simplehook.listen(app, key)` — ~100 lines |
+| Landing page | HTML | Static page at simplehook.dev |
 
 ---
 
@@ -15,7 +15,7 @@
 ### Project Structure
 
 ```
-~/antiwebhooks/
+~/simplehook/
 ├── Cargo.toml                          # workspace root
 ├── migrations/
 │   └── 001_init.sql                    # SQLite schema
@@ -35,7 +35,7 @@
 ├── sdk/
 │   └── node/
 │       ├── package.json
-│       ├── index.js                    # antiwebhooks.listen(app, key)
+│       ├── index.js                    # simplehook.listen(app, key)
 │       └── README.md
 ├── site/
 │   └── index.html                      # landing page
@@ -207,13 +207,13 @@ Extract API key from Bearer header or cookie.
 const WebSocket = require('ws');
 const http = require('http');
 
-const SERVER = process.env.ANTIWEBHOOKS_URL || 'wss://hooks.antiwebhooks.dev';
+const SERVER = process.env.SIMPLEHOOK_URL || 'wss://hooks.simplehook.dev';
 
 exports.listen = function listen(app, apiKey) {
   function connect() {
     const ws = new WebSocket(`${SERVER}/tunnel?key=${apiKey}`);
 
-    ws.on('open', () => console.log('[antiwebhooks] connected'));
+    ws.on('open', () => console.log('[simplehook] connected'));
 
     ws.on('message', (raw) => {
       const frame = JSON.parse(raw);
@@ -256,7 +256,7 @@ exports.listen = function listen(app, apiKey) {
     });
 
     ws.on('close', () => {
-      console.log('[antiwebhooks] disconnected, reconnecting in 3s...');
+      console.log('[simplehook] disconnected, reconnecting in 3s...');
       setTimeout(connect, 3000);
     });
 
@@ -271,7 +271,7 @@ exports.listen = function listen(app, apiKey) {
 
 ```json
 {
-  "name": "antiwebhooks",
+  "name": "simplehook",
   "version": "0.1.0",
   "description": "Stable webhook URLs for localhost. One line of code.",
   "main": "index.js",

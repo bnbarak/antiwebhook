@@ -6,7 +6,7 @@ The developer's app connects TO us. Not the other way around.
 
 ```
 Traditional (ngrok):     Developer runs a tunnel process → exposes localhost to internet
-antiwebhooks:            Developer's app opens WebSocket to us → we forward webhooks through it
+simplehook:            Developer's app opens WebSocket to us → we forward webhooks through it
 ```
 
 No CLI. No tunnel binary. The SDK (npm package) opens an outbound WebSocket from inside the Express app. We send webhooks down that connection. The app handles them like normal HTTP requests.
@@ -21,7 +21,7 @@ No CLI. No tunnel binary. The SDK (npm package) opens an outbound WebSocket from
         | POST /hooks/p_xxx/stripe/webhook         | app starts → SDK connects
         v                                         v
 ┌──────────────────────────────────────────────────────────┐
-│                  antiwebhooks cloud (Rust)                │
+│                  simplehook cloud (Rust)                │
 │                                                          │
 │   Webhook Receiver          Tunnel Manager               │
 │   ┌──────────┐             ┌──────────────┐              │
@@ -65,11 +65,11 @@ Single Rust binary that handles everything:
 Tiny library that the developer adds to their app. For Node.js/Express:
 
 ```javascript
-// antiwebhooks npm package — ~100 lines of code
+// simplehook npm package — ~100 lines of code
 const WebSocket = require('ws');
 
 function listen(app, apiKey, opts = {}) {
-  const ws = new WebSocket(`wss://hooks.antiwebhooks.dev/tunnel?key=${apiKey}`);
+  const ws = new WebSocket(`wss://hooks.simplehook.dev/tunnel?key=${apiKey}`);
 
   ws.on('message', (raw) => {
     const frame = JSON.parse(raw);
@@ -96,7 +96,7 @@ function listen(app, apiKey, opts = {}) {
 ```
 
 That's the entire SDK concept. It:
-1. Opens WebSocket to antiwebhooks
+1. Opens WebSocket to simplehook
 2. Receives webhook requests as JSON frames
 3. Feeds them into Express's router (app.handle)
 4. Captures the response and sends it back through the WebSocket
@@ -208,7 +208,7 @@ Single binary. Deploy anywhere (fly.io, Railway, bare VPS).
 DATABASE_URL=sqlite:data.db \
 STRIPE_SECRET_KEY=sk_xxx \
 STRIPE_WEBHOOK_SECRET=whsec_xxx \
-./antiwebhooks-server
+./simplehook-server
 ```
 
 Put behind Caddy for TLS. SQLite file on disk. Back up with cron.
@@ -219,9 +219,9 @@ Put behind Caddy for TLS. SQLite file on disk. Back up with cron.
 
 | Deliverable | What |
 |-------------|------|
-| `antiwebhooks-server` | Rust binary — the cloud service |
-| `antiwebhooks` npm package | Node.js SDK (~100 lines) |
+| `simplehook-server` | Rust binary — the cloud service |
+| `simplehook` npm package | Node.js SDK (~100 lines) |
 | Dashboard | Built into the server (maud HTML) |
-| Landing page | Static HTML at antiwebhooks.dev |
+| Landing page | Static HTML at simplehook.dev |
 
 Future SDKs: Python, Go, Ruby — same WebSocket protocol, ~100 lines each.

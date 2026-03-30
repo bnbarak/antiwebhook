@@ -1,9 +1,9 @@
-# antiwebhooks
+# simplehook
 
 Stable webhook URLs for localhost. One line of code.
 
 ```
-Stripe/Twilio/GitHub ──POST──> antiwebhooks cloud ══WS══> Your Express app on localhost
+Stripe/Twilio/GitHub ──POST──> simplehook cloud ══WS══> Your Express app on localhost
 ```
 
 ## Quick start
@@ -64,7 +64,7 @@ npm install
 
 ```javascript
 const express = require('express');
-const { listen } = require('./index'); // or 'antiwebhooks' when published
+const { listen } = require('./index'); // or 'simplehook' when published
 
 const app = express();
 app.use(express.json());
@@ -131,7 +131,7 @@ node --test stress.test.js
 ## Project structure
 
 ```
-antiwebhooks/
+simplehook/
   server/                    Rust server (axum + sqlx + postgres)
     src/
       main.rs                Boot, migrations, serve on :8400

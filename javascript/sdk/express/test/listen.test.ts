@@ -38,12 +38,12 @@ describe("listen", () => {
       process.env.NODE_ENV = origEnv;
     });
 
-    it("skips when ANTIWEBHOOKS_ENABLED=false", () => {
-      process.env.ANTIWEBHOOKS_ENABLED = "false";
+    it("skips when SIMPLEHOOK_ENABLED=false", () => {
+      process.env.SIMPLEHOOK_ENABLED = "false";
 
       conn = listen({ handle: () => {} }, "ak_test", { silent: true });
 
-      delete process.env.ANTIWEBHOOKS_ENABLED;
+      delete process.env.SIMPLEHOOK_ENABLED;
     });
   });
 

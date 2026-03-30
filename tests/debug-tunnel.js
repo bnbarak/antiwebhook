@@ -6,8 +6,8 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 
-const SERVER_BIN = path.join(__dirname, '../server/target/debug/antiwebhooks-server');
-const DB_URL = 'postgres://admin:secret@localhost:5434/antiwebhooks';
+const SERVER_BIN = path.join(__dirname, '../server/target/debug/simplehook-server');
+const DB_URL = 'postgres://admin:secret@localhost:5434/simplehook';
 const PORT = 8403;
 
 // Clean DB
@@ -17,7 +17,7 @@ try {
 
 // Start server
 const server = spawn(SERVER_BIN, [], {
-  env: { ...process.env, DATABASE_URL: DB_URL, PORT: String(PORT), BASE_URL: `http://localhost:${PORT}`, FRONTEND_URL: 'http://localhost:4000', RUST_LOG: 'antiwebhooks_server=debug' },
+  env: { ...process.env, DATABASE_URL: DB_URL, PORT: String(PORT), BASE_URL: `http://localhost:${PORT}`, FRONTEND_URL: 'http://localhost:4000', RUST_LOG: 'simplehook_server=debug' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 server.stderr.on('data', d => process.stderr.write(d));

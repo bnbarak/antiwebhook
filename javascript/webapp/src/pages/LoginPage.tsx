@@ -43,7 +43,7 @@ export function LoginPage() {
             <Webhook className="size-4" />
           </div>
           <span className="font-mono text-[15px] font-medium tracking-[0.04em]">
-            antiwebhooks
+            simplehook
           </span>
         </Link>
 

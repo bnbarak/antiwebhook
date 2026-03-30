@@ -50,7 +50,7 @@ export function AppLayout() {
           </div>
           <div className="flex flex-col">
             <span className="text-base font-semibold leading-tight tracking-tight">
-              antiwebhooks
+              simplehook
             </span>
           </div>
         </div>

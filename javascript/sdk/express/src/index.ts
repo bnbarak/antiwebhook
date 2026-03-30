@@ -11,7 +11,7 @@ import { isExplicitlyDisabled, isProduction, parseFrame, sanitizeHeaders } from 
 
 export type { App, Connection, ListenOptions, RequestFrame, ResponseFrame };
 
-const DEFAULT_URL = "wss://hooks.antiwebhooks.dev";
+const DEFAULT_URL = "wss://hooks.simplehook.dev";
 const MAX_BACKOFF = 30_000;
 const NOOP_CONNECTION: Connection = { close() {} };
 
@@ -19,7 +19,7 @@ export function listen(app: App, apiKey: string, opts: ListenOptions = {}): Conn
   if (!opts.forceEnable && isProduction()) return NOOP_CONNECTION;
   if (isExplicitlyDisabled()) return NOOP_CONNECTION;
 
-  const serverUrl = opts.serverUrl ?? process.env.ANTIWEBHOOKS_URL ?? DEFAULT_URL;
+  const serverUrl = opts.serverUrl ?? process.env.SIMPLEHOOK_URL ?? DEFAULT_URL;
   const log = opts.silent ? () => {} : console.log.bind(console);
 
   let closed = false;
@@ -41,7 +41,7 @@ export function listen(app: App, apiKey: string, opts: ListenOptions = {}): Conn
     currentWs = ws;
 
     ws.on("open", () => {
-      log("[antiwebhooks] connected");
+      log("[simplehook] connected");
       backoff = 1000;
       opts.onConnect?.();
     });
@@ -64,7 +64,7 @@ export function listen(app: App, apiKey: string, opts: ListenOptions = {}): Conn
 
     ws.on("close", () => {
       if (closed) return;
-      log(`[antiwebhooks] disconnected, reconnecting in ${backoff / 1000}s...`);
+      log(`[simplehook] disconnected, reconnecting in ${backoff / 1000}s...`);
       opts.onDisconnect?.();
       setTimeout(connect, backoff);
       backoff = Math.min(backoff * 2, MAX_BACKOFF);

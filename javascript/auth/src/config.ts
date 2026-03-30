@@ -8,7 +8,7 @@ export const config = {
 
   databaseUrl: env(
     "DATABASE_URL",
-    "postgresql://admin:secret@localhost:5434/antiwebhooks",
+    "postgresql://admin:secret@localhost:5434/simplehook",
   ),
 
   betterAuthSecret: env(

@@ -1,5 +1,5 @@
 {
-  "name": "antiwebhooks-e2e-tests",
+  "name": "simplehook-e2e-tests",
   "private": true,
   "type": "commonjs",
   "dependencies": {

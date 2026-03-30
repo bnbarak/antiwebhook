@@ -1,5 +1,5 @@
 /**
- * End-to-end integration tests for antiwebhooks.
+ * End-to-end integration tests for simplehook.
  *
  * Tests the REAL flow:
  *   1. PostgreSQL database (docker, port 5434)
@@ -17,11 +17,11 @@ const { spawn } = require('node:child_process');
 const http = require('node:http');
 const path = require('node:path');
 
-const SERVER_BIN = path.join(__dirname, '../server/target/debug/antiwebhooks-server');
+const SERVER_BIN = path.join(__dirname, '../server/target/debug/simplehook-server');
 const SDK_PATH = path.join(__dirname, '../javascript/sdk/express');
 const { listen } = require(SDK_PATH);
 
-const DB_URL = 'postgres://admin:secret@localhost:5434/antiwebhooks';
+const DB_URL = 'postgres://admin:secret@localhost:5434/simplehook';
 const SERVER_PORT = 8401; // Use non-default to avoid conflicts
 const BASE_URL = `http://localhost:${SERVER_PORT}`;
 
@@ -101,7 +101,7 @@ async function startServer() {
         BASE_URL: `http://localhost:${SERVER_PORT}`,
         FRONTEND_URL: 'http://localhost:4000',
         PORT: String(SERVER_PORT),
-        RUST_LOG: 'antiwebhooks_server=info',
+        RUST_LOG: 'simplehook_server=info',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -110,7 +110,7 @@ async function startServer() {
     serverProcess.stderr.on('data', (d) => {
       stderr += d.toString();
       // Server logs to stderr via tracing
-      if (stderr.includes('antiwebhooks server running')) {
+      if (stderr.includes('simplehook server running')) {
         resolve();
       }
     });

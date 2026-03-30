@@ -19,10 +19,10 @@ from .utils import (
     sanitize_headers,
 )
 
-DEFAULT_URL = "wss://hooks.antiwebhooks.dev"
+DEFAULT_URL = "wss://hooks.simplehook.dev"
 MAX_BACKOFF = 30.0
 
-logger = logging.getLogger("antiwebhooks")
+logger = logging.getLogger("simplehook")
 
 
 class Connection:
@@ -63,7 +63,7 @@ def listen(
 
     import os
 
-    server_url = opts.get("server_url") or os.environ.get("ANTIWEBHOOKS_URL") or DEFAULT_URL
+    server_url = opts.get("server_url") or os.environ.get("SIMPLEHOOK_URL") or DEFAULT_URL
     silent = opts.get("silent", False)
     on_connect: Callable[[], None] | None = opts.get("on_connect")
     on_disconnect: Callable[[], None] | None = opts.get("on_disconnect")
@@ -86,7 +86,7 @@ def listen(
             except Exception:
                 if conn._closed:
                     return
-                log(f"[antiwebhooks] disconnected, reconnecting in {backoff:.0f}s...")
+                log(f"[simplehook] disconnected, reconnecting in {backoff:.0f}s...")
                 if on_disconnect:
                     on_disconnect()
                 time.sleep(backoff)
@@ -113,7 +113,7 @@ def _connect_and_handle(
     conn._ws = ws
 
     try:
-        log("[antiwebhooks] connected")
+        log("[simplehook] connected")
         if on_connect:
             on_connect()
 

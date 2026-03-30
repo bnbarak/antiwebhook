@@ -35,7 +35,7 @@ def is_production() -> bool:
 
 
 def is_explicitly_disabled() -> bool:
-    return os.environ.get("ANTIWEBHOOKS_ENABLED") == "false"
+    return os.environ.get("SIMPLEHOOK_ENABLED") == "false"
 
 
 def parse_frame(raw: str | bytes) -> Any | None:

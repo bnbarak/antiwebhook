@@ -74,7 +74,7 @@ export function HomePage() {
                   {" { webhooks } "}
                   <span className="text-[#8c1a4a]">from</span>
                   {" "}
-                  <span className="text-[#92600a]">'antiwebhooks'</span>
+                  <span className="text-[#92600a]">'simplehook'</span>
                   {"\n\n"}
                   <span className="text-[#1d6a4a]">webhooks</span>
                   <span className="text-[#9e9b93]">.</span>
@@ -102,7 +102,7 @@ export function HomePage() {
                 <code>
                   <span className="text-[#9e9b93] italic">{"// Set your webhook URL to:"}</span>
                   {"\n\n"}
-                  <span className="text-[#1d6a4a]">https://hook.antiwebhooks.com</span>
+                  <span className="text-[#1d6a4a]">https://hook.simplehook.dev</span>
                   {"\n  "}
                   <span className="text-[#1a4b8c]">/</span>
                   <span className="text-[#4a1a8c]">{"<your-project-id>"}</span>
@@ -141,20 +141,20 @@ export function HomePage() {
               {
                 num: "1",
                 title: "Set your webhook URLs",
-                desc: "Point Stripe, GitHub, etc. to your antiwebhooks URL. Do this once.",
-                code: "https://hook.antiwebhooks.com\n  /<project-id>/stripe",
+                desc: "Point Stripe, GitHub, etc. to your simplehook URL. Do this once.",
+                code: "https://hook.simplehook.dev\n  /<project-id>/stripe",
               },
               {
                 num: "2",
                 title: "Add one line of code",
                 desc: "Import the SDK and call listen(). That's the entire integration.",
-                code: "import { webhooks } from 'antiwebhooks'\nwebhooks.listen(3000)",
+                code: "import { webhooks } from 'simplehook'\nwebhooks.listen(3000)",
               },
               {
                 num: "3",
                 title: "Run your app",
                 desc: "Webhooks flow through a WebSocket to your local server. Instantly.",
-                code: "$ npm run dev\n\n[antiwebhooks] connected\n[antiwebhooks] POST /stripe/events -> 200",
+                code: "$ npm run dev\n\n[simplehook] connected\n[simplehook] POST /stripe/events -> 200",
               },
             ].map((step) => (
               <div
@@ -253,7 +253,7 @@ export function HomePage() {
             Why not ngrok or Hookdeck?
           </h2>
           <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            Different tools for different problems. Here is where antiwebhooks fits.
+            Different tools for different problems. Here is where simplehook fits.
           </p>
 
           <div className="overflow-x-auto">
@@ -264,7 +264,7 @@ export function HomePage() {
                     Feature
                   </th>
                   <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
-                    antiwebhooks
+                    simplehook
                   </th>
                   <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
                     ngrok
@@ -427,7 +427,7 @@ export function HomePage() {
 
           <div className="mx-auto mb-6 inline-block text-left">
             <pre className="rounded-lg bg-[#1a1916] px-5 py-4 font-mono text-[12.5px] leading-[1.8] text-[#d4d0c8]">
-              <code>npm install antiwebhooks</code>
+              <code>npm install simplehook</code>
             </pre>
           </div>
 
@@ -448,7 +448,7 @@ export function HomePage() {
           </div>
 
           <p className="mt-6 font-mono text-xs text-text-tertiary">
-            npm install antiwebhooks &middot; one line &middot; done
+            npm install simplehook &middot; one line &middot; done
           </p>
         </div>
       </section>

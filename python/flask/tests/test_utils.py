@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from antiwebhooks_flask.utils import (
+from simplehook_flask.utils import (
     decode_body,
     encode_body,
     is_explicitly_disabled,
@@ -110,7 +110,7 @@ class TestIsProduction:
 class TestIsExplicitlyDisabled:
     def test_true_when_set_to_false_string(self) -> None:
         # Arrange
-        os.environ["ANTIWEBHOOKS_ENABLED"] = "false"
+        os.environ["SIMPLEHOOK_ENABLED"] = "false"
 
         # Act
         result = is_explicitly_disabled()
@@ -119,11 +119,11 @@ class TestIsExplicitlyDisabled:
         assert result is True
 
         # Cleanup
-        del os.environ["ANTIWEBHOOKS_ENABLED"]
+        del os.environ["SIMPLEHOOK_ENABLED"]
 
     def test_false_when_not_set(self) -> None:
         # Arrange
-        os.environ.pop("ANTIWEBHOOKS_ENABLED", None)
+        os.environ.pop("SIMPLEHOOK_ENABLED", None)
 
         # Act
         result = is_explicitly_disabled()
@@ -133,7 +133,7 @@ class TestIsExplicitlyDisabled:
 
     def test_false_when_set_to_true(self) -> None:
         # Arrange
-        os.environ["ANTIWEBHOOKS_ENABLED"] = "true"
+        os.environ["SIMPLEHOOK_ENABLED"] = "true"
 
         # Act
         result = is_explicitly_disabled()
@@ -142,7 +142,7 @@ class TestIsExplicitlyDisabled:
         assert result is False
 
         # Cleanup
-        del os.environ["ANTIWEBHOOKS_ENABLED"]
+        del os.environ["SIMPLEHOOK_ENABLED"]
 
 
 class TestParseFrame:

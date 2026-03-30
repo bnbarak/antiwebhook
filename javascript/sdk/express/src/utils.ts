@@ -30,7 +30,7 @@ export function isProduction(): boolean {
 }
 
 export function isExplicitlyDisabled(): boolean {
-  return process.env.ANTIWEBHOOKS_ENABLED === "false";
+  return process.env.SIMPLEHOOK_ENABLED === "false";
 }
 
 export function parseFrame(raw: Buffer | string): unknown | null {

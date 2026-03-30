@@ -27,7 +27,7 @@ export function MarketingLayout() {
               <Webhook className="size-3.5" />
             </div>
             <span className="font-mono text-sm font-medium tracking-[0.04em]">
-              antiwebhooks
+              simplehook
             </span>
           </Link>
 
@@ -64,15 +64,15 @@ export function MarketingLayout() {
             <Link to="/docs" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Docs
             </Link>
-            <a href="https://github.com/nicholasgriffintn/antiwebhooks" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+            <a href="https://github.com/nicholasgriffintn/simplehook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               GitHub
             </a>
-            <a href="https://www.npmjs.com/package/antiwebhooks" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+            <a href="https://www.npmjs.com/package/simplehook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               npm
             </a>
           </div>
           <span className="text-xs text-text-tertiary">
-            antiwebhooks
+            simplehook
           </span>
         </div>
       </footer>

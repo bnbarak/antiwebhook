@@ -73,16 +73,16 @@ describe("isProduction", () => {
 });
 
 describe("isExplicitlyDisabled", () => {
-  it("returns true when ANTIWEBHOOKS_ENABLED is false", () => {
-    process.env.ANTIWEBHOOKS_ENABLED = "false";
+  it("returns true when SIMPLEHOOK_ENABLED is false", () => {
+    process.env.SIMPLEHOOK_ENABLED = "false";
 
     expect(isExplicitlyDisabled()).toBe(true);
 
-    delete process.env.ANTIWEBHOOKS_ENABLED;
+    delete process.env.SIMPLEHOOK_ENABLED;
   });
 
   it("returns false otherwise", () => {
-    delete process.env.ANTIWEBHOOKS_ENABLED;
+    delete process.env.SIMPLEHOOK_ENABLED;
 
     expect(isExplicitlyDisabled()).toBe(false);
   });

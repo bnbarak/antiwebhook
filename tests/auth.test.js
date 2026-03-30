@@ -19,7 +19,7 @@ const crypto = require("node:crypto");
 
 const AUTH_PORT = 8406;
 const RUST_PORT = 8407;
-const DB_URL = "postgres://admin:secret@localhost:5434/antiwebhooks";
+const DB_URL = "postgres://admin:secret@localhost:5434/simplehook";
 
 let authProcess = null;
 let rustProcess = null;
@@ -132,7 +132,7 @@ describe("auth: signup, login, session, logout", () => {
 
     // Start Rust server
     rustProcess = spawn(
-      path.join(__dirname, "../server/target/debug/antiwebhooks-server"),
+      path.join(__dirname, "../server/target/debug/simplehook-server"),
       [],
       {
         env: {
@@ -141,7 +141,7 @@ describe("auth: signup, login, session, logout", () => {
           PORT: String(RUST_PORT),
           BASE_URL: `http://localhost:${RUST_PORT}`,
           FRONTEND_URL: "http://localhost:4000",
-          RUST_LOG: "antiwebhooks_server=warn",
+          RUST_LOG: "simplehook_server=warn",
         },
         stdio: ["ignore", "pipe", "pipe"],
       },

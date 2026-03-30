@@ -7,8 +7,8 @@ import time
 
 from flask import Flask
 
-from antiwebhooks_flask import listen
-from antiwebhooks_flask.client import Connection
+from simplehook_flask import listen
+from simplehook_flask.client import Connection
 
 from .conftest import MockWSServer
 
@@ -30,7 +30,7 @@ class TestListen:
 
     def test_returns_noop_when_explicitly_disabled(self, flask_app: Flask) -> None:
         # Arrange
-        os.environ["ANTIWEBHOOKS_ENABLED"] = "false"
+        os.environ["SIMPLEHOOK_ENABLED"] = "false"
 
         # Act
         conn = listen(flask_app, "test_key")
@@ -39,7 +39,7 @@ class TestListen:
         assert conn._closed is True
 
         # Cleanup
-        del os.environ["ANTIWEBHOOKS_ENABLED"]
+        del os.environ["SIMPLEHOOK_ENABLED"]
 
     def test_force_enable_overrides_production(
         self, flask_app: Flask, mock_ws_server: MockWSServer,

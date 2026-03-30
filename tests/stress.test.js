@@ -1,5 +1,5 @@
 /**
- * Stress and resilience tests for antiwebhooks.
+ * Stress and resilience tests for simplehook.
  *
  * Tests real-world scenarios:
  *   - Concurrent webhooks
@@ -17,10 +17,10 @@ const { spawn, execSync } = require('node:child_process');
 const http = require('node:http');
 const path = require('node:path');
 
-const SERVER_BIN = path.join(__dirname, '../server/target/debug/antiwebhooks-server');
+const SERVER_BIN = path.join(__dirname, '../server/target/debug/simplehook-server');
 const { listen } = require(path.join(__dirname, '../javascript/sdk/express'));
 
-const DB_URL = 'postgres://admin:secret@localhost:5434/antiwebhooks';
+const DB_URL = 'postgres://admin:secret@localhost:5434/simplehook';
 const SERVER_PORT = 8405;
 const BASE_URL = `http://localhost:${SERVER_PORT}`;
 
@@ -119,7 +119,7 @@ describe('stress: resilience and concurrency', () => {
         PORT: String(SERVER_PORT),
         BASE_URL: `http://localhost:${SERVER_PORT}`,
         FRONTEND_URL: 'http://localhost:4000',
-        RUST_LOG: 'antiwebhooks_server=warn',
+        RUST_LOG: 'simplehook_server=warn',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });

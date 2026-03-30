@@ -35,7 +35,7 @@ export function SettingsPage() {
   };
 
   const webhookUrl = projectData
-    ? `https://hook.antiwebhooks.com/${projectData.id}`
+    ? `https://hook.simplehook.dev/${projectData.id}`
     : "";
 
   return (

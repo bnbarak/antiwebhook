@@ -208,7 +208,7 @@ mod tests {
         let resp = RegisterResponse {
             project_id: "p_abc123".into(),
             api_key: "ak_xyz".into(),
-            webhook_base_url: "https://hooks.antiwebhooks.dev/hooks/p_abc123".into(),
+            webhook_base_url: "https://hooks.simplehook.dev/hooks/p_abc123".into(),
         };
         let json = serde_json::to_string(&resp).unwrap();
         assert!(json.contains("p_abc123"));
