@@ -3,6 +3,7 @@ use axum::{
     extract::{Path, State},
     http::{HeaderMap, Method, StatusCode},
     response::{IntoResponse, Response},
+    Json,
 };
 use base64::Engine;
 use std::{collections::HashMap, sync::Arc, time::Duration};
@@ -17,9 +18,20 @@ pub async fn handle_webhook(
     body: Bytes,
 ) -> Result<Response, AppError> {
     // 1. Verify project exists
-    let _project = db::get_project_by_id(&state.db, &project_id)
+    let project = db::get_project_by_id(&state.db, &project_id)
         .await?
         .ok_or(AppError::NotFound("project not found"))?;
+
+    // 1b. Check billing status
+    if project.billing_status == "trial_expired" || project.billing_status == "cancelled" {
+        return Ok((
+            StatusCode::PAYMENT_REQUIRED,
+            Json(serde_json::json!({
+                "error": "payment_required",
+                "message": "Your trial has ended or subscription is cancelled. Please subscribe to continue receiving webhooks.",
+            })),
+        ).into_response());
+    }
 
     // 2. Determine route mode (longest prefix match, default: queue)
     let full_path = format!("/{}", path);

@@ -19,6 +19,10 @@ pub struct User {
     pub email: String,
     #[serde(skip_serializing)]
     pub password_hash: String,
+    pub trial_ends_at: Option<chrono::DateTime<Utc>>,
+    pub trial_reminder_sent: bool,
+    pub trial_expired_sent: bool,
+    pub welcome_email_sent: bool,
     pub created_at: chrono::DateTime<Utc>,
 }
 
@@ -92,23 +96,25 @@ pub async fn sign_up(
     // Hash password
     let password_hash = hash_password(&body.password)?;
 
-    // Create user
+    // Create user with trial
     let user_id = db::generate_id("u_", 16);
+    let trial_ends_at = Utc::now() + Duration::hours(24);
     let user: User = sqlx::query_as(
-        "INSERT INTO users (id, name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO users (id, name, email, password_hash, trial_ends_at) VALUES ($1, $2, $3, $4, $5) RETURNING *",
     )
     .bind(&user_id)
     .bind(&body.name)
     .bind(&email)
     .bind(&password_hash)
+    .bind(trial_ends_at)
     .fetch_one(&state.db)
     .await?;
 
-    // Create project for user
+    // Create project for user (trial, active)
     let project_id = db::generate_id("p_", 12);
     let api_key = db::generate_id("ak_", 24);
     sqlx::query(
-        "INSERT INTO projects (id, name, api_key, user_id, active) VALUES ($1, $2, $3, $4, true)",
+        "INSERT INTO projects (id, name, api_key, user_id, active, billing_status) VALUES ($1, $2, $3, $4, true, 'trial')",
     )
     .bind(&project_id)
     .bind(format!("{}'s project", body.name))
@@ -116,6 +122,16 @@ pub async fn sign_up(
     .bind(&user_id)
     .execute(&state.db)
     .await?;
+
+    // Send welcome email in background
+    let welcome_state = state.clone();
+    let welcome_user = user.clone();
+    let webhook_url = format!("{}/hooks/{}", state.config.base_url, project_id);
+    tokio::spawn(async move {
+        if let Err(e) = crate::email::send_welcome(&welcome_state, &welcome_user, &webhook_url).await {
+            tracing::error!(error = %e, "failed to send welcome email");
+        }
+    });
 
     // Create session
     let (token, cookie) = create_session(&state, &user_id).await?;
@@ -237,6 +253,7 @@ pub async fn me(
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "trial_ends_at": user.trial_ends_at,
         },
         "project": project.map(|p| serde_json::json!({
             "id": p.id,
@@ -244,6 +261,7 @@ pub async fn me(
             "api_key": p.api_key,
             "webhook_base_url": format!("{}/hooks/{}", state.config.base_url, p.id),
             "active": p.active,
+            "billing_status": p.billing_status,
             "connected": false,
         })),
     })))

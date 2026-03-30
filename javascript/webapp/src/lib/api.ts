@@ -7,6 +7,8 @@ export interface Project {
   webhook_base_url: string;
   active: boolean;
   connected: boolean;
+  billing_status: string;
+  trial_ends_at?: string;
 }
 
 export interface WebhookEvent {
@@ -42,6 +44,13 @@ export interface BillingInfo {
   current_period_end: string | null;
   checkout_url: string | null;
   portal_url: string | null;
+}
+
+export interface BillingStatus {
+  billing_status: string;
+  trial_ends_at: string | null;
+  trial_hours_remaining: number | null;
+  has_subscription: boolean;
 }
 
 export interface EventsFilter {
@@ -149,6 +158,9 @@ export const api = {
   },
 
   billing: {
+    getStatus(): Promise<BillingStatus> {
+      return request("/billing/status");
+    },
     createCheckout(): Promise<{ url: string }> {
       return request("/billing/checkout", { method: "POST" });
     },

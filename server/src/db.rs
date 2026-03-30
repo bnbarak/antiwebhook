@@ -14,6 +14,8 @@ pub struct Project {
     pub stripe_customer_id: Option<String>,
     pub stripe_subscription_id: Option<String>,
     pub active: bool,
+    pub billing_status: String,
+    pub subscription_period_end: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -348,6 +350,105 @@ pub async fn clone_event_as_pending(pool: &PgPool, original: &Event, new_id: &st
     .bind(&original.body)
     .fetch_one(pool)
     .await
+}
+
+// --- Trial & billing queries ---
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct TrialCandidate {
+    pub user_id: String,
+    pub user_name: String,
+    pub user_email: String,
+    pub trial_ends_at: DateTime<Utc>,
+    pub project_id: String,
+}
+
+pub async fn get_trial_reminder_candidates(pool: &PgPool) -> Result<Vec<TrialCandidate>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT u.id AS user_id, u.name AS user_name, u.email AS user_email,
+                u.trial_ends_at, p.id AS project_id
+         FROM users u JOIN projects p ON p.user_id = u.id
+         WHERE u.trial_ends_at IS NOT NULL
+           AND u.trial_ends_at > now()
+           AND u.trial_ends_at <= now() + interval '2 hours'
+           AND u.trial_reminder_sent = false",
+    )
+    .fetch_all(pool)
+    .await
+}
+
+pub async fn get_trial_expired_candidates(pool: &PgPool) -> Result<Vec<TrialCandidate>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT u.id AS user_id, u.name AS user_name, u.email AS user_email,
+                u.trial_ends_at, p.id AS project_id
+         FROM users u JOIN projects p ON p.user_id = u.id
+         WHERE u.trial_ends_at IS NOT NULL
+           AND u.trial_ends_at <= now()
+           AND u.trial_expired_sent = false",
+    )
+    .fetch_all(pool)
+    .await
+}
+
+pub async fn expire_trial_projects(pool: &PgPool, user_id: &str) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE projects SET billing_status = 'trial_expired', active = false
+         WHERE user_id = $1 AND billing_status = 'trial'",
+    )
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn mark_trial_reminder_sent(pool: &PgPool, user_id: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE users SET trial_reminder_sent = true WHERE id = $1")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn mark_trial_expired_sent(pool: &PgPool, user_id: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE users SET trial_expired_sent = true WHERE id = $1")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn mark_welcome_email_sent(pool: &PgPool, user_id: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE users SET welcome_email_sent = true WHERE id = $1")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn set_billing_status(pool: &PgPool, project_id: &str, status: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE projects SET billing_status = $1 WHERE id = $2")
+        .bind(status)
+        .bind(project_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn insert_email_log(
+    pool: &PgPool,
+    user_id: &str,
+    email_type: &str,
+    resend_id: &str,
+) -> Result<(), sqlx::Error> {
+    let id = generate_id("eml_", 16);
+    sqlx::query("INSERT INTO email_log (id, user_id, email_type, resend_id) VALUES ($1, $2, $3, $4)")
+        .bind(&id)
+        .bind(user_id)
+        .bind(email_type)
+        .bind(resend_id)
+        .execute(pool)
+        .await?;
+    Ok(())
 }
 
 // --- Helpers ---

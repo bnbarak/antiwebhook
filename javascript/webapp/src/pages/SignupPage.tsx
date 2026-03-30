@@ -64,7 +64,7 @@ export function SignupPage() {
         <div className="rounded-xl border border-border bg-card p-6 ring-1 ring-foreground/10">
           <h1 className="mb-1 text-base font-medium">Create your account</h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            Sign up to start receiving webhooks.
+            Start your free 24-hour trial. No credit card required.
           </p>
 
           {error && (

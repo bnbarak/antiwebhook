@@ -4,9 +4,11 @@ mod auth;
 mod billing;
 mod config;
 mod db;
+mod email;
 mod error;
 mod proxy;
 mod queue;
+mod trial_worker;
 mod tunnel;
 mod user_auth;
 
@@ -39,8 +41,9 @@ async fn main() {
         config,
     });
 
-    // Spawn background queue worker
+    // Spawn background workers
     tokio::spawn(queue::run_worker(state.clone()));
+    tokio::spawn(trial_worker::run_trial_checker(state.clone()));
 
     let router = app::build_router(state);
     let listener = tokio::net::TcpListener::bind(("0.0.0.0", port))

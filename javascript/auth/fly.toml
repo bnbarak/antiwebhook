@@ -1,0 +1,30 @@
+app = 'simplehook-auth'
+primary_region = 'ord'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  PORT = '8401'
+  BETTER_AUTH_URL = 'https://simplehook-auth.fly.dev'
+  WEBAPP_URL = 'https://www.simplehook.dev'
+
+[http_service]
+  internal_port = 8401
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '10s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health'
+
+[[vm]]
+  memory = '256mb'
+  cpu_kind = 'shared'
+  cpus = 1

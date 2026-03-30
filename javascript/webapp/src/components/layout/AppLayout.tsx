@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils.js";
 import { Separator } from "@/components/ui/separator.js";
 import { useAuth } from "@/hooks/use-auth.js";
+import { TrialBanner } from "@/components/shared/TrialBanner.js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -135,6 +136,7 @@ export function AppLayout() {
       {/* Main content */}
       <main className="flex-1 overflow-auto">
         <div className="mx-auto max-w-[960px] px-6 py-6">
+          <TrialBanner />
           <Outlet />
         </div>
       </main>

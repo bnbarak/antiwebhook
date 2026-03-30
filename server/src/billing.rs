@@ -4,10 +4,11 @@ use axum::{
     http::{HeaderMap, StatusCode},
     Json,
 };
+use chrono::Utc;
 use serde::Serialize;
 use std::sync::Arc;
 
-use crate::{app::AppState, auth::AuthProject, db, error::AppError};
+use crate::{app::AppState, auth::AuthProject, db, error::AppError, user_auth};
 
 #[derive(Serialize)]
 pub struct CheckoutResponse {
@@ -89,6 +90,39 @@ pub async fn create_portal(
     }))
 }
 
+#[derive(Serialize)]
+pub struct BillingStatusResponse {
+    pub billing_status: String,
+    pub trial_ends_at: Option<chrono::DateTime<Utc>>,
+    pub trial_hours_remaining: Option<f64>,
+    pub has_subscription: bool,
+}
+
+pub async fn get_billing_status(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+) -> Result<Json<BillingStatusResponse>, AppError> {
+    let user: Option<user_auth::User> = sqlx::query_as(
+        "SELECT * FROM users WHERE id = (SELECT user_id FROM projects WHERE id = $1)",
+    )
+    .bind(&project.id)
+    .fetch_optional(&state.db)
+    .await?;
+
+    let trial_ends_at = user.as_ref().and_then(|u| u.trial_ends_at);
+    let trial_hours_remaining = trial_ends_at.map(|t| {
+        let remaining = t - Utc::now();
+        (remaining.num_seconds() as f64 / 3600.0).max(0.0)
+    });
+
+    Ok(Json(BillingStatusResponse {
+        billing_status: project.billing_status.clone(),
+        trial_ends_at,
+        trial_hours_remaining,
+        has_subscription: project.stripe_subscription_id.is_some(),
+    }))
+}
+
 pub async fn stripe_webhook(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -112,16 +146,71 @@ pub async fn stripe_webhook(
             let sub_id = obj["subscription"].as_str().unwrap_or("");
             if !project_id.is_empty() {
                 db::activate_project(&state.db, project_id, customer_id, sub_id).await?;
+                db::set_billing_status(&state.db, project_id, "active").await?;
                 tracing::info!(project_id = %project_id, "project activated via checkout");
+
+                // Send payment confirmed email
+                let state2 = state.clone();
+                let pid = project_id.to_string();
+                tokio::spawn(async move {
+                    let user: Option<user_auth::User> = sqlx::query_as(
+                        "SELECT * FROM users WHERE id = (SELECT user_id FROM projects WHERE id = $1)",
+                    )
+                    .bind(&pid)
+                    .fetch_optional(&state2.db)
+                    .await
+                    .ok()
+                    .flatten();
+
+                    if let Some(user) = user {
+                        if let Err(e) = crate::email::send_payment_confirmed(&state2, &user).await {
+                            tracing::error!(error = %e, "failed to send payment confirmed email");
+                        }
+                    }
+                });
             }
         }
-        "customer.subscription.deleted" | "invoice.payment_failed" => {
+        "invoice.paid" => {
             let customer_id = event["data"]["object"]["customer"]
                 .as_str()
                 .unwrap_or("");
             if !customer_id.is_empty() {
-                db::deactivate_by_customer(&state.db, customer_id).await?;
-                tracing::info!(customer_id = %customer_id, "project deactivated");
+                // Ensure project stays active on recurring payments
+                sqlx::query(
+                    "UPDATE projects SET active = true, billing_status = 'active' WHERE stripe_customer_id = $1",
+                )
+                .bind(customer_id)
+                .execute(&state.db)
+                .await?;
+                tracing::info!(customer_id = %customer_id, "invoice paid, project confirmed active");
+            }
+        }
+        "customer.subscription.deleted" => {
+            let customer_id = event["data"]["object"]["customer"]
+                .as_str()
+                .unwrap_or("");
+            if !customer_id.is_empty() {
+                sqlx::query(
+                    "UPDATE projects SET active = false, billing_status = 'cancelled' WHERE stripe_customer_id = $1",
+                )
+                .bind(customer_id)
+                .execute(&state.db)
+                .await?;
+                tracing::info!(customer_id = %customer_id, "subscription deleted, project deactivated");
+            }
+        }
+        "invoice.payment_failed" => {
+            let customer_id = event["data"]["object"]["customer"]
+                .as_str()
+                .unwrap_or("");
+            if !customer_id.is_empty() {
+                sqlx::query(
+                    "UPDATE projects SET billing_status = 'past_due' WHERE stripe_customer_id = $1",
+                )
+                .bind(customer_id)
+                .execute(&state.db)
+                .await?;
+                tracing::info!(customer_id = %customer_id, "payment failed, project set to past_due");
             }
         }
         _ => {}

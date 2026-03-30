@@ -450,7 +450,7 @@ export function HomePage() {
             One plan. No surprises.
           </h2>
           <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            No per-event pricing. No usage tiers. Just webhooks that work.
+            24-hour free trial. No credit card required. $5/mo after trial.
           </p>
 
           <div className="flex justify-center">
@@ -489,7 +489,7 @@ export function HomePage() {
 
               <div className="mt-6 border-t border-border pt-5">
                 <p className="text-[13px] text-text-tertiary">
-                  14-day free trial. Cancel anytime.
+                  24-hour free trial. No credit card required.
                 </p>
               </div>
 
