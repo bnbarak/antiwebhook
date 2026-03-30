@@ -11,7 +11,7 @@ import { isExplicitlyDisabled, isProduction, parseFrame, sanitizeHeaders } from 
 
 export type { App, Connection, ListenOptions, RequestFrame, ResponseFrame };
 
-const DEFAULT_URL = "wss://hooks.simplehook.dev";
+const DEFAULT_URL = "wss://hook.simplehook.dev";
 const MAX_BACKOFF = 30_000;
 const NOOP_CONNECTION: Connection = { close() {} };
 

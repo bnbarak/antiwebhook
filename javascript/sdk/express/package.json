@@ -1,6 +1,6 @@
 {
   "name": "simplehook",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stable webhook URLs for localhost. One line of code.",
   "type": "module",
   "main": "dist/index.js",
