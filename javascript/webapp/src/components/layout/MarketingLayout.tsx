@@ -1,0 +1,81 @@
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { Webhook } from "lucide-react";
+
+function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={to}
+      className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md"
+    >
+      {children}
+    </a>
+  );
+}
+
+export function MarketingLayout() {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+
+  return (
+    <div className="min-h-svh bg-background">
+      {/* Sticky nav */}
+      <nav className="sticky top-0 z-50 border-b border-border bg-card/90 supports-backdrop-filter:backdrop-blur-[20px]">
+        <div className="mx-auto flex h-14 max-w-[960px] items-center justify-between px-6">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
+              <Webhook className="size-3.5" />
+            </div>
+            <span className="font-mono text-sm font-medium tracking-[0.04em]">
+              antiwebhooks
+            </span>
+          </Link>
+
+          {/* Nav links */}
+          <div className="flex items-center gap-1">
+            {isHome ? (
+              <>
+                <NavLink to="#how-it-works">How it works</NavLink>
+                <NavLink to="#pricing">Pricing</NavLink>
+              </>
+            ) : (
+              <NavLink to="/">Home</NavLink>
+            )}
+            <Link to="/docs" className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
+              Docs
+            </Link>
+            <Link
+              to="/login"
+              className="ml-1.5 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Content */}
+      <Outlet />
+
+      {/* Footer */}
+      <footer className="border-t border-border">
+        <div className="mx-auto flex max-w-[960px] flex-wrap items-center justify-between gap-4 px-6 py-8">
+          <div className="flex flex-wrap items-center gap-5">
+            <Link to="/docs" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+              Docs
+            </Link>
+            <a href="https://github.com/nicholasgriffintn/antiwebhooks" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+              GitHub
+            </a>
+            <a href="https://www.npmjs.com/package/antiwebhooks" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+              npm
+            </a>
+          </div>
+          <span className="text-xs text-text-tertiary">
+            antiwebhooks
+          </span>
+        </div>
+      </footer>
+    </div>
+  );
+}
