@@ -373,7 +373,7 @@ process.on('SIGINT', () => client.close())`}
             <h3 className="mb-3 text-sm font-medium">Authentication</h3>
             <CodeBlock label="Example request">
               {`curl -H "Authorization: Bearer aw_live_..." \\
-  https://api.simplehook.dev/api/events`}
+  https://hook.simplehook.dev/api/events`}
             </CodeBlock>
           </div>
         </div>

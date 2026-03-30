@@ -17,28 +17,59 @@ import { Badge } from "@/components/ui/badge.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
 
+function FlowNode({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
+  return (
+    <span
+      className={`rounded px-2 py-1 font-mono text-[11px] ${
+        highlight
+          ? "bg-status-green-bg text-status-green-text"
+          : "bg-muted text-muted-foreground"
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
 function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
   if (mode === "passthrough") {
     return (
       <div className="rounded-lg border border-border bg-card/50 p-4">
-        <div className="mb-2.5 text-xs font-medium text-foreground">
-          Passthrough mode
+        <div className="mb-3 text-xs font-medium">Passthrough mode</div>
+        {/* U-shape: request goes right, then returns left */}
+        <div className="flex flex-col items-center gap-1 font-mono text-[11px]">
+          <div className="flex w-full items-center justify-between gap-2">
+            <FlowNode>Stripe</FlowNode>
+            <div className="flex flex-1 items-center gap-1 text-muted-foreground">
+              <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
+              <span className="text-[10px]">POST</span>
+              <ArrowRight className="size-3" />
+            </div>
+            <FlowNode>simplehook</FlowNode>
+            <div className="flex flex-1 items-center gap-1 text-muted-foreground">
+              <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
+              <ArrowRight className="size-3" />
+            </div>
+            <FlowNode>Your app</FlowNode>
+          </div>
+          <div className="flex w-full items-center justify-between gap-2">
+            <FlowNode>Stripe</FlowNode>
+            <div className="flex flex-1 items-center gap-1 text-status-green-text">
+              <ArrowRight className="size-3 rotate-180" />
+              <span className="text-[10px]">TwiML / JSON</span>
+              <span className="flex-1 border-t border-dashed border-status-green-text/40" />
+            </div>
+            <FlowNode>simplehook</FlowNode>
+            <div className="flex flex-1 items-center gap-1 text-status-green-text">
+              <ArrowRight className="size-3 rotate-180" />
+              <span className="flex-1 border-t border-dashed border-status-green-text/40" />
+            </div>
+            <FlowNode highlight>200 + body</FlowNode>
+          </div>
         </div>
-        <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
-          <span className="rounded bg-muted px-1.5 py-0.5">Stripe</span>
-          <ArrowRight className="size-3" />
-          <span className="rounded bg-muted px-1.5 py-0.5">simplehook</span>
-          <ArrowRight className="size-3" />
-          <span className="rounded bg-muted px-1.5 py-0.5">Your app</span>
-          <ArrowRight className="size-3" />
-          <span className="rounded bg-muted px-1.5 py-0.5">simplehook</span>
-          <ArrowRight className="size-3" />
-          <span className="rounded bg-muted px-1.5 py-0.5">Stripe</span>
-        </div>
-        <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-          Your app's <strong>real response</strong> is sent back to the caller.
-          Use for Twilio (TwiML), Shopify (verification), or any provider that reads your response.
-          Returns <strong>502</strong> if your app is offline.
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          Your app's <strong>real response</strong> goes all the way back to the caller.
+          Use for Twilio (TwiML), Shopify, or any provider that reads your response.
         </p>
       </div>
     );
@@ -46,30 +77,37 @@ function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
 
   return (
     <div className="rounded-lg border border-border bg-card/50 p-4">
-      <div className="mb-2.5 text-xs font-medium text-foreground">
-        Queue mode
+      <div className="mb-3 text-xs font-medium">Queue mode</div>
+      <div className="flex flex-col items-center gap-1 font-mono text-[11px]">
+        <div className="flex w-full items-center justify-between gap-2">
+          <FlowNode>Stripe</FlowNode>
+          <div className="flex flex-1 items-center gap-1 text-muted-foreground">
+            <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
+            <span className="text-[10px]">POST</span>
+            <ArrowRight className="size-3" />
+          </div>
+          <FlowNode>simplehook</FlowNode>
+          <div className="flex flex-1 items-center gap-1 text-status-green-text">
+            <ArrowRight className="size-3 rotate-180" />
+            <span className="flex-1 border-t border-dashed border-status-green-text/40" />
+          </div>
+          <FlowNode highlight>200 OK</FlowNode>
+        </div>
+        <div className="mt-1 flex w-full items-center gap-2">
+          <span className="w-[52px]" />
+          <span className="w-0 flex-1" />
+          <FlowNode>simplehook</FlowNode>
+          <div className="flex flex-1 items-center gap-1 text-muted-foreground">
+            <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
+            <span className="text-[10px] italic">async</span>
+            <ArrowRight className="size-3" />
+          </div>
+          <FlowNode>Your app</FlowNode>
+        </div>
       </div>
-      <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
-        <span className="rounded bg-muted px-1.5 py-0.5">Stripe</span>
-        <ArrowRight className="size-3" />
-        <span className="rounded bg-muted px-1.5 py-0.5">simplehook</span>
-        <ArrowRight className="size-3" />
-        <span className="rounded bg-status-green-bg px-1.5 py-0.5 text-status-green-text">
-          200 OK
-        </span>
-      </div>
-      <div className="mt-1.5 flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
-        <span className="invisible rounded bg-muted px-1.5 py-0.5">Stripe</span>
-        <span className="invisible size-3" />
-        <span className="rounded bg-muted px-1.5 py-0.5">simplehook</span>
-        <ArrowRight className="size-3" />
-        <span className="rounded bg-muted px-1.5 py-0.5">Your app</span>
-        <span className="text-[10px] italic">(async)</span>
-      </div>
-      <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-        Returns <strong>200 immediately</strong> to the caller.
-        Delivers to your app async with retry. If your app is offline, events queue and deliver when you reconnect.
-        Use for Stripe, GitHub, or any fire-and-forget webhook.
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+        Returns <strong>200 instantly</strong>. Delivers async with retry.
+        Events queue when your app is offline and drain on reconnect.
       </p>
     </div>
   );

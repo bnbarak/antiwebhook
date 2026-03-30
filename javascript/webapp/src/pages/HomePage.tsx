@@ -28,7 +28,7 @@ const STEPS = [
     num: "1",
     title: "Set your webhook URL",
     desc: "Point Stripe, GitHub, Twilio — any provider — to your simplehook URL. Set it once, never change it.",
-    code: `# Your stable webhook URL\n\nhttps://api.simplehook.dev\n  /hooks/<your-project-id>\n  /stripe/events`,
+    code: `# Your stable webhook URL\n\nhttps://hook.simplehook.dev\n  /hooks/<your-project-id>\n  /stripe/events`,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="size-5">
         <path d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-4.828a4.5 4.5 0 0 0-1.242-7.244l4.5-4.5a4.5 4.5 0 1 0 6.364 6.364l-1.757 1.757" strokeLinecap="round" strokeLinejoin="round" />
