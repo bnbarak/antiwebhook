@@ -70,14 +70,14 @@ export function HomePage() {
             </div>
             {/* Split panes */}
             <div className="grid md:grid-cols-2">
-              <div>
+              <div className="flex flex-col">
                 <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
                   <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#9a91b0]">
                     Your app
                   </span>
                   <span className="font-mono text-[11px] text-[#7a7190]">app.ts</span>
                 </div>
-                <pre className="overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                <pre className="flex-1 overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
                   <code>
                     <span className="text-[#c678dd]">import</span>
                     {" { webhooks } "}
@@ -96,14 +96,14 @@ export function HomePage() {
                   </code>
                 </pre>
               </div>
-              <div className="border-t border-white/[0.06] md:border-l md:border-t-0">
+              <div className="flex flex-col border-t border-white/[0.06] md:border-l md:border-t-0">
                 <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
                   <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#9a91b0]">
                     Webhook URL
                   </span>
                   <span className="font-mono text-[11px] text-[#7a7190]">Stripe Dashboard</span>
                 </div>
-                <pre className="overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                <pre className="flex-1 overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
                   <code>
                     <span className="text-[#7a7190] italic">{"// Set your webhook URL to:"}</span>
                     {"\n\n"}
@@ -148,35 +148,42 @@ export function HomePage() {
                 num: "1",
                 title: "Set your webhook URLs",
                 desc: "Point Stripe, GitHub, etc. to your simplehook URL. Do this once.",
-                code: "https://hook.simplehook.dev\n  /<project-id>/stripe",
+                code: "https://hook.simplehook.dev\n/<project-id>/stripe",
               },
               {
                 num: "2",
                 title: "Add one line of code",
                 desc: "Import the SDK and call listen(). That's the entire integration.",
-                code: "import { webhooks } from 'simplehook'\nwebhooks.listen(3000)",
+                code: "import { webhooks }\n  from 'simplehook'\nwebhooks.listen(3000)",
               },
               {
                 num: "3",
                 title: "Run your app",
                 desc: "Webhooks flow through a WebSocket to your local server. Instantly.",
-                code: "$ npm run dev\n\n[simplehook] connected\n[simplehook] POST /stripe/events -> 200",
+                code: "$ npm run dev\n\n[simplehook] connected\n[simplehook] POST -> 200",
               },
             ].map((step) => (
               <div
                 key={step.num}
-                className="rounded-lg border border-border bg-card p-5 transition-colors hover:border-border-strong"
+                className="flex flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:border-border-strong"
               >
                 <div className="mb-3 flex size-6 items-center justify-center rounded-full bg-foreground font-mono text-xs text-background">
                   {step.num}
                 </div>
                 <h3 className="mb-2 text-sm font-medium">{step.title}</h3>
-                <p className="mb-3 text-[13px] text-muted-foreground">
+                <p className="mb-4 flex-1 text-[13px] text-muted-foreground">
                   {step.desc}
                 </p>
-                <pre className="overflow-x-auto rounded-md bg-[#1e1834] px-3 py-2.5 font-mono text-[12px] leading-[1.7] text-[#e0dce8]">
-                  <code>{step.code}</code>
-                </pre>
+                <div className="overflow-hidden rounded-lg shadow">
+                  <div className="flex items-center gap-1.5 bg-[#2d2640] px-3 py-1.5">
+                    <span className="h-2 w-2 rounded-full bg-[#ff5f56]" />
+                    <span className="h-2 w-2 rounded-full bg-[#ffbd2e]" />
+                    <span className="h-2 w-2 rounded-full bg-[#27c93f]" />
+                  </div>
+                  <pre className="bg-[#1e1834] px-3.5 py-3 font-mono text-[11.5px] leading-[1.7] text-[#e0dce8]">
+                    <code>{step.code}</code>
+                  </pre>
+                </div>
               </div>
             ))}
           </div>
