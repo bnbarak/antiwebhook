@@ -3,8 +3,10 @@
 export interface Project {
   id: string;
   name: string;
-  webhook_url: string;
-  created_at: string;
+  api_key: string;
+  webhook_base_url: string;
+  active: boolean;
+  connected: boolean;
 }
 
 export interface WebhookEvent {
@@ -147,9 +149,6 @@ export const api = {
   },
 
   billing: {
-    get(): Promise<BillingInfo> {
-      return request("/billing");
-    },
     createCheckout(): Promise<{ url: string }> {
       return request("/billing/checkout", { method: "POST" });
     },
@@ -159,8 +158,11 @@ export const api = {
   },
 
   project: {
-    get(): Promise<Project> {
-      return request("/auth/me");
+    async get(): Promise<Project> {
+      const res = await fetch("/auth/me", { credentials: "include" });
+      if (!res.ok) throw new ApiError(res.status, "Failed to load project");
+      const data = await res.json();
+      return data.project;
     },
   },
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Copy, ExternalLink, CheckCircle } from "lucide-react";
-import { api, type Project, type BillingInfo } from "@/lib/api.js";
+import { Copy, ExternalLink } from "lucide-react";
+import { api, type Project } from "@/lib/api.js";
 import { useAuth } from "@/hooks/use-auth.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -12,9 +12,7 @@ import { toast } from "sonner";
 export function SettingsPage() {
   const { session } = useAuth();
   const [projectData, setProjectData] = useState<Project | null>(null);
-  const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [loadingProject, setLoadingProject] = useState(true);
-  const [loadingBilling, setLoadingBilling] = useState(true);
 
   useEffect(() => {
     api.project
@@ -22,11 +20,6 @@ export function SettingsPage() {
       .then(setProjectData)
       .catch(() => {})
       .finally(() => setLoadingProject(false));
-    api.billing
-      .get()
-      .then(setBilling)
-      .catch(() => {})
-      .finally(() => setLoadingBilling(false));
   }, []);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -34,9 +27,7 @@ export function SettingsPage() {
     toast.success(`${label} copied`);
   };
 
-  const webhookUrl = projectData
-    ? `https://hook.simplehook.dev/${projectData.id}`
-    : "";
+  const webhookUrl = projectData?.webhook_base_url ?? "";
 
   return (
     <div>
@@ -145,73 +136,11 @@ export function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loadingBilling ? (
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-            ) : billing ? (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="size-4 text-status-green-text" />
-                    <span className="text-sm font-medium">
-                      {billing.plan} plan
-                    </span>
-                  </div>
-                  <span className="rounded-full bg-status-green-bg px-2 py-0.5 text-xs font-medium text-status-green-text">
-                    {billing.status}
-                  </span>
-                </div>
-
-                {billing.current_period_end && (
-                  <p className="text-xs text-muted-foreground">
-                    Current period ends{" "}
-                    {new Date(
-                      billing.current_period_end,
-                    ).toLocaleDateString()}
-                  </p>
-                )}
-
-                <div className="flex gap-2">
-                  {billing.portal_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        window.open(billing.portal_url!, "_blank")
-                      }
-                      className="gap-1.5"
-                    >
-                      <ExternalLink className="size-3" />
-                      Manage billing
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <p className="text-sm text-muted-foreground">
-                  No active subscription. Start your free trial to unlock all
-                  features.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      const { url } = await api.billing.createCheckout();
-                      window.open(url, "_blank");
-                    } catch {
-                      toast.error("Failed to create checkout session");
-                    }
-                  }}
-                  className="w-fit gap-1.5"
-                >
-                  <ExternalLink className="size-3" />
-                  Start free trial
-                </Button>
-              </div>
-            )}
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-muted-foreground">
+                Free during beta. Paid plans coming soon.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
