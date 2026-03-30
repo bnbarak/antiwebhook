@@ -36,6 +36,13 @@ function ProtectedRoute() {
   return <Outlet />;
 }
 
+function GuestOnly() {
+  const { session, loading } = useAuth();
+  if (loading) return null;
+  if (session) return <Navigate to="/events" replace />;
+  return <Outlet />;
+}
+
 function App() {
   return (
     <TooltipProvider>
@@ -49,9 +56,11 @@ function App() {
               <Route path="/docs" element={<DocsPage />} />
             </Route>
 
-            {/* Auth */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            {/* Auth — redirect to dashboard if already logged in */}
+            <Route element={<GuestOnly />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+            </Route>
 
             {/* Protected dashboard routes */}
             <Route element={<ProtectedRoute />}>
