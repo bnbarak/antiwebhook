@@ -31,6 +31,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/billing/portal", post(billing::create_portal));
 
     Router::new()
+        .route("/", get(|| async { axum::Json(serde_json::json!({"name": "simplehook", "version": "0.1.0", "docs": "https://simplehook.dev/docs"})) }))
         .route("/health", get(|| async { "ok" }))
         .route("/hooks/{project_id}/{*path}", any(proxy::handle_webhook))
         .route("/tunnel", get(crate::tunnel::ws_upgrade))
