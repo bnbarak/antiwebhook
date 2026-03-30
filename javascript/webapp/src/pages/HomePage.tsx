@@ -56,62 +56,68 @@ export function HomePage() {
             </a>
           </div>
 
-          {/* Code split panes */}
-          <div className="grid max-w-[860px] overflow-hidden rounded-xl border border-border-strong bg-background md:grid-cols-2">
-            {/* Left pane: your code */}
-            <div>
-              <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2.5">
-                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
-                  Your app
-                </span>
-                <span className="font-mono text-[11px] text-text-tertiary">
-                  app.ts
-                </span>
+          {/* Code split panes — terminal theme */}
+          <div className="max-w-[860px] overflow-hidden rounded-xl shadow-lg">
+            {/* Terminal title bar */}
+            <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+                <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+                <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
               </div>
-              <pre className="overflow-x-auto bg-[#1a1916] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e8e5dd]">
-                <code>
-                  <span className="text-[#8c1a4a]">import</span>
-                  {" { webhooks } "}
-                  <span className="text-[#8c1a4a]">from</span>
-                  {" "}
-                  <span className="text-[#92600a]">'simplehook'</span>
-                  {"\n\n"}
-                  <span className="text-[#1d6a4a]">webhooks</span>
-                  <span className="text-[#9e9b93]">.</span>
-                  <span className="text-[#1a4b8c]">listen</span>
-                  {"("}
-                  <span className="text-[#92600a]">3000</span>
-                  {")"}
-                  {"\n\n"}
-                  <span className="text-[#9e9b93] italic">{"// That's it. Webhooks flow to localhost:3000"}</span>
-                </code>
-              </pre>
+              <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">Terminal</span>
+              <div className="w-[52px]" />
             </div>
-
-            {/* Right pane: what happens */}
-            <div className="border-t border-border-strong md:border-l md:border-t-0">
-              <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2.5">
-                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
-                  Webhook URL
-                </span>
-                <span className="font-mono text-[11px] text-text-tertiary">
-                  Stripe Dashboard
-                </span>
+            {/* Split panes */}
+            <div className="grid md:grid-cols-2">
+              <div>
+                <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#9a91b0]">
+                    Your app
+                  </span>
+                  <span className="font-mono text-[11px] text-[#7a7190]">app.ts</span>
+                </div>
+                <pre className="overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                  <code>
+                    <span className="text-[#c678dd]">import</span>
+                    {" { webhooks } "}
+                    <span className="text-[#c678dd]">from</span>
+                    {" "}
+                    <span className="text-[#98c379]">'simplehook'</span>
+                    {"\n\n"}
+                    <span className="text-[#61afef]">webhooks</span>
+                    <span className="text-[#7a7190]">.</span>
+                    <span className="text-[#e5c07b]">listen</span>
+                    {"("}
+                    <span className="text-[#d19a66]">3000</span>
+                    {")"}
+                    {"\n\n"}
+                    <span className="text-[#7a7190] italic">{"// That's it. Webhooks flow to localhost:3000"}</span>
+                  </code>
+                </pre>
               </div>
-              <pre className="overflow-x-auto bg-[#1a1916] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e8e5dd]">
-                <code>
-                  <span className="text-[#9e9b93] italic">{"// Set your webhook URL to:"}</span>
-                  {"\n\n"}
-                  <span className="text-[#1d6a4a]">https://hook.simplehook.dev</span>
-                  {"\n  "}
-                  <span className="text-[#1a4b8c]">/</span>
-                  <span className="text-[#4a1a8c]">{"<your-project-id>"}</span>
-                  {"\n  "}
-                  <span className="text-[#1a4b8c]">/stripe/events</span>
-                  {"\n\n"}
-                  <span className="text-[#9e9b93] italic">{"// Events forward to your localhost"}</span>
-                </code>
-              </pre>
+              <div className="border-t border-white/[0.06] md:border-l md:border-t-0">
+                <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#9a91b0]">
+                    Webhook URL
+                  </span>
+                  <span className="font-mono text-[11px] text-[#7a7190]">Stripe Dashboard</span>
+                </div>
+                <pre className="overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                  <code>
+                    <span className="text-[#7a7190] italic">{"// Set your webhook URL to:"}</span>
+                    {"\n\n"}
+                    <span className="text-[#98c379]">https://hook.simplehook.dev</span>
+                    {"\n  "}
+                    <span className="text-[#61afef]">/</span>
+                    <span className="text-[#c678dd]">{"<your-project-id>"}</span>
+                    {"\n  "}
+                    <span className="text-[#61afef]">/stripe/events</span>
+                    {"\n\n"}
+                    <span className="text-[#7a7190] italic">{"// Events forward to your localhost"}</span>
+                  </code>
+                </pre>
+              </div>
             </div>
           </div>
 
@@ -168,7 +174,7 @@ export function HomePage() {
                 <p className="mb-3 text-[13px] text-muted-foreground">
                   {step.desc}
                 </p>
-                <pre className="overflow-x-auto rounded-md bg-[#1a1916] px-3 py-2.5 font-mono text-[12px] leading-[1.7] text-[#d4d0c8]">
+                <pre className="overflow-x-auto rounded-md bg-[#1e1834] px-3 py-2.5 font-mono text-[12px] leading-[1.7] text-[#e0dce8]">
                   <code>{step.code}</code>
                 </pre>
               </div>
@@ -425,9 +431,18 @@ export function HomePage() {
             One install. One line of code. Every webhook provider works.
           </p>
 
-          <div className="mx-auto mb-6 inline-block text-left">
-            <pre className="rounded-lg bg-[#1a1916] px-5 py-4 font-mono text-[12.5px] leading-[1.8] text-[#d4d0c8]">
-              <code>npm install simplehook</code>
+          <div className="mx-auto mb-6 inline-block overflow-hidden rounded-xl text-left shadow-lg">
+            <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#27c93f]" />
+              </div>
+              <span className="mx-auto font-mono text-[11px] text-[#9a91b0]">Terminal</span>
+              <div className="w-[44px]" />
+            </div>
+            <pre className="bg-[#1e1834] px-5 py-4 font-mono text-[13px] leading-[1.8] text-[#e0dce8]">
+              <code><span className="text-[#27c93f]">$</span> npm install simplehook</code>
             </pre>
           </div>
 
