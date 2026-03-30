@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown } from "lucide-react";
+import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown, RotateCcw } from "lucide-react";
 import { api, type Route } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -177,9 +177,12 @@ function RouteCard({
 
 export function RoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [deletedRoutes, setDeletedRoutes] = useState<Route[]>([]);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const [pathPrefix, setPathPrefix] = useState("");
   const [mode, setMode] = useState<"passthrough" | "queue">("passthrough");
@@ -187,8 +190,12 @@ export function RoutesPage() {
 
   const fetchRoutes = async () => {
     try {
-      const data = await api.routes.list();
-      setRoutes(data);
+      const [active, deleted] = await Promise.all([
+        api.routes.list(),
+        api.routes.listDeleted(),
+      ]);
+      setRoutes(active);
+      setDeletedRoutes(deleted);
     } catch {
       // silent
     } finally {
@@ -221,12 +228,26 @@ export function RoutesPage() {
     setDeletingId(id);
     try {
       await api.routes.delete(id);
-      toast.success("Route deleted");
+      toast.success("Route deleted — you can restore it from the deleted list");
       fetchRoutes();
     } catch {
       toast.error("Failed to delete route");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    setRestoringId(id);
+    try {
+      await api.routes.restore(id);
+      toast.success("Route restored");
+      fetchRoutes();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to restore route";
+      toast.error(msg.includes("already exists") ? "Can't restore — an active route with this path already exists" : msg);
+    } finally {
+      setRestoringId(null);
     }
   };
 
@@ -352,6 +373,53 @@ export function RoutesPage() {
               onDelete={() => handleDelete(route.id)}
             />
           ))}
+        </div>
+      )}
+
+      {/* Deleted routes */}
+      {deletedRoutes.length > 0 && (
+        <div className="mt-8">
+          <button
+            onClick={() => setShowDeleted(!showDeleted)}
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronDown
+              className={`size-3 transition-transform duration-200 ${showDeleted ? "rotate-0" : "-rotate-90"}`}
+            />
+            {deletedRoutes.length} deleted route{deletedRoutes.length !== 1 ? "s" : ""}
+          </button>
+
+          <div
+            className={`overflow-hidden transition-all duration-200 ${
+              showDeleted ? "mt-3 max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="flex flex-col gap-2">
+              {deletedRoutes.map((route) => (
+                <div
+                  key={route.id}
+                  className="flex items-center justify-between rounded-lg border border-dashed border-border px-5 py-3 opacity-60"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono text-sm line-through">{route.path_prefix}</span>
+                    <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+                      {route.mode}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRestore(route.id)}
+                    disabled={restoringId === route.id}
+                    className="gap-1.5 text-xs"
+                  >
+                    <RotateCcw className="size-3" />
+                    {restoringId === route.id ? "Restoring..." : "Restore"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
