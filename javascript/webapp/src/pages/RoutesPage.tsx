@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, GitBranch, ArrowRight } from "lucide-react";
+import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown } from "lucide-react";
 import { api, type Route } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.js";
 import {
   Dialog,
   DialogContent,
@@ -79,6 +71,68 @@ function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
         Delivers to your app async with retry. If your app is offline, events queue and deliver when you reconnect.
         Use for Stripe, GitHub, or any fire-and-forget webhook.
       </p>
+    </div>
+  );
+}
+
+function RouteCard({
+  route,
+  deleting,
+  onDelete,
+}: {
+  route: Route;
+  deleting: boolean;
+  onDelete: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      className="group rounded-lg border border-border bg-card transition-colors hover:border-border-strong"
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+    >
+      <div className="flex items-center justify-between px-5 py-3.5">
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-sm">{route.path_prefix}</span>
+          <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+            {route.mode}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs text-muted-foreground">
+            {new Date(route.created_at).toLocaleDateString()}
+          </span>
+          <ChevronDown
+            className={`size-3.5 text-muted-foreground transition-transform duration-200 ${
+              expanded ? "rotate-180" : ""
+            }`}
+          />
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            disabled={deleting}
+            title="Delete route"
+            className="text-destructive opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      </div>
+
+      <div
+        className={`overflow-hidden transition-all duration-200 ease-out ${
+          expanded ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="border-t border-border px-5 py-4">
+          <ModeExplainer mode={route.mode as "passthrough" | "queue"} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -251,48 +305,16 @@ export function RoutesPage() {
           </Button>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Path prefix</TableHead>
-              <TableHead>Mode</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {routes.map((route) => (
-              <TableRow key={route.id}>
-                <TableCell className="font-mono text-sm">
-                  {route.path_prefix}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className="font-mono text-[10px] uppercase"
-                  >
-                    {route.mode}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">
-                  {new Date(route.created_at).toLocaleDateString()}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => handleDelete(route.id)}
-                    disabled={deletingId === route.id}
-                    title="Delete route"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="flex flex-col gap-3">
+          {routes.map((route) => (
+            <RouteCard
+              key={route.id}
+              route={route}
+              deleting={deletingId === route.id}
+              onDelete={() => handleDelete(route.id)}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
