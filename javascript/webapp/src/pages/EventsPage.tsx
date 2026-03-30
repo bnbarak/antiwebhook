@@ -201,33 +201,33 @@ export function EventsPage() {
             ))}
           </TableBody>
         </Table>
+      )}
 
-        {/* Pagination */}
-        {total > pageSize && (
-          <div className="mt-4 flex items-center justify-between">
-            <span className="font-mono text-xs text-muted-foreground">
-              {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} of {total}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage(p => p - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={(page + 1) * pageSize >= total}
-                onClick={() => setPage(p => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
+      {/* Pagination */}
+      {total > pageSize && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="font-mono text-xs text-muted-foreground">
+            {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} of {total}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={(page + 1) * pageSize >= total}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
           </div>
-        )}
+        </div>
       )}
     </div>
   );
