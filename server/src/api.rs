@@ -178,6 +178,27 @@ pub async fn delete_route(
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
+pub async fn list_deleted_routes(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+) -> Result<Json<Vec<db::Route>>, AppError> {
+    let routes = db::list_deleted_routes(&state.db, &project.id).await?;
+    Ok(Json(routes))
+}
+
+pub async fn restore_route(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+    Path(route_id): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let route_id: Uuid = route_id.parse().map_err(|_| AppError::BadRequest("invalid route id"))?;
+    let restored = db::restore_route(&state.db, route_id, &project.id).await?;
+    if !restored {
+        return Err(AppError::NotFound("route not found or conflict"));
+    }
+    Ok(Json(serde_json::json!({"restored": true})))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

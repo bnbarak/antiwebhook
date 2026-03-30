@@ -133,27 +133,23 @@ export const api = {
     list(): Promise<Route[]> {
       return request("/routes");
     },
+    listDeleted(): Promise<Route[]> {
+      return request("/routes/deleted");
+    },
     create(data: {
       path_prefix: string;
       mode: "queue" | "passthrough";
-      target_url?: string;
     }): Promise<Route> {
       return request("/routes", {
         method: "POST",
         body: JSON.stringify(data),
       });
     },
-    update(
-      id: string,
-      data: Partial<{ path_prefix: string; mode: string; target_url: string }>,
-    ): Promise<Route> {
-      return request(`/routes/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-    },
     delete(id: string): Promise<void> {
       return request(`/routes/${id}`, { method: "DELETE" });
+    },
+    restore(id: string): Promise<void> {
+      return request(`/routes/${id}/restore`, { method: "POST" });
     },
   },
 

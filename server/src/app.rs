@@ -25,7 +25,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/events/{id}", get(api::get_event))
         .route("/events/{id}/replay", post(api::replay_event))
         .route("/routes", get(api::list_routes).post(api::create_route))
+        .route("/routes/deleted", get(api::list_deleted_routes))
         .route("/routes/{id}", delete(api::delete_route))
+        .route("/routes/{id}/restore", post(api::restore_route))
         // Billing
         .route("/billing/checkout", post(billing::create_checkout))
         .route("/billing/portal", post(billing::create_portal))

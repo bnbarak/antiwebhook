@@ -26,6 +26,7 @@ pub struct Route {
     pub path_prefix: String,
     pub mode: String,
     pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
@@ -124,7 +125,7 @@ pub async fn match_route(
     path: &str,
 ) -> Result<Option<RouteMode>, sqlx::Error> {
     let row: Option<Route> = sqlx::query_as(
-        "SELECT * FROM routes WHERE project_id = $1 AND $2 LIKE path_prefix || '%'
+        "SELECT * FROM routes WHERE project_id = $1 AND deleted_at IS NULL AND $2 LIKE path_prefix || '%'
          ORDER BY LENGTH(path_prefix) DESC LIMIT 1",
     )
     .bind(project_id)
@@ -139,7 +140,14 @@ pub async fn match_route(
 }
 
 pub async fn list_routes(pool: &PgPool, project_id: &str) -> Result<Vec<Route>, sqlx::Error> {
-    sqlx::query_as("SELECT * FROM routes WHERE project_id = $1 ORDER BY path_prefix")
+    sqlx::query_as("SELECT * FROM routes WHERE project_id = $1 AND deleted_at IS NULL ORDER BY path_prefix")
+        .bind(project_id)
+        .fetch_all(pool)
+        .await
+}
+
+pub async fn list_deleted_routes(pool: &PgPool, project_id: &str) -> Result<Vec<Route>, sqlx::Error> {
+    sqlx::query_as("SELECT * FROM routes WHERE project_id = $1 AND deleted_at IS NOT NULL ORDER BY deleted_at DESC")
         .bind(project_id)
         .fetch_all(pool)
         .await
@@ -162,14 +170,58 @@ pub async fn create_route(
 }
 
 pub async fn delete_route(pool: &PgPool, id: Uuid, project_id: &str) -> Result<bool, sqlx::Error> {
-    let result =
-        sqlx::query("DELETE FROM routes WHERE id = $1 AND project_id = $2")
-            .bind(id)
-            .bind(project_id)
-            .execute(pool)
-            .await?;
+    let result = sqlx::query(
+        "UPDATE routes SET deleted_at = now() WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL",
+    )
+    .bind(id)
+    .bind(project_id)
+    .execute(pool)
+    .await?;
     Ok(result.rows_affected() > 0)
 }
+
+pub async fn restore_route(pool: &PgPool, id: Uuid, project_id: &str) -> Result<bool, AppError> {
+    // Check for conflict: is there an active route with the same path_prefix?
+    let route: Option<Route> = sqlx::query_as(
+        "SELECT * FROM routes WHERE id = $1 AND project_id = $2 AND deleted_at IS NOT NULL",
+    )
+    .bind(id)
+    .bind(project_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(AppError::Db)?;
+
+    let Some(route) = route else {
+        return Ok(false);
+    };
+
+    let conflict: Option<Route> = sqlx::query_as(
+        "SELECT * FROM routes WHERE project_id = $1 AND path_prefix = $2 AND deleted_at IS NULL AND id != $3",
+    )
+    .bind(project_id)
+    .bind(&route.path_prefix)
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+    .map_err(AppError::Db)?;
+
+    if conflict.is_some() {
+        return Err(AppError::BadRequest("an active route with this path prefix already exists"));
+    }
+
+    let result = sqlx::query(
+        "UPDATE routes SET deleted_at = NULL WHERE id = $1 AND project_id = $2",
+    )
+    .bind(id)
+    .bind(project_id)
+    .execute(pool)
+    .await
+    .map_err(AppError::Db)?;
+
+    Ok(result.rows_affected() > 0)
+}
+
+use crate::error::AppError;
 
 // --- Event queries ---
 
