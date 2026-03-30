@@ -6,3 +6,7 @@ dist/
 *.db
 .DS_Store
 .idea/
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
