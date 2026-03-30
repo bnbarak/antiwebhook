@@ -59,6 +59,15 @@ pub struct EventsQuery {
     pub offset: Option<i64>,
     pub status: Option<String>,
     pub path: Option<String>,
+    pub method: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PaginatedEvents {
+    pub data: Vec<Event>,
+    pub total: i64,
+    pub limit: i64,
+    pub offset: i64,
 }
 
 // --- Project queries ---
@@ -332,60 +341,66 @@ pub async fn list_events(
     pool: &PgPool,
     project_id: &str,
     query: &EventsQuery,
-) -> Result<Vec<Event>, sqlx::Error> {
+) -> Result<PaginatedEvents, sqlx::Error> {
     let limit = query.limit.unwrap_or(50).min(200);
     let offset = query.offset.unwrap_or(0);
 
-    match (&query.status, &query.path) {
-        (Some(status), Some(path)) => {
-            sqlx::query_as(
-                "SELECT * FROM events WHERE project_id = $1 AND status = $2 AND path LIKE $3
-                 ORDER BY created_at DESC LIMIT $4 OFFSET $5",
-            )
-            .bind(project_id)
-            .bind(status)
-            .bind(format!("{}%", path))
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(pool)
-            .await
-        }
-        (Some(status), None) => {
-            sqlx::query_as(
-                "SELECT * FROM events WHERE project_id = $1 AND status = $2
-                 ORDER BY created_at DESC LIMIT $3 OFFSET $4",
-            )
-            .bind(project_id)
-            .bind(status)
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(pool)
-            .await
-        }
-        (None, Some(path)) => {
-            sqlx::query_as(
-                "SELECT * FROM events WHERE project_id = $1 AND path LIKE $2
-                 ORDER BY created_at DESC LIMIT $3 OFFSET $4",
-            )
-            .bind(project_id)
-            .bind(format!("{}%", path))
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(pool)
-            .await
-        }
-        (None, None) => {
-            sqlx::query_as(
-                "SELECT * FROM events WHERE project_id = $1
-                 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
-            )
-            .bind(project_id)
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(pool)
-            .await
-        }
+    // Build WHERE clauses dynamically
+    let mut conditions = vec!["project_id = $1".to_string()];
+    let mut param_idx = 2;
+
+    if query.status.is_some() {
+        conditions.push(format!("status = ${}", param_idx));
+        param_idx += 1;
     }
+    if query.path.is_some() {
+        conditions.push(format!("path LIKE ${}", param_idx));
+        param_idx += 1;
+    }
+    if query.method.is_some() {
+        conditions.push(format!("method = ${}", param_idx));
+        param_idx += 1;
+    }
+
+    let where_clause = conditions.join(" AND ");
+
+    // Count query
+    let count_sql = format!("SELECT COUNT(*) as count FROM events WHERE {}", where_clause);
+    let mut count_query = sqlx::query_scalar::<_, i64>(&count_sql).bind(project_id);
+    if let Some(ref status) = query.status {
+        count_query = count_query.bind(status);
+    }
+    if let Some(ref path) = query.path {
+        count_query = count_query.bind(format!("{}%", path));
+    }
+    if let Some(ref method) = query.method {
+        count_query = count_query.bind(method);
+    }
+    let total = count_query.fetch_one(pool).await?;
+
+    // Data query
+    let data_sql = format!(
+        "SELECT * FROM events WHERE {} ORDER BY created_at DESC LIMIT ${} OFFSET ${}",
+        where_clause, param_idx, param_idx + 1
+    );
+    let mut data_query = sqlx::query_as::<_, Event>(&data_sql).bind(project_id);
+    if let Some(ref status) = query.status {
+        data_query = data_query.bind(status);
+    }
+    if let Some(ref path) = query.path {
+        data_query = data_query.bind(format!("{}%", path));
+    }
+    if let Some(ref method) = query.method {
+        data_query = data_query.bind(method);
+    }
+    let data = data_query.bind(limit).bind(offset).fetch_all(pool).await?;
+
+    Ok(PaginatedEvents {
+        data,
+        total,
+        limit,
+        offset,
+    })
 }
 
 pub async fn get_event(

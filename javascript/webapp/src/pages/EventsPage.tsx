@@ -39,25 +39,30 @@ function timeAgo(dateStr: string): string {
 export function EventsPage() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<WebhookEvent[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [pathFilter, setPathFilter] = useState("");
   const [replayingId, setReplayingId] = useState<string | null>(null);
+  const pageSize = 25;
 
   const fetchEvents = useCallback(async () => {
     try {
-      const data = await api.events.list({
+      const result = await api.events.list({
         status: statusFilter === "all" ? undefined : statusFilter,
         path: pathFilter || undefined,
-        limit: 50,
+        limit: pageSize,
+        offset: page * pageSize,
       });
-      setEvents(data);
+      setEvents(result.data);
+      setTotal(result.total);
     } catch {
       // silently fail for polling
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, pathFilter]);
+  }, [statusFilter, pathFilter, page]);
 
   // Initial fetch + polling
   useEffect(() => {
@@ -94,7 +99,7 @@ export function EventsPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5">
           <Filter className="size-3.5 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
             <SelectTrigger size="sm" className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
@@ -111,7 +116,7 @@ export function EventsPage() {
         <Input
           placeholder="Filter by path..."
           value={pathFilter}
-          onChange={(e) => setPathFilter(e.target.value)}
+          onChange={(e) => { setPathFilter(e.target.value); setPage(0); }}
           className="h-7 w-[200px] text-sm"
         />
 
@@ -196,6 +201,33 @@ export function EventsPage() {
             ))}
           </TableBody>
         </Table>
+
+        {/* Pagination */}
+        {total > pageSize && (
+          <div className="mt-4 flex items-center justify-between">
+            <span className="font-mono text-xs text-muted-foreground">
+              {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} of {total}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage(p => p - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={(page + 1) * pageSize >= total}
+                onClick={() => setPage(p => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       )}
     </div>
   );

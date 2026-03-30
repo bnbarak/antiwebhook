@@ -67,9 +67,9 @@ pub async fn list_events(
     State(state): State<Arc<AppState>>,
     AuthProject(project): AuthProject,
     Query(query): Query<db::EventsQuery>,
-) -> Result<Json<Vec<db::Event>>, AppError> {
-    let events = db::list_events(&state.db, &project.id, &query).await?;
-    Ok(Json(events))
+) -> Result<Json<db::PaginatedEvents>, AppError> {
+    let result = db::list_events(&state.db, &project.id, &query).await?;
+    Ok(Json(result))
 }
 
 pub async fn get_event(

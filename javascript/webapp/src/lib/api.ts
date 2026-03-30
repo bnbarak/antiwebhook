@@ -56,6 +56,7 @@ export interface BillingStatus {
 export interface EventsFilter {
   status?: string;
   path?: string;
+  method?: string;
   limit?: number;
   offset?: number;
 }
@@ -112,10 +113,16 @@ export const api = {
   },
 
   events: {
-    list(filters: EventsFilter = {}): Promise<WebhookEvent[]> {
+    list(filters: EventsFilter = {}): Promise<{
+      data: WebhookEvent[];
+      total: number;
+      limit: number;
+      offset: number;
+    }> {
       const params = new URLSearchParams();
       if (filters.status) params.set("status", filters.status);
       if (filters.path) params.set("path", filters.path);
+      if (filters.method) params.set("method", filters.method);
       if (filters.limit) params.set("limit", String(filters.limit));
       if (filters.offset) params.set("offset", String(filters.offset));
       const qs = params.toString();
