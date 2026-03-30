@@ -34,6 +34,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/sign-up/email", post(user_auth::sign_up))
         .route("/sign-in/email", post(user_auth::sign_in))
         .route("/get-session", get(user_auth::get_session))
+        .route("/me", get(user_auth::me))
         .route("/sign-out", post(user_auth::sign_out));
 
     Router::new()

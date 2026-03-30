@@ -206,6 +206,49 @@ pub async fn get_session(
     }))
 }
 
+pub async fn me(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let token = extract_token(&headers).ok_or(AppError::Unauthorized)?;
+
+    let session: Session = sqlx::query_as(
+        "SELECT * FROM sessions WHERE token = $1 AND expires_at > now()",
+    )
+    .bind(&token)
+    .fetch_optional(&state.db)
+    .await?
+    .ok_or(AppError::Unauthorized)?;
+
+    let user: User = sqlx::query_as("SELECT * FROM users WHERE id = $1")
+        .bind(&session.user_id)
+        .fetch_one(&state.db)
+        .await?;
+
+    let project: Option<db::Project> = sqlx::query_as(
+        "SELECT * FROM projects WHERE user_id = $1 LIMIT 1",
+    )
+    .bind(&user.id)
+    .fetch_optional(&state.db)
+    .await?;
+
+    Ok(Json(serde_json::json!({
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+        },
+        "project": project.map(|p| serde_json::json!({
+            "id": p.id,
+            "name": p.name,
+            "api_key": p.api_key,
+            "webhook_base_url": format!("{}/hooks/{}", state.config.base_url, p.id),
+            "active": p.active,
+            "connected": false,
+        })),
+    })))
+}
+
 pub async fn sign_out(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
