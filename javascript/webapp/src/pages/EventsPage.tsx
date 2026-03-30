@@ -44,14 +44,21 @@ export function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [pathFilter, setPathFilter] = useState("");
+  const [routeFilter, setRouteFilter] = useState("all");
+  const [routes, setRoutes] = useState<{ path_prefix: string }[]>([]);
   const [replayingId, setReplayingId] = useState<string | null>(null);
   const pageSize = 25;
+
+  // Fetch routes for the dropdown filter
+  useEffect(() => {
+    api.routes.list().then((r) => setRoutes(r)).catch(() => {});
+  }, []);
 
   const fetchEvents = useCallback(async () => {
     try {
       const result = await api.events.list({
         status: statusFilter === "all" ? undefined : statusFilter,
-        path: pathFilter || undefined,
+        path: routeFilter !== "all" ? routeFilter : pathFilter || undefined,
         limit: pageSize,
         offset: page * pageSize,
       });
@@ -62,7 +69,7 @@ export function EventsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, pathFilter, page]);
+  }, [statusFilter, pathFilter, routeFilter, page]);
 
   // Initial fetch + polling
   useEffect(() => {
@@ -113,10 +120,26 @@ export function EventsPage() {
           </Select>
         </div>
 
+        {routes.length > 0 && (
+          <Select value={routeFilter} onValueChange={(v) => { setRouteFilter(v); setPage(0); }}>
+            <SelectTrigger size="sm" className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All routes</SelectItem>
+              {routes.map((r) => (
+                <SelectItem key={r.path_prefix} value={r.path_prefix}>
+                  {r.path_prefix}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         <Input
           placeholder="Filter by path..."
           value={pathFilter}
-          onChange={(e) => { setPathFilter(e.target.value); setPage(0); }}
+          onChange={(e) => { setPathFilter(e.target.value); setRouteFilter("all"); setPage(0); }}
           className="h-7 w-[200px] text-sm"
         />
 
