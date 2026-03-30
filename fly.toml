@@ -5,7 +5,7 @@ primary_region = 'ord'
   dockerfile = 'Dockerfile.fly'
 
 [env]
-  BASE_URL = 'https://api.simplehook.dev'
+  BASE_URL = 'https://hook.simplehook.dev'
   FRONTEND_URL = 'https://simplehook.dev'
   PORT = '8400'
   RUST_LOG = 'simplehook_server=info'
