@@ -1,0 +1,12 @@
+{
+  "name": "simplehook-test-react",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "simplehook": "^0.1.0"
+  }
+}

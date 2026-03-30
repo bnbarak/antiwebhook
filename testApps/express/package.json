@@ -1,0 +1,12 @@
+{
+  "name": "simplehook-test-express",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "simplehook": "^0.1.0"
+  }
+}

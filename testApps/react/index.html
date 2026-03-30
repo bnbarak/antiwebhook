@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>simplehook — Live Webhook Monitor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', -apple-system, sans-serif; background: #f7f6f2; color: #1a1916; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #6b6860; margin-bottom: 24px; }
+    .providers { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .provider { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #e4e2da; background: white; }
+    .provider.stripe { border-color: #635bff; color: #635bff; }
+    .provider.github { border-color: #24292e; color: #24292e; }
+    .provider.twilio { border-color: #f22f46; color: #f22f46; }
+    .provider.shopify { border-color: #96bf48; color: #96bf48; }
+    .events { display: flex; flex-direction: column; gap: 8px; }
+    .event { background: white; border: 1px solid #e4e2da; border-radius: 8px; padding: 14px 18px; }
+    .event-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .method { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; background: #1a1916; color: #f7f6f2; padding: 2px 8px; border-radius: 4px; }
+    .path { font-family: 'DM Mono', monospace; font-size: 13px; }
+    .time { font-family: 'DM Mono', monospace; font-size: 11px; color: #9e9b93; margin-left: auto; }
+    .body { font-family: 'DM Mono', monospace; font-size: 11px; color: #6b6860; background: #f7f6f2; border-radius: 6px; padding: 10px 14px; max-height: 120px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+    .empty { text-align: center; padding: 60px 20px; color: #9e9b93; }
+    .empty-icon { font-size: 32px; margin-bottom: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #1d6a4a; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <h1><span class="dot"></span>&nbsp; Live Webhook Monitor</h1>
+    <p class="subtitle">Webhooks received via simplehook appear here in real-time.</p>
+
+    <div class="providers">
+      <span class="provider stripe">/stripe/*</span>
+      <span class="provider github">/github/*</span>
+      <span class="provider twilio">/twilio/*</span>
+      <span class="provider shopify">/shopify/*</span>
+    </div>
+
+    <div id="events" class="events">
+      <div class="empty">
+        <div class="empty-icon">📡</div>
+        <p>Waiting for webhooks...</p>
+        <p style="font-size: 12px; margin-top: 8px;">Send a POST to your simplehook URL to see it here.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const container = document.getElementById("events");
+    let lastCount = 0;
+
+    async function poll() {
+      try {
+        const res = await fetch("/api/events");
+        const events = await res.json();
+
+        if (events.length === 0) return;
+        if (events.length === lastCount) return;
+        lastCount = events.length;
+
+        container.innerHTML = events.map(ev => `
+          <div class="event">
+            <div class="event-header">
+              <span class="method">${ev.method}</span>
+              <span class="path">${ev.path}</span>
+              <span class="time">${new Date(ev.timestamp).toLocaleTimeString()}</span>
+            </div>
+            ${ev.body && Object.keys(ev.body).length > 0
+              ? `<div class="body">${JSON.stringify(ev.body, null, 2)}</div>`
+              : ""}
+          </div>
+        `).join("");
+      } catch {}
+    }
+
+    setInterval(poll, 1000);
+    poll();
+  </script>
+</body>
+</html>
