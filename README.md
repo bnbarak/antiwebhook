@@ -8,25 +8,36 @@ Stripe/Twilio/GitHub ──POST──> antiwebhooks cloud ══WS══> Your E
 
 ## Quick start
 
-### Prerequisites
-
-- Docker
-- Rust toolchain (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
-- Node.js 18+
-
-### 1. Start the database
+### Run everything with Docker (recommended)
 
 ```bash
-docker compose up -d
+docker compose up --build -d
 ```
 
-Postgres runs on port **5434** (admin/secret/antiwebhooks).
-
-### 2. Start the server
+That's it. Postgres + Rust server start together. Server is at **http://localhost:8400**.
 
 ```bash
-cp .env.example .env
+# Verify it works
+curl http://localhost:8400/health
 
+# Register a project
+curl -s -X POST http://localhost:8400/api/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"my-project"}' | jq
+```
+
+Stop everything: `docker compose down` (add `-v` to wipe the DB).
+
+### Run without Docker (for development)
+
+Prerequisites: Docker (for Postgres), Rust toolchain, Node.js 18+
+
+```bash
+# 1. Start just Postgres
+docker compose up postgres -d
+
+# 2. Start the server
+cp .env.example .env
 cd server
 cargo run
 ```

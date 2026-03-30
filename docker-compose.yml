@@ -16,5 +16,19 @@ services:
       timeout: 5s
       retries: 10
 
+  server:
+    build: ./server
+    ports:
+      - "8400:8400"
+    environment:
+      DATABASE_URL: postgres://admin:secret@postgres:5432/antiwebhooks
+      BASE_URL: http://localhost:8400
+      FRONTEND_URL: http://localhost:4000
+      PORT: "8400"
+      RUST_LOG: antiwebhooks_server=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
