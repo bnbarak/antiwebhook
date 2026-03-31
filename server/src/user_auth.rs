@@ -439,19 +439,20 @@ pub async fn github_callback(
         user
     };
 
-    // Create session and redirect
+    // Create session and redirect via HTML page (Vercel rewrites don't forward Set-Cookie on 302)
     let (_token, cookie) = create_session(&state, &user.id).await?;
+    let redirect_url = format!("{}/dashboard", state.config.frontend_url);
+
+    let html = format!(
+        r#"<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url={}"></head><body>Redirecting...</body></html>"#,
+        redirect_url
+    );
 
     let mut headers = HeaderMap::new();
     headers.insert(SET_COOKIE, cookie.parse().unwrap());
-    headers.insert(
-        "Location",
-        format!("{}/dashboard", state.config.frontend_url)
-            .parse()
-            .unwrap(),
-    );
+    headers.insert("Content-Type", "text/html".parse().unwrap());
 
-    Ok((StatusCode::FOUND, headers))
+    Ok((StatusCode::OK, headers, html))
 }
 
 // --- Helpers ---
