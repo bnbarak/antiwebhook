@@ -1,4 +1,4 @@
-# simplehook
+# simplehook-fastify
 
 Stable webhook URLs for localhost. One line of code.
 
@@ -7,31 +7,30 @@ Stable webhook URLs for localhost. One line of code.
 ## Install
 
 ```bash
-npm install simplehook
+npm install simplehook-fastify
 ```
 
 ## Quick start
 
 ```typescript
-import express from "express";
-import { listenToWebhooks } from "simplehook";
+import Fastify from "fastify";
+import { listenToWebhooks } from "simplehook-fastify";
 
-const app = express();
-app.use(express.json());
+const app = Fastify();
 
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
-app.post("/stripe/events", (req, res) => {
-  console.log("Webhook received!", req.body);
-  res.json({ received: true });
+app.post("/stripe/events", async (request, reply) => {
+  console.log("Webhook received!", request.body);
+  return { received: true };
 });
 
-app.listen(3000);
+app.listen({ port: 3000 });
 ```
 
 ## How it works
 
-Your app opens an outbound WebSocket to simplehook. When a webhook arrives at your stable URL, it's forwarded through the connection to your Express routes. Your response goes back to the caller.
+Your app opens an outbound WebSocket to simplehook. When a webhook arrives at your stable URL, it's forwarded through the connection to your Fastify routes. Your response goes back to the caller.
 
 No CLI. No tunnel process. No URL that changes every session.
 
@@ -52,15 +51,6 @@ listenToWebhooks(app, apiKey, {
 By default, simplehook only connects in development. Set `SIMPLEHOOK_ENABLED=false` to disable, or `forceEnable: true` to force.
 
 Production is detected when `NODE_ENV === "production"`.
-
-## Migration
-
-The `listen` function is still available as a deprecated alias for `listenToWebhooks`. Update your code when convenient:
-
-```diff
-- import { listen } from "simplehook";
-+ import { listenToWebhooks } from "simplehook";
-```
 
 ## Links
 
