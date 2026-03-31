@@ -33,14 +33,11 @@ export function MarketingLayout() {
 
           {/* Nav links */}
           <div className="flex items-center gap-1">
-            {isHome ? (
-              <>
-                <NavLink to="#how-it-works">How it works</NavLink>
-                <NavLink to="#pricing">Pricing</NavLink>
-              </>
-            ) : (
+            {!isHome && (
               <NavLink to="/">Home</NavLink>
             )}
+            <NavLink to="/#how-it-works">How it works</NavLink>
+            <NavLink to="/#pricing">Pricing</NavLink>
             <Link to="/docs" className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
               Docs
             </Link>
@@ -64,7 +61,7 @@ export function MarketingLayout() {
             <Link to="/docs" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Docs
             </Link>
-            <a href="https://github.com/nicholasgriffintn/simplehook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+            <a href="https://github.com/bnbarak/antiwebhook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               GitHub
             </a>
             <a href="https://www.npmjs.com/package/simplehook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">

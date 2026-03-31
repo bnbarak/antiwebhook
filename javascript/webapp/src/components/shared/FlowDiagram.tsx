@@ -46,13 +46,9 @@ export function FlowArrow({
   return (
     <div className={cn("flex flex-1 items-center gap-1.5", color)}>
       {reverse && <span className="text-[10px]">{"<"}</span>}
-      {reverse && label && (
-        <span className="text-[9px]">{label}</span>
-      )}
       <span className={cn("flex-1 border-t border-dashed", border)} />
-      {!reverse && label && (
-        <span className="text-[9px]">{label}</span>
-      )}
+      {label && <span className="shrink-0 text-[9px]">{label}</span>}
+      <span className={cn("flex-1 border-t border-dashed", border)} />
       {!reverse && <span className="text-[10px]">{">"}</span>}
     </div>
   );

@@ -33,7 +33,6 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/events", label: "Events", icon: Activity },
   { to: "/agents", label: "Agents", icon: Radio },
   { to: "/routes", label: "Routes", icon: GitBranch },
-  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppLayout() {
@@ -91,15 +90,34 @@ export function AppLayout() {
               </NavLink>
             );
           })}
-          <a
-            href="/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-auto flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <BookOpen className="size-4" />
-            Docs
-          </a>
+          <div className="mt-auto flex flex-col gap-0.5">
+            <a
+              href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <BookOpen className="size-4" />
+              Docs
+            </a>
+            <NavLink
+              to="/settings"
+              className={() =>
+                cn(
+                  "relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors",
+                  location.pathname.startsWith("/settings")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )
+              }
+            >
+              {location.pathname.startsWith("/settings") && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r-full bg-primary" />
+              )}
+              <Settings className="size-4" />
+              Settings
+            </NavLink>
+          </div>
         </nav>
 
         {/* User menu at bottom */}
