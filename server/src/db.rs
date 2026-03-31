@@ -26,6 +26,7 @@ pub struct Route {
     pub path_prefix: String,
     pub mode: String,
     pub timeout_seconds: i32,
+    pub listener_id: Option<String>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }
@@ -145,6 +146,7 @@ pub async fn deactivate_by_customer(pool: &PgPool, customer_id: &str) -> Result<
 pub struct RouteMatch {
     pub mode: RouteMode,
     pub timeout_seconds: u64,
+    pub listener_id: Option<String>,
 }
 
 pub async fn match_route(
@@ -167,6 +169,7 @@ pub async fn match_route(
             _ => RouteMode::Queue,
         },
         timeout_seconds: r.timeout_seconds.max(1) as u64,
+        listener_id: r.listener_id,
     }))
 }
 
@@ -190,15 +193,38 @@ pub async fn create_route(
     path_prefix: &str,
     mode: &str,
     timeout_seconds: i32,
+    listener_id: Option<&str>,
 ) -> Result<Route, sqlx::Error> {
     sqlx::query_as(
-        "INSERT INTO routes (project_id, path_prefix, mode, timeout_seconds) VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO routes (project_id, path_prefix, mode, timeout_seconds, listener_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
     )
     .bind(project_id)
     .bind(path_prefix)
     .bind(mode)
     .bind(timeout_seconds)
+    .bind(listener_id)
     .fetch_one(pool)
+    .await
+}
+
+pub async fn update_route(
+    pool: &PgPool,
+    id: Uuid,
+    project_id: &str,
+    mode: &str,
+    timeout_seconds: i32,
+    listener_id: Option<&str>,
+) -> Result<Option<Route>, sqlx::Error> {
+    sqlx::query_as(
+        "UPDATE routes SET mode = $1, timeout_seconds = $2, listener_id = $3
+         WHERE id = $4 AND project_id = $5 AND deleted_at IS NULL RETURNING *",
+    )
+    .bind(mode)
+    .bind(timeout_seconds)
+    .bind(listener_id)
+    .bind(id)
+    .bind(project_id)
+    .fetch_optional(pool)
     .await
 }
 

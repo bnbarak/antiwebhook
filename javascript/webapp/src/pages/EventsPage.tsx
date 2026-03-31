@@ -197,7 +197,8 @@ export function EventsPage() {
             <TableRow>
               <TableHead className="w-[90px]">Time</TableHead>
               <TableHead className="w-[70px]">Method</TableHead>
-              <TableHead className="w-[200px]">Path</TableHead>
+              <TableHead className="w-[180px]">Path</TableHead>
+              <TableHead className="w-[80px]">Agent</TableHead>
               <TableHead className="w-[90px]">Mode</TableHead>
               <TableHead className="w-[90px]">Status</TableHead>
               <TableHead className="w-[70px]">Response</TableHead>
@@ -219,8 +220,17 @@ export function EventsPage() {
                     {event.method}
                   </span>
                 </TableCell>
-                <TableCell className="max-w-[200px] truncate font-mono text-xs">
+                <TableCell className="max-w-[180px] truncate font-mono text-xs">
                   {event.path}
+                </TableCell>
+                <TableCell>
+                  {event.listener_id ? (
+                    <span className="inline-flex rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium">
+                      {event.listener_id}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {event.route_mode ? (

@@ -26,7 +26,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/events/{id}/replay", post(api::replay_event))
         .route("/routes", get(api::list_routes).post(api::create_route))
         .route("/routes/trash", get(api::list_deleted_routes))
-        .route("/routes/{id}", delete(api::delete_route))
+        .route("/routes/{id}", delete(api::delete_route).put(api::update_route))
         .route("/routes/{id}/restore", post(api::restore_route))
         .route("/listeners", get(api::list_listeners).post(api::create_listener))
         .route("/listeners/{listener_id}", delete(api::delete_listener))

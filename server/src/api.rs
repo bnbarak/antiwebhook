@@ -153,6 +153,14 @@ pub struct CreateRouteRequest {
     pub path_prefix: String,
     pub mode: String,
     pub timeout_seconds: Option<i32>,
+    pub listener_id: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateRouteRequest {
+    pub mode: String,
+    pub timeout_seconds: Option<i32>,
+    pub listener_id: Option<String>,
 }
 
 pub async fn create_route(
@@ -165,7 +173,7 @@ pub async fn create_route(
     }
     let default_timeout = if body.mode == "passthrough" { 30 } else { 5 };
     let timeout = body.timeout_seconds.unwrap_or(default_timeout).clamp(1, 300);
-    let route = db::create_route(&state.db, &project.id, &body.path_prefix, &body.mode, timeout).await?;
+    let route = db::create_route(&state.db, &project.id, &body.path_prefix, &body.mode, timeout, body.listener_id.as_deref()).await?;
     Ok(Json(route))
 }
 
@@ -180,6 +188,24 @@ pub async fn delete_route(
         return Err(AppError::NotFound("route not found"));
     }
     Ok(Json(serde_json::json!({"deleted": true})))
+}
+
+pub async fn update_route(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+    Path(route_id): Path<String>,
+    Json(body): Json<UpdateRouteRequest>,
+) -> Result<Json<db::Route>, AppError> {
+    let route_id: Uuid = route_id.parse().map_err(|_| AppError::BadRequest("invalid route id"))?;
+    if body.mode != "passthrough" && body.mode != "queue" {
+        return Err(AppError::BadRequest("mode must be 'passthrough' or 'queue'"));
+    }
+    let default_timeout = if body.mode == "passthrough" { 30 } else { 5 };
+    let timeout = body.timeout_seconds.unwrap_or(default_timeout).clamp(1, 300);
+    let route = db::update_route(&state.db, route_id, &project.id, &body.mode, timeout, body.listener_id.as_deref())
+        .await?
+        .ok_or(AppError::NotFound("route not found"))?;
+    Ok(Json(route))
 }
 
 pub async fn list_deleted_routes(

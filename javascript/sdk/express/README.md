@@ -55,6 +55,17 @@ listenToWebhooks(app, apiKey, {
 });
 ```
 
+## Agents
+
+Use agents to run multiple SDK instances and route events to specific ones. Create agents in the dashboard, then assign them to routes.
+
+```typescript
+// This instance only receives events from routes assigned to "staging"
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "staging");
+```
+
+Your webhook URL stays the same — event routing is configured in the dashboard, not the URL.
+
 ## Dev mode
 
 By default, simplehook only connects in development. Set `SIMPLEHOOK_ENABLED=false` to disable, or `forceEnable: true` to force.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown, RotateCcw } from "lucide-react";
-import { api, type Route } from "@/lib/api.js";
+import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown, RotateCcw, Pencil } from "lucide-react";
+import { api, type Route, type Listener } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
@@ -13,6 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
@@ -36,7 +43,6 @@ function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
     return (
       <div className="rounded-lg border border-border bg-card/50 p-4">
         <div className="mb-3 text-xs font-medium">Passthrough mode</div>
-        {/* U-shape: request goes right, then returns left */}
         <div className="flex flex-col items-center gap-1 font-mono text-[11px]">
           <div className="flex w-full items-center justify-between gap-2">
             <FlowNode>Stripe</FlowNode>
@@ -115,14 +121,21 @@ function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
 
 function RouteCard({
   route,
+  agents,
   deleting,
   onDelete,
+  onEdit,
 }: {
   route: Route;
+  agents: Listener[];
   deleting: boolean;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const agentLabel = route.listener_id
+    ? agents.find((a) => a.listener_id === route.listener_id)?.label ?? route.listener_id
+    : null;
 
   return (
     <div
@@ -136,19 +149,28 @@ function RouteCard({
           <Badge variant="secondary" className="font-mono text-[10px] uppercase">
             {route.mode}
           </Badge>
+          {agentLabel && (
+            <Badge variant="outline" className="text-[10px]">
+              {agentLabel}
+            </Badge>
+          )}
           <span className="font-mono text-[10px] text-muted-foreground">
             {route.timeout_seconds}s
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-muted-foreground">
-            {new Date(route.created_at).toLocaleDateString()}
-          </span>
-          <ChevronDown
-            className={`size-3.5 text-muted-foreground transition-transform duration-200 ${
-              expanded ? "rotate-180" : ""
-            }`}
-          />
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            title="Edit route"
+            className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+          >
+            <Pencil />
+          </Button>
           <Button
             variant="ghost"
             size="icon-xs"
@@ -162,6 +184,11 @@ function RouteCard({
           >
             <Trash2 />
           </Button>
+          <ChevronDown
+            className={`size-3.5 text-muted-foreground transition-transform duration-200 ${
+              expanded ? "rotate-180" : ""
+            }`}
+          />
         </div>
       </div>
 
@@ -181,25 +208,30 @@ function RouteCard({
 export function RoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [deletedRoutes, setDeletedRoutes] = useState<Route[]>([]);
+  const [agents, setAgents] = useState<Listener[]>([]);
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const [pathPrefix, setPathPrefix] = useState("");
   const [mode, setMode] = useState<"passthrough" | "queue">("passthrough");
   const [timeoutSeconds, setTimeoutSeconds] = useState(30);
-  const [creating, setCreating] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<string>("_none");
+  const [saving, setSaving] = useState(false);
 
-  const fetchRoutes = async () => {
+  const fetchData = async () => {
     try {
-      const [active, deleted] = await Promise.all([
+      const [active, deleted, ls] = await Promise.all([
         api.routes.list(),
         api.routes.listDeleted(),
+        api.listeners.list(),
       ]);
       setRoutes(active);
       setDeletedRoutes(deleted);
+      setAgents(ls);
     } catch {
       // silent
     } finally {
@@ -208,24 +240,59 @@ export function RoutesPage() {
   };
 
   useEffect(() => {
-    fetchRoutes();
+    fetchData();
   }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setPathPrefix("");
+    setTimeoutSeconds(30);
+    setMode("passthrough");
+    setSelectedAgent("_none");
+    setEditingRoute(null);
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setDialogOpen(true);
+  };
+
+  const openEdit = (route: Route) => {
+    setEditingRoute(route);
+    setPathPrefix(route.path_prefix);
+    setMode(route.mode);
+    setTimeoutSeconds(route.timeout_seconds);
+    setSelectedAgent(route.listener_id ?? "_none");
+    setDialogOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreating(true);
+    setSaving(true);
+    const listenerId = selectedAgent === "_none" ? null : selectedAgent;
     try {
-      await api.routes.create({ path_prefix: pathPrefix, mode, timeout_seconds: timeoutSeconds });
-      toast.success("Route created");
+      if (editingRoute) {
+        await api.routes.update(editingRoute.id, {
+          mode,
+          timeout_seconds: timeoutSeconds,
+          listener_id: listenerId,
+        });
+        toast.success("Route updated");
+      } else {
+        await api.routes.create({
+          path_prefix: pathPrefix,
+          mode,
+          timeout_seconds: timeoutSeconds,
+          listener_id: listenerId,
+        });
+        toast.success("Route created");
+      }
       setDialogOpen(false);
-      setPathPrefix("");
-      setTimeoutSeconds(30);
-      setMode("passthrough");
-      fetchRoutes();
+      resetForm();
+      fetchData();
     } catch {
-      toast.error("Failed to create route");
+      toast.error(editingRoute ? "Failed to update route" : "Failed to create route");
     } finally {
-      setCreating(false);
+      setSaving(false);
     }
   };
 
@@ -234,7 +301,7 @@ export function RoutesPage() {
     try {
       await api.routes.delete(id);
       toast.success("Route deleted — you can restore it from the deleted list");
-      fetchRoutes();
+      fetchData();
     } catch {
       toast.error("Failed to delete route");
     } finally {
@@ -247,7 +314,7 @@ export function RoutesPage() {
     try {
       await api.routes.restore(id);
       toast.success("Route restored");
-      fetchRoutes();
+      fetchData();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to restore route";
       toast.error(msg.includes("already exists") ? "Can't restore — an active route with this path already exists" : msg);
@@ -262,26 +329,30 @@ export function RoutesPage() {
         <div>
           <h1 className="text-lg font-medium">Routes</h1>
           <p className="text-sm text-muted-foreground">
-            Configure how different webhook paths are handled. Default is queue mode.
+            Configure how different webhook paths are handled and which agent receives them.
           </p>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5">
-              <Plus className="size-3.5" />
-              Add route
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add route</DialogTitle>
-              <DialogDescription>
-                Choose how webhooks matching this path are delivered to your app.
-              </DialogDescription>
-            </DialogHeader>
+        <Button size="sm" className="gap-1.5" onClick={openCreate}>
+          <Plus className="size-3.5" />
+          Add route
+        </Button>
+      </div>
 
-            <form onSubmit={handleCreate} className="flex flex-col gap-4">
+      {/* Create / Edit dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingRoute ? "Edit route" : "Add route"}</DialogTitle>
+            <DialogDescription>
+              {editingRoute
+                ? "Update mode, timeout, or agent assignment."
+                : "Choose how webhooks matching this path are delivered to your app."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSave} className="flex flex-col gap-4">
+            {!editingRoute && (
               <div className="flex flex-col gap-2">
                 <Label htmlFor="path-prefix">Path prefix</Label>
                 <Input
@@ -296,68 +367,95 @@ export function RoutesPage() {
                   Webhooks matching this prefix will use this route's settings.
                 </p>
               </div>
+            )}
 
-              <div className="flex flex-col gap-2">
-                <Label>Mode</Label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setMode("passthrough"); setTimeoutSeconds(30); }}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
-                      mode === "passthrough"
-                        ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
-                        : "border-border hover:border-border-strong"
-                    }`}
-                  >
-                    <div className="font-medium">Passthrough</div>
-                    <div className="mt-0.5 text-muted-foreground">
-                      Returns your app's real response
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMode("queue"); setTimeoutSeconds(5); }}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
-                      mode === "queue"
-                        ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
-                        : "border-border hover:border-border-strong"
-                    }`}
-                  >
-                    <div className="font-medium">Queue</div>
-                    <div className="mt-0.5 text-muted-foreground">
-                      Instant 200, async delivery with retry
-                    </div>
-                  </button>
-                </div>
+            {editingRoute && (
+              <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
+                <span className="text-xs text-muted-foreground">Path:</span>
+                <span className="font-mono text-sm">{editingRoute.path_prefix}</span>
               </div>
+            )}
 
-              <ModeExplainer mode={mode} />
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="timeout">Timeout (seconds)</Label>
-                <Input
-                  id="timeout"
-                  type="number"
-                  min={1}
-                  max={300}
-                  value={timeoutSeconds}
-                  onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
-                  className="w-32 font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground">
-                  How long to wait for your app to respond. Max 300s.
-                </p>
+            <div className="flex flex-col gap-2">
+              <Label>Mode</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setMode("passthrough"); setTimeoutSeconds(30); }}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                    mode === "passthrough"
+                      ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+                      : "border-border hover:border-border-strong"
+                  }`}
+                >
+                  <div className="font-medium">Passthrough</div>
+                  <div className="mt-0.5 text-muted-foreground">
+                    Returns your app's real response
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode("queue"); setTimeoutSeconds(5); }}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                    mode === "queue"
+                      ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+                      : "border-border hover:border-border-strong"
+                  }`}
+                >
+                  <div className="font-medium">Queue</div>
+                  <div className="mt-0.5 text-muted-foreground">
+                    Instant 200, async delivery with retry
+                  </div>
+                </button>
               </div>
+            </div>
 
-              <DialogFooter>
-                <Button type="submit" disabled={!pathPrefix.trim() || creating}>
-                  {creating ? "Creating..." : "Create route"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            <ModeExplainer mode={mode} />
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="agent-select">Agent (optional)</Label>
+              <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                <SelectTrigger id="agent-select" className="w-full">
+                  <SelectValue placeholder="All agents" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">All agents</SelectItem>
+                  {agents.map((a) => (
+                    <SelectItem key={a.listener_id} value={a.listener_id}>
+                      {a.label ? `${a.label} (${a.listener_id})` : a.listener_id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Route events to a specific agent, or leave as "All agents" to deliver to any connected SDK.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="timeout">Timeout (seconds)</Label>
+              <Input
+                id="timeout"
+                type="number"
+                min={1}
+                max={300}
+                value={timeoutSeconds}
+                onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
+                className="w-32 font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                How long to wait for your app to respond. Max 300s.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button type="submit" disabled={(!editingRoute && !pathPrefix.trim()) || saving}>
+                {saving ? "Saving..." : editingRoute ? "Save changes" : "Create route"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {loading ? (
         <div className="flex flex-col gap-2">
@@ -372,12 +470,12 @@ export function RoutesPage() {
             No routes configured
           </p>
           <p className="mb-4 text-xs text-text-tertiary">
-            All paths default to queue mode. Add a route to use passthrough.
+            All paths default to queue mode. Add a route to use passthrough or assign an agent.
           </p>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setDialogOpen(true)}
+            onClick={openCreate}
             className="gap-1.5"
           >
             <Plus className="size-3.5" />
@@ -390,8 +488,10 @@ export function RoutesPage() {
             <RouteCard
               key={route.id}
               route={route}
+              agents={agents}
               deleting={deletingId === route.id}
               onDelete={() => handleDelete(route.id)}
+              onEdit={() => openEdit(route)}
             />
           ))}
         </div>

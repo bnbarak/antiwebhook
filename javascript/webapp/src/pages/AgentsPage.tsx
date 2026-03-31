@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Copy, Plus, Trash2, Radio } from "lucide-react";
-import { api, type Listener, type Project } from "@/lib/api.js";
+import { Plus, Trash2, Radio } from "lucide-react";
+import { api, type Listener } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
@@ -33,7 +33,6 @@ import { toast } from "sonner";
 
 export function AgentsPage() {
   const [listeners, setListeners] = useState<Listener[]>([]);
-  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -42,12 +41,8 @@ export function AgentsPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [ls, proj] = await Promise.all([
-        api.listeners.list(),
-        api.project.get(),
-      ]);
+      const ls = await api.listeners.list();
       setListeners(ls);
-      setProject(proj);
     } catch {
       // handled
     } finally {
@@ -58,9 +53,6 @@ export function AgentsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const webhookUrl = (listenerId: string) =>
-    `${project?.webhook_base_url}/${listenerId}/`;
 
   const handleCreate = async () => {
     if (!newId.trim()) return;
@@ -99,11 +91,6 @@ export function AgentsPage() {
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied`);
-  };
-
   const validIdPattern = /^[a-z0-9_-]{1,12}$/;
   const isIdValid = validIdPattern.test(newId.trim());
 
@@ -113,8 +100,8 @@ export function AgentsPage() {
         <div>
           <h1 className="text-lg font-medium">Agents</h1>
           <p className="text-sm text-muted-foreground">
-            Each agent is an SDK instance that receives webhooks with its own
-            unique URL.
+            Each agent is an SDK instance. Assign agents to routes to control
+            which SDK receives which webhooks.
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -159,14 +146,6 @@ export function AgentsPage() {
                   onChange={(e) => setNewLabel(e.target.value)}
                 />
               </div>
-              {project && newId && isIdValid && (
-                <div className="rounded-md border bg-muted/50 px-3 py-2">
-                  <p className="text-xs text-muted-foreground">Webhook URL</p>
-                  <p className="mt-0.5 break-all font-mono text-xs">
-                    {webhookUrl(newId.trim())}
-                  </p>
-                </div>
-              )}
             </div>
             <DialogFooter>
               <Button
@@ -197,7 +176,7 @@ export function AgentsPage() {
             <Radio className="mx-auto mb-3 size-8 text-muted-foreground/40" />
             <p className="text-sm font-medium">No agents yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Create an agent to give each SDK instance its own webhook URL.
+              Create an agent, then assign it to a route to control event delivery.
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
               Without agents, all webhooks go to every connected SDK.
@@ -211,7 +190,8 @@ export function AgentsPage() {
               {listeners.length} agent{listeners.length !== 1 ? "s" : ""}
             </CardTitle>
             <CardDescription>
-              Each agent gets a unique webhook URL. Use the agent ID in your SDK:{" "}
+              Assign agents to routes to control which SDK receives which events.
+              Use the agent ID in your SDK:{" "}
               <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
                 listenToWebhooks(app, "ak_...", "agent-id")
               </code>
@@ -221,9 +201,8 @@ export function AgentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[140px]">ID</TableHead>
-                  <TableHead className="w-[160px]">Label</TableHead>
-                  <TableHead>Webhook URL</TableHead>
+                  <TableHead className="w-[160px]">ID</TableHead>
+                  <TableHead>Label</TableHead>
                   <TableHead className="w-[90px]">Status</TableHead>
                   <TableHead className="w-[60px]" />
                 </TableRow>
@@ -236,26 +215,6 @@ export function AgentsPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {l.label ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate font-mono text-xs text-muted-foreground">
-                          {webhookUrl(l.listener_id)}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-6 shrink-0"
-                          onClick={() =>
-                            copyToClipboard(
-                              webhookUrl(l.listener_id),
-                              "Webhook URL",
-                            )
-                          }
-                        >
-                          <Copy className="size-3" />
-                        </Button>
-                      </div>
                     </TableCell>
                     <TableCell>
                       {l.connected ? (

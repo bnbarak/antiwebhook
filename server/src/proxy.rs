@@ -6,41 +6,9 @@ use axum::{
     Json,
 };
 use base64::Engine;
-use regex::Regex;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use crate::{app::AppState, db, error::AppError, tunnel::RequestFrame};
-
-/// Parse the first segment of the path and check if it's a valid listener_id.
-/// Returns (listener_id, actual_path).
-async fn extract_listener_id(
-    state: &AppState,
-    project_id: &str,
-    raw_path: &str,
-) -> (Option<String>, String) {
-    let listener_re = Regex::new(r"^[a-z0-9_-]{1,12}$").unwrap();
-
-    // Split: raw_path does NOT have leading slash (axum strips it for wildcard)
-    // e.g. "dev/stripe/webhook" or "stripe/webhook"
-    let (first_seg, rest) = match raw_path.split_once('/') {
-        Some((first, rest)) => (first, Some(rest)),
-        None => (raw_path, None),
-    };
-
-    if listener_re.is_match(first_seg) {
-        // Check if this listener actually exists for the project
-        if let Ok(Some(_)) = db::get_listener(&state.db, project_id, first_seg).await {
-            let actual_path = match rest {
-                Some(r) => format!("/{}", r),
-                None => "/".to_string(),
-            };
-            return (Some(first_seg.to_string()), actual_path);
-        }
-    }
-
-    // Not a listener — treat the whole thing as the path
-    (None, format!("/{}", raw_path))
-}
 
 pub async fn handle_webhook(
     State(state): State<Arc<AppState>>,
@@ -65,8 +33,7 @@ pub async fn handle_webhook(
         ).into_response());
     }
 
-    // 1c. Extract listener_id from path
-    let (listener_id, full_path) = extract_listener_id(&state, &project_id, &path).await;
+    let full_path = format!("/{}", path);
 
     // 2. Determine route mode + timeout (longest prefix match, default: queue 5s)
     let matched_route = db::match_route(&state.db, &project_id, &full_path).await?;
@@ -74,7 +41,9 @@ pub async fn handle_webhook(
     let route_match = matched_route.unwrap_or(db::RouteMatch {
         mode: db::RouteMode::Queue,
         timeout_seconds: 5,
+        listener_id: None,
     });
+    let listener_id = route_match.listener_id.clone();
     let route_mode_str: Option<&str> = if has_route {
         Some(match route_match.mode {
             db::RouteMode::Passthrough => "passthrough",
@@ -256,46 +225,9 @@ mod tests {
     }
 
     #[test]
-    fn test_listener_id_regex_valid() {
-        let re = Regex::new(r"^[a-z0-9_-]{1,12}$").unwrap();
-        assert!(re.is_match("dev"));
-        assert!(re.is_match("staging"));
-        assert!(re.is_match("my-app"));
-        assert!(re.is_match("app_1"));
-        assert!(re.is_match("a"));
-        assert!(re.is_match("123456789012")); // 12 chars
-    }
-
-    #[test]
-    fn test_listener_id_regex_invalid() {
-        let re = Regex::new(r"^[a-z0-9_-]{1,12}$").unwrap();
-        assert!(!re.is_match(""));              // empty
-        assert!(!re.is_match("1234567890123")); // 13 chars
-        assert!(!re.is_match("Dev"));           // uppercase
-        assert!(!re.is_match("my app"));        // space
-        assert!(!re.is_match("stripe/webhook")); // slash
-    }
-
-    #[test]
-    fn test_path_split_with_rest() {
-        let raw_path = "dev/stripe/webhook";
-        let (first, rest) = raw_path.split_once('/').unwrap();
-        assert_eq!(first, "dev");
-        assert_eq!(rest, "stripe/webhook");
-    }
-
-    #[test]
-    fn test_path_split_no_rest() {
-        let raw_path = "dev";
-        let result = raw_path.split_once('/');
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_path_split_deep() {
-        let raw_path = "staging/a/b/c/d";
-        let (first, rest) = raw_path.split_once('/').unwrap();
-        assert_eq!(first, "staging");
-        assert_eq!(rest, "a/b/c/d");
+    fn test_full_path_construction() {
+        let path = "stripe/webhook";
+        let full_path = format!("/{}", path);
+        assert_eq!(full_path, "/stripe/webhook");
     }
 }

@@ -7,6 +7,7 @@ import {
   Shield,
   Clock,
   Terminal,
+  Radio,
   Check,
 } from "lucide-react";
 
@@ -394,6 +395,7 @@ export function HomePage() {
                   ["Response passthrough", "Yes (passthrough mode)", "Yes", "No"],
                   ["Event replay", "One click", "No", "Yes"],
                   ["Public URL needed", "No", "Yes (tunnel)", "No"],
+                  ["Agent routing", "Yes (per-route)", "No", "Connections"],
                   ["Auth", "API key", "Account + auth token", "Account + API key"],
                   ["Price", "$5/mo flat", "Free tier / $8+/mo", "Free tier / $25+/mo"],
                 ].map(([feature, aw, ngrok, hookdeck]) => (
@@ -445,6 +447,11 @@ export function HomePage() {
                 icon: Shield,
                 title: "Per-route configuration",
                 desc: "Set queue or passthrough mode per path prefix. Different providers, different rules.",
+              },
+              {
+                icon: Radio,
+                title: "Agents",
+                desc: "Run multiple SDKs and route events to specific ones. Same webhook URL, different destinations.",
               },
             ].map((feature) => (
               <div

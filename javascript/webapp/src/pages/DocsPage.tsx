@@ -120,6 +120,7 @@ listenToWebhooks(application, "${key}")`,
 const SECTIONS = [
   { id: "quick-start", label: "Quick Start" },
   { id: "configuration", label: "Configuration" },
+  { id: "agents", label: "Agents" },
   { id: "route-configuration", label: "Route Configuration" },
   { id: "websocket-protocol", label: "WebSocket Protocol" },
   { id: "api-reference", label: "API Reference" },
@@ -800,6 +801,60 @@ listenToWebhooks(app)`}
                   />
                 </div>
               </div>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── Agents ──────────────────────────────────────────────────── */}
+          <section
+            id="agents"
+            ref={(el) => setSectionRef("agents", el)}
+            className="py-16"
+          >
+            <Kicker>Agents</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Route events to specific SDK instances
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              By default, all webhooks go to every connected SDK. Use agents to run multiple
+              SDK instances and control which one receives which events.
+            </p>
+
+            <div className="mb-8">
+              <h3 className="mb-3 text-sm font-medium">How it works</h3>
+              <ol className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="font-mono text-xs text-foreground/60">1.</span>
+                  Create an agent in the dashboard (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>)
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-mono text-xs text-foreground/60">2.</span>
+                  Assign the agent to a route (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">/stripe</code> → <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>)
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-mono text-xs text-foreground/60">3.</span>
+                  Pass the agent ID in your SDK call
+                </li>
+              </ol>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              <CopyableCode
+                code={`// Express\nlistenToWebhooks(app, "${project?.api_key ?? PLACEHOLDER_KEY}", "staging");`}
+                title="app.ts"
+              />
+              <CopyableCode
+                code={`# Flask\nlistenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"], "staging")`}
+                title="app.py"
+              />
+            </div>
+
+            <div className="mt-8 rounded-lg border border-border bg-card/50 p-4">
+              <p className="text-sm text-muted-foreground">
+                Your webhook URL stays the same — <strong>event routing is configured in the
+                dashboard</strong>, not the URL. Routes without an agent deliver to any connected SDK.
+              </p>
             </div>
           </section>
 

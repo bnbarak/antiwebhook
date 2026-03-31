@@ -24,6 +24,7 @@ export interface WebhookEvent {
   response_body: string | null;
   response_headers: Record<string, string> | null;
   route_mode: string | null;
+  listener_id: string | null;
   attempts: number;
   next_retry_at: string | null;
   created_at: string;
@@ -36,6 +37,7 @@ export interface Route {
   path_prefix: string;
   mode: "queue" | "passthrough";
   timeout_seconds: number;
+  listener_id: string | null;
   created_at: string;
 }
 
@@ -187,9 +189,20 @@ export const api = {
       path_prefix: string;
       mode: "queue" | "passthrough";
       timeout_seconds?: number;
+      listener_id?: string | null;
     }): Promise<Route> {
       return request("/routes", {
         method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    update(id: string, data: {
+      mode: "queue" | "passthrough";
+      timeout_seconds?: number;
+      listener_id?: string | null;
+    }): Promise<Route> {
+      return request(`/routes/${id}`, {
+        method: "PUT",
         body: JSON.stringify(data),
       });
     },
