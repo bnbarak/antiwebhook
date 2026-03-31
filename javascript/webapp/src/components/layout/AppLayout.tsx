@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
+  BookOpen,
   GitBranch,
   LayoutDashboard,
   Radio,
@@ -90,6 +91,15 @@ export function AppLayout() {
               </NavLink>
             );
           })}
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-auto flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <BookOpen className="size-4" />
+            Docs
+          </a>
         </nav>
 
         {/* User menu at bottom */}
