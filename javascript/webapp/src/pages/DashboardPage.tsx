@@ -306,7 +306,7 @@ function QuickStartGuide({ apiKey, showKey }: { apiKey: string; showKey: boolean
   );
 }
 
-function QuickStartCard({ apiKey }: { apiKey: string }) {
+function QuickStartCard({ apiKey, webhookUrl }: { apiKey: string; webhookUrl: string }) {
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -328,6 +328,25 @@ function QuickStartCard({ apiKey }: { apiKey: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {webhookUrl && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your Webhook URL</p>
+            <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
+              <span className="font-mono text-sm flex-1 truncate">{webhookUrl}</span>
+              <button
+                onClick={() => { navigator.clipboard.writeText(webhookUrl); toast.success("Webhook URL copied"); }}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Copy"
+              >
+                <Copy className="size-3.5" />
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Append your route path (e.g., <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">/stripe/events</code>)
+            </p>
+          </div>
+        )}
+
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1.5">Your API Key</p>
           <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
@@ -574,6 +593,7 @@ export function DashboardPage() {
   }, [window, fetchStats]);
 
   const apiKey = projectData?.api_key ?? "";
+  const webhookUrl = projectData?.webhook_base_url ?? "";
 
   return (
     <div>
@@ -594,7 +614,7 @@ export function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <QuickStartCard apiKey={apiKey} />
+          <QuickStartCard apiKey={apiKey} webhookUrl={webhookUrl} />
         )}
 
         {/* Stats Cards */}
