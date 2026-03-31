@@ -7,6 +7,6 @@
   },
   "dependencies": {
     "fastify": "^5.8.4",
-    "simplehook-fastify": "^0.1.1"
+    "simplehook-fastify": "file:../../javascript/sdk/fastify"
   }
 }
