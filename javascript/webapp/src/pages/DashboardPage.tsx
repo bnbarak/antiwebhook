@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Copy, Eye, EyeOff, Check } from "lucide-react";
+import { Copy, Eye, EyeOff, Check, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.js";
 import {
   AreaChart,
   Area,
@@ -279,58 +280,55 @@ function QuickStartGuide({ apiKey, showKey, listeners }: { apiKey: string; showK
       </div>
 
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-1.5">3. Add to your app</p>
-        {lang.frameworks.length > 1 && (
-          <div className="flex gap-1.5 mb-2 flex-wrap">
-            {lang.frameworks.map((f) => (
-              <button
-                key={f.id}
-                onClick={() => f.available && setFwId(f.id)}
-                disabled={!f.available}
-                className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                  f.id === fwId && f.available
-                    ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
-                    : f.available
-                      ? "border-border hover:border-border-strong"
-                      : "border-border opacity-40 cursor-not-allowed"
-                }`}
-              >
-                {f.name}
-                {!f.available && <span className="ml-1 text-[9px] text-muted-foreground">soon</span>}
-              </button>
-            ))}
-          </div>
-        )}
-        {listeners.length > 0 && (
-          <div className="mb-2">
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">Agent</p>
+        <div className="flex items-center gap-3 mb-2">
+          <p className="text-xs font-medium text-muted-foreground">3. Add to your app</p>
+          {lang.frameworks.length > 1 && (
             <div className="flex gap-1.5 flex-wrap">
-              <button
-                onClick={() => setAgentId("")}
-                className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                  agentId === ""
-                    ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
-                    : "border-border hover:border-border-strong"
-                }`}
-              >
-                No agent
-              </button>
-              {listeners.map((l) => (
+              {lang.frameworks.map((f) => (
                 <button
-                  key={l.listener_id}
-                  onClick={() => setAgentId(l.listener_id)}
-                  className={`rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium transition-colors ${
-                    agentId === l.listener_id
+                  key={f.id}
+                  onClick={() => f.available && setFwId(f.id)}
+                  disabled={!f.available}
+                  className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    f.id === fwId && f.available
                       ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
-                      : "border-border hover:border-border-strong"
+                      : f.available
+                        ? "border-border hover:border-border-strong"
+                        : "border-border opacity-40 cursor-not-allowed"
                   }`}
                 >
-                  {l.listener_id}
+                  {f.name}
+                  {!f.available && <span className="ml-1 text-[9px] text-muted-foreground">soon</span>}
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+          {listeners.length > 0 && (
+            <>
+              <span className="text-muted-foreground/30">|</span>
+              <select
+                value={agentId}
+                onChange={(e) => setAgentId(e.target.value)}
+                className="rounded-md border border-border bg-transparent px-2 py-1 font-mono text-[11px] font-medium text-foreground outline-none hover:border-border-strong"
+              >
+                <option value="">No agent</option>
+                {listeners.map((l) => (
+                  <option key={l.listener_id} value={l.listener_id}>
+                    {l.listener_id}
+                  </option>
+                ))}
+              </select>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="size-3.5 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px] text-xs">
+                  Agents route events to specific SDK instances. Assign agents to routes in the Routes page.
+                </TooltipContent>
+              </Tooltip>
+            </>
+          )}
+        </div>
         {fw && <CodeBlock code={fw.snippet(displayKey, agentId || undefined)} />}
       </div>
     </>
