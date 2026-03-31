@@ -32,7 +32,9 @@ export function createClient(
   function connect() {
     if (closed) return;
 
-    const ws = new WebSocket(`${serverUrl}/tunnel?key=${apiKey}`);
+    let wsUrl = `${serverUrl}/tunnel?key=${apiKey}`;
+    if (opts.listenerId) wsUrl += `&listener_id=${opts.listenerId}`;
+    const ws = new WebSocket(wsUrl);
     currentWs = ws;
 
     ws.on("open", () => {

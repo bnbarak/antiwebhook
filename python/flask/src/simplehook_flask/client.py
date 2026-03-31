@@ -92,10 +92,16 @@ def _noop_connection() -> Connection:
 def listenToWebhooks(
     app: Flask,
     api_key: str,
+    listener_id: str | ListenOptions | None = None,
     opts: ListenOptions | None = None,
 ) -> Connection:
+    if isinstance(listener_id, dict):
+        opts = listener_id
+        listener_id = None
     if opts is None:
         opts = {}
+    if isinstance(listener_id, str):
+        opts = {**opts, "listener_id": listener_id}
 
     # Check noop conditions before starting any servers
     force_enable = opts.get("force_enable", False)

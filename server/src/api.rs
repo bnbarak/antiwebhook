@@ -52,7 +52,7 @@ pub async fn get_project(
     State(state): State<Arc<AppState>>,
     AuthProject(project): AuthProject,
 ) -> Result<Json<ProjectInfo>, AppError> {
-    let connected = state.tunnels.is_connected(&project.id).await;
+    let connected = state.tunnels.is_any_connected(&project.id).await;
     let webhook_base_url = format!("{}/hooks/{}", state.config.base_url, project.id);
     Ok(Json(ProjectInfo {
         project,
@@ -102,6 +102,7 @@ pub async fn replay_event(
     let headers: std::collections::HashMap<String, String> =
         serde_json::from_value(original.headers).unwrap_or_default();
 
+    let lid = original.listener_id.clone();
     tokio::spawn(async move {
         use crate::tunnel::RequestFrame;
         use base64::Engine;
@@ -119,7 +120,7 @@ pub async fn replay_event(
 
         match state2
             .tunnels
-            .send_request(&pid, frame, std::time::Duration::from_secs(5))
+            .send_request(&pid, lid.as_deref(), frame, std::time::Duration::from_secs(5))
             .await
         {
             Some(resp) => {
@@ -202,6 +203,84 @@ pub async fn restore_route(
     Ok(Json(serde_json::json!({"restored": true})))
 }
 
+// --- Listeners ---
+
+#[derive(Deserialize)]
+pub struct CreateListenerRequest {
+    pub listener_id: String,
+    pub label: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ListenerInfo {
+    #[serde(flatten)]
+    pub listener: db::Listener,
+    pub connected: bool,
+}
+
+pub async fn create_listener(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+    Json(body): Json<CreateListenerRequest>,
+) -> Result<Json<db::Listener>, AppError> {
+    // Validate format
+    let re = regex::Regex::new(r"^[a-z0-9_-]{1,12}$").unwrap();
+    if !re.is_match(&body.listener_id) {
+        return Err(AppError::BadRequest(
+            "listener_id must match ^[a-z0-9_-]{1,12}$",
+        ));
+    }
+
+    let listener = db::create_listener(
+        &state.db,
+        &project.id,
+        &body.listener_id,
+        body.label.as_deref(),
+    )
+    .await
+    .map_err(|e| {
+        if let sqlx::Error::Database(ref db_err) = e {
+            if db_err.constraint() == Some("listener_id_unique") {
+                return AppError::BadRequest("listener_id already exists for this project");
+            }
+        }
+        AppError::Db(e)
+    })?;
+
+    Ok(Json(listener))
+}
+
+pub async fn list_listeners(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+) -> Result<Json<Vec<ListenerInfo>>, AppError> {
+    let listeners = db::list_listeners(&state.db, &project.id).await?;
+    let mut result = Vec::new();
+    for listener in listeners {
+        let connected = state
+            .tunnels
+            .is_connected(&project.id, Some(&listener.listener_id))
+            .await;
+        result.push(ListenerInfo {
+            listener,
+            connected,
+        });
+    }
+    Ok(Json(result))
+}
+
+pub async fn delete_listener(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+    Path(listener_id): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let deleted = db::delete_listener(&state.db, &project.id, &listener_id).await?;
+    if !deleted {
+        return Err(AppError::NotFound("listener not found"));
+    }
+    Ok(Json(serde_json::json!({"deleted": true})))
+}
+
 // --- Stats ---
 
 #[derive(Deserialize)]
@@ -259,5 +338,57 @@ mod tests {
         assert!(json.contains("p_abc123"));
         assert!(json.contains("ak_xyz"));
         assert!(json.contains("webhook_base_url"));
+    }
+
+    #[test]
+    fn test_create_listener_request_deserialize() {
+        let json = r#"{"listener_id": "dev", "label": "Development"}"#;
+        let req: CreateListenerRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.listener_id, "dev");
+        assert_eq!(req.label, Some("Development".into()));
+    }
+
+    #[test]
+    fn test_create_listener_request_no_label() {
+        let json = r#"{"listener_id": "staging"}"#;
+        let req: CreateListenerRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.listener_id, "staging");
+        assert_eq!(req.label, None);
+    }
+
+    #[test]
+    fn test_listener_id_validation_regex() {
+        let re = regex::Regex::new(r"^[a-z0-9_-]{1,12}$").unwrap();
+        // Valid
+        assert!(re.is_match("dev"));
+        assert!(re.is_match("staging"));
+        assert!(re.is_match("my-app"));
+        assert!(re.is_match("app_1"));
+        assert!(re.is_match("a"));
+        assert!(re.is_match("123456789012")); // exactly 12 chars
+        // Invalid
+        assert!(!re.is_match(""));
+        assert!(!re.is_match("1234567890123")); // 13 chars
+        assert!(!re.is_match("Dev")); // uppercase
+        assert!(!re.is_match("my app")); // space
+    }
+
+    #[test]
+    fn test_listener_info_serialize() {
+        let listener = db::Listener {
+            id: uuid::Uuid::new_v4(),
+            project_id: "p_test".into(),
+            listener_id: "dev".into(),
+            label: Some("Development".into()),
+            created_at: chrono::Utc::now(),
+        };
+        let info = ListenerInfo {
+            listener,
+            connected: true,
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        assert!(json.contains("\"listener_id\":\"dev\""));
+        assert!(json.contains("\"connected\":true"));
+        assert!(json.contains("\"label\":\"Development\""));
     }
 }

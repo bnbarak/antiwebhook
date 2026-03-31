@@ -40,7 +40,7 @@ async fn process_retries(state: &AppState) -> Result<(), sqlx::Error> {
 
         match state
             .tunnels
-            .send_request(&event.project_id, frame, Duration::from_secs(10))
+            .send_request(&event.project_id, event.listener_id.as_deref(), frame, Duration::from_secs(10))
             .await
         {
             Some(resp) => {

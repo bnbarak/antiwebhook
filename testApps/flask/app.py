@@ -12,9 +12,11 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
 app = Flask(__name__)
 
+listener_id = os.environ.get("SIMPLEHOOK_LISTENER") or None
 connection = listenToWebhooks(
     app,
     os.environ.get("SIMPLEHOOK_KEY", "ak_test"),
+    listener_id,
     {
         "server_url": os.environ.get("SIMPLEHOOK_URL"),
         "force_enable": True,

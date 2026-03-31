@@ -24,6 +24,7 @@ export type InboundFrame = RequestFrame | PingFrame;
 export interface ListenOptions {
   forceEnable?: boolean;
   serverUrl?: string;
+  listenerId?: string;
   onConnect?: () => void;
   onDisconnect?: () => void;
   silent?: boolean;

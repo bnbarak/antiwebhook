@@ -77,6 +77,7 @@ def create_client(
     import os
 
     server_url = opts.get("server_url") or os.environ.get("SIMPLEHOOK_URL") or DEFAULT_URL
+    listener_id: str | None = opts.get("listener_id")
     silent = opts.get("silent", False)
     on_connect: Callable[[], None] | None = opts.get("on_connect")
     on_disconnect: Callable[[], None] | None = opts.get("on_disconnect")
@@ -93,7 +94,7 @@ def create_client(
         while not conn._closed:
             try:
                 _connect_and_handle(
-                    dispatch_fn, conn, api_key, server_url, log, on_connect, on_disconnect,
+                    dispatch_fn, conn, api_key, server_url, listener_id, log, on_connect, on_disconnect,
                 )
                 backoff = 1.0
             except Exception:
@@ -117,11 +118,14 @@ def _connect_and_handle(
     conn: Connection,
     api_key: str,
     server_url: str,
+    listener_id: str | None,
     log: Callable[[str], None],
     on_connect: Callable[[], None] | None,
     on_disconnect: Callable[[], None] | None,
 ) -> None:
     url = f"{server_url}/tunnel?key={api_key}"
+    if listener_id:
+        url += f"&listener_id={listener_id}"
     ws = ws_client.connect(url)
     conn._ws = ws
 

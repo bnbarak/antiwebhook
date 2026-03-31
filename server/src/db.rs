@@ -44,8 +44,18 @@ pub struct Event {
     pub attempts: i16,
     pub next_retry_at: Option<DateTime<Utc>>,
     pub route_mode: Option<String>,
+    pub listener_id: Option<String>,
     pub created_at: DateTime<Utc>,
     pub delivered_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct Listener {
+    pub id: Uuid,
+    pub project_id: String,
+    pub listener_id: String,
+    pub label: Option<String>,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -62,6 +72,7 @@ pub struct EventsQuery {
     pub path: Option<String>,
     pub method: Option<String>,
     pub route_mode: Option<String>,
+    pub listener_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -256,9 +267,10 @@ pub async fn insert_event(
     headers: &HashMap<String, String>,
     body: Option<&[u8]>,
     route_mode: Option<&str>,
+    listener_id: Option<&str>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
-        "INSERT INTO events (id, project_id, path, method, headers, body, route_mode) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        "INSERT INTO events (id, project_id, path, method, headers, body, route_mode, listener_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
     )
     .bind(id)
     .bind(project_id)
@@ -267,6 +279,7 @@ pub async fn insert_event(
     .bind(serde_json::to_value(headers).unwrap())
     .bind(body)
     .bind(route_mode)
+    .bind(listener_id)
     .execute(pool)
     .await?;
     Ok(())
@@ -330,15 +343,31 @@ pub async fn get_retryable_events(pool: &PgPool, limit: i64) -> Result<Vec<Event
 pub async fn get_pending_for_project(
     pool: &PgPool,
     project_id: &str,
+    listener_id: Option<&str>,
 ) -> Result<Vec<Event>, sqlx::Error> {
-    sqlx::query_as(
-        "SELECT * FROM events
-         WHERE project_id = $1 AND status = 'pending'
-         ORDER BY created_at ASC",
-    )
-    .bind(project_id)
-    .fetch_all(pool)
-    .await
+    match listener_id {
+        Some(lid) => {
+            sqlx::query_as(
+                "SELECT * FROM events
+                 WHERE project_id = $1 AND status = 'pending' AND listener_id = $2
+                 ORDER BY created_at ASC",
+            )
+            .bind(project_id)
+            .bind(lid)
+            .fetch_all(pool)
+            .await
+        }
+        None => {
+            sqlx::query_as(
+                "SELECT * FROM events
+                 WHERE project_id = $1 AND status = 'pending' AND listener_id IS NULL
+                 ORDER BY created_at ASC",
+            )
+            .bind(project_id)
+            .fetch_all(pool)
+            .await
+        }
+    }
 }
 
 pub async fn list_events(
@@ -373,6 +402,14 @@ pub async fn list_events(
             param_idx += 1;
         }
     }
+    if let Some(ref lid) = query.listener_id {
+        if lid == "none" {
+            conditions.push("listener_id IS NULL".to_string());
+        } else {
+            conditions.push(format!("listener_id = ${}", param_idx));
+            param_idx += 1;
+        }
+    }
 
     let where_clause = conditions.join(" AND ");
 
@@ -391,6 +428,11 @@ pub async fn list_events(
     if let Some(ref rm) = query.route_mode {
         if rm != "unmatched" {
             count_query = count_query.bind(rm);
+        }
+    }
+    if let Some(ref lid) = query.listener_id {
+        if lid != "none" {
+            count_query = count_query.bind(lid);
         }
     }
     let total = count_query.fetch_one(pool).await?;
@@ -413,6 +455,11 @@ pub async fn list_events(
     if let Some(ref rm) = query.route_mode {
         if rm != "unmatched" {
             data_query = data_query.bind(rm);
+        }
+    }
+    if let Some(ref lid) = query.listener_id {
+        if lid != "none" {
+            data_query = data_query.bind(lid);
         }
     }
     let data = data_query.bind(limit).bind(offset).fetch_all(pool).await?;
@@ -657,6 +704,59 @@ pub async fn get_stats(
         timeseries,
         by_path,
     })
+}
+
+// --- Listener queries ---
+
+pub async fn create_listener(
+    pool: &PgPool,
+    project_id: &str,
+    listener_id: &str,
+    label: Option<&str>,
+) -> Result<Listener, sqlx::Error> {
+    sqlx::query_as(
+        "INSERT INTO listeners (project_id, listener_id, label) VALUES ($1, $2, $3) RETURNING *",
+    )
+    .bind(project_id)
+    .bind(listener_id)
+    .bind(label)
+    .fetch_one(pool)
+    .await
+}
+
+pub async fn list_listeners(
+    pool: &PgPool,
+    project_id: &str,
+) -> Result<Vec<Listener>, sqlx::Error> {
+    sqlx::query_as("SELECT * FROM listeners WHERE project_id = $1 ORDER BY created_at ASC")
+        .bind(project_id)
+        .fetch_all(pool)
+        .await
+}
+
+pub async fn get_listener(
+    pool: &PgPool,
+    project_id: &str,
+    listener_id: &str,
+) -> Result<Option<Listener>, sqlx::Error> {
+    sqlx::query_as("SELECT * FROM listeners WHERE project_id = $1 AND listener_id = $2")
+        .bind(project_id)
+        .bind(listener_id)
+        .fetch_optional(pool)
+        .await
+}
+
+pub async fn delete_listener(
+    pool: &PgPool,
+    project_id: &str,
+    listener_id: &str,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM listeners WHERE project_id = $1 AND listener_id = $2")
+        .bind(project_id)
+        .bind(listener_id)
+        .execute(pool)
+        .await?;
+    Ok(result.rows_affected() > 0)
 }
 
 // --- Helpers ---

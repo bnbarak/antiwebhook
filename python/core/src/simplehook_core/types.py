@@ -27,6 +27,7 @@ class PingFrame(TypedDict):
 class ListenOptions(TypedDict, total=False):
     force_enable: bool
     server_url: str
+    listener_id: str
     on_connect: callable
     on_disconnect: callable
     silent: bool

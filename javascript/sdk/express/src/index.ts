@@ -18,8 +18,20 @@ import type { App } from "./types.js";
 
 const NOOP_CONNECTION: Connection = { close() {} };
 
-export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions = {}): Connection {
-  if (!opts.forceEnable && isProduction()) return NOOP_CONNECTION;
+export function listenToWebhooks(
+  app: App,
+  apiKey: string,
+  listenerIdOrOpts?: string | ListenOptions,
+  opts?: ListenOptions,
+): Connection {
+  let resolvedOpts: ListenOptions;
+  if (typeof listenerIdOrOpts === "string") {
+    resolvedOpts = { ...opts, listenerId: listenerIdOrOpts };
+  } else {
+    resolvedOpts = listenerIdOrOpts ?? opts ?? {};
+  }
+
+  if (!resolvedOpts.forceEnable && isProduction()) return NOOP_CONNECTION;
   if (isExplicitlyDisabled()) return NOOP_CONNECTION;
 
   const loopback = http.createServer((req, res) => app.handle(req, res));
@@ -79,7 +91,7 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
       });
     };
 
-    coreConn = createClient(dispatch, apiKey, opts);
+    coreConn = createClient(dispatch, apiKey, resolvedOpts);
   });
 
   return {

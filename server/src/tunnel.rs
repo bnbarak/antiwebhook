@@ -34,10 +34,11 @@ pub struct ResponseFrame {
 
 // --- Tunnel manager ---
 
+type TunnelKey = (String, Option<String>); // (project_id, listener_id)
 type TunnelMessage = (RequestFrame, oneshot::Sender<ResponseFrame>);
 
 pub struct TunnelManager {
-    connections: RwLock<HashMap<String, mpsc::Sender<TunnelMessage>>>,
+    connections: RwLock<HashMap<TunnelKey, mpsc::Sender<TunnelMessage>>>,
 }
 
 impl TunnelManager {
@@ -47,30 +48,40 @@ impl TunnelManager {
         }
     }
 
-    pub async fn register(&self, project_id: String) -> mpsc::Receiver<TunnelMessage> {
+    pub async fn register(&self, project_id: String, listener_id: Option<String>) -> mpsc::Receiver<TunnelMessage> {
         let (tx, rx) = mpsc::channel::<TunnelMessage>(32);
-        self.connections.write().await.insert(project_id, tx);
+        self.connections.write().await.insert((project_id, listener_id), tx);
         rx
     }
 
-    pub async fn unregister(&self, project_id: &str) {
-        self.connections.write().await.remove(project_id);
+    pub async fn unregister(&self, project_id: &str, listener_id: Option<&str>) {
+        self.connections.write().await.remove(&(project_id.to_string(), listener_id.map(String::from)));
     }
 
-    pub async fn is_connected(&self, project_id: &str) -> bool {
+    pub async fn is_connected(&self, project_id: &str, listener_id: Option<&str>) -> bool {
         let conns = self.connections.read().await;
-        conns.get(project_id).map_or(false, |tx| !tx.is_closed())
+        let key = (project_id.to_string(), listener_id.map(String::from));
+        conns.get(&key).map_or(false, |tx| !tx.is_closed())
+    }
+
+    /// Check if ANY connection exists for this project (any listener_id).
+    /// Used by the dashboard to show overall connectivity.
+    pub async fn is_any_connected(&self, project_id: &str) -> bool {
+        let conns = self.connections.read().await;
+        conns.iter().any(|((pid, _), tx)| pid == project_id && !tx.is_closed())
     }
 
     pub async fn send_request(
         &self,
         project_id: &str,
+        listener_id: Option<&str>,
         frame: RequestFrame,
         timeout: Duration,
     ) -> Option<ResponseFrame> {
         let tx = {
             let conns = self.connections.read().await;
-            conns.get(project_id)?.clone()
+            let key = (project_id.to_string(), listener_id.map(String::from));
+            conns.get(&key)?.clone()
         };
 
         let (resp_tx, resp_rx) = oneshot::channel();
@@ -87,6 +98,7 @@ impl TunnelManager {
 #[derive(Deserialize)]
 pub struct TunnelParams {
     key: String,
+    listener_id: Option<String>,
 }
 
 pub async fn ws_upgrade(
@@ -98,14 +110,23 @@ pub async fn ws_upgrade(
         .await?
         .ok_or(AppError::Unauthorized)?;
 
-    Ok(ws.on_upgrade(move |socket| handle_ws(socket, state, project)))
+    // Validate listener_id exists in DB if provided
+    if let Some(ref lid) = params.listener_id {
+        let listener = db::get_listener(&state.db, &project.id, lid).await?;
+        if listener.is_none() {
+            return Err(AppError::BadRequest("listener_id not found for this project"));
+        }
+    }
+
+    let listener_id = params.listener_id;
+    Ok(ws.on_upgrade(move |socket| handle_ws(socket, state, project, listener_id)))
 }
 
-async fn handle_ws(socket: WebSocket, state: Arc<AppState>, project: db::Project) {
+async fn handle_ws(socket: WebSocket, state: Arc<AppState>, project: db::Project, listener_id: Option<String>) {
     let project_id = project.id.clone();
-    tracing::info!(project_id = %project_id, "SDK connected");
+    tracing::info!(project_id = %project_id, listener_id = ?listener_id, "SDK connected");
 
-    let mut rx = state.tunnels.register(project_id.clone()).await;
+    let mut rx = state.tunnels.register(project_id.clone(), listener_id.clone()).await;
     let (mut ws_tx, mut ws_rx) = socket.split();
 
     // Track in-flight requests
@@ -153,10 +174,11 @@ async fn handle_ws(socket: WebSocket, state: Arc<AppState>, project: db::Project
     // Drain pending events CONCURRENTLY — spawned so the select loop runs at the same time
     let drain_state = state.clone();
     let drain_pid = project_id.clone();
+    let drain_lid = listener_id.clone();
     tokio::spawn(async move {
         // Small delay to ensure the select loop is running
         tokio::time::sleep(Duration::from_millis(50)).await;
-        drain_pending(&drain_state, &drain_pid).await;
+        drain_pending(&drain_state, &drain_pid, drain_lid.as_deref()).await;
     });
 
     // Main loop: forward requests to SDK + keepalive
@@ -184,13 +206,13 @@ async fn handle_ws(socket: WebSocket, state: Arc<AppState>, project: db::Project
         }
     }
 
-    state.tunnels.unregister(&project_id).await;
-    tracing::info!(project_id = %project_id, "SDK disconnected");
+    state.tunnels.unregister(&project_id, listener_id.as_deref()).await;
+    tracing::info!(project_id = %project_id, listener_id = ?listener_id, "SDK disconnected");
 }
 
 /// On reconnect, immediately try to deliver any pending queued events.
-async fn drain_pending(state: &AppState, project_id: &str) {
-    let events = match db::get_pending_for_project(&state.db, project_id).await {
+async fn drain_pending(state: &AppState, project_id: &str, listener_id: Option<&str>) {
+    let events = match db::get_pending_for_project(&state.db, project_id, listener_id).await {
         Ok(e) => e,
         Err(e) => {
             tracing::error!(error = %e, "failed to drain pending events");
@@ -202,7 +224,7 @@ async fn drain_pending(state: &AppState, project_id: &str) {
         return;
     }
 
-    tracing::info!(project_id = %project_id, count = events.len(), "draining pending events");
+    tracing::info!(project_id = %project_id, listener_id = ?listener_id, count = events.len(), "draining pending events");
 
     for event in events {
         let headers: HashMap<String, String> =
@@ -222,7 +244,7 @@ async fn drain_pending(state: &AppState, project_id: &str) {
 
         match state
             .tunnels
-            .send_request(project_id, frame, Duration::from_secs(10))
+            .send_request(project_id, listener_id, frame, Duration::from_secs(10))
             .await
         {
             Some(resp) => {
@@ -278,17 +300,17 @@ mod tests {
     #[tokio::test]
     async fn test_tunnel_manager_register_unregister() {
         let tm = TunnelManager::new();
-        let _rx = tm.register("p_test".into()).await;
-        assert!(tm.is_connected("p_test").await);
+        let _rx = tm.register("p_test".into(), None).await;
+        assert!(tm.is_connected("p_test", None).await);
 
-        tm.unregister("p_test").await;
-        assert!(!tm.is_connected("p_test").await);
+        tm.unregister("p_test", None).await;
+        assert!(!tm.is_connected("p_test", None).await);
     }
 
     #[tokio::test]
     async fn test_tunnel_manager_not_connected() {
         let tm = TunnelManager::new();
-        assert!(!tm.is_connected("p_nonexistent").await);
+        assert!(!tm.is_connected("p_nonexistent", None).await);
     }
 
     #[tokio::test]
@@ -302,14 +324,14 @@ mod tests {
             headers: HashMap::new(),
             body: None,
         };
-        let result = tm.send_request("p_none", frame, Duration::from_millis(100)).await;
+        let result = tm.send_request("p_none", None, frame, Duration::from_millis(100)).await;
         assert!(result.is_none());
     }
 
     #[tokio::test]
     async fn test_tunnel_manager_send_and_receive() {
         let tm = TunnelManager::new();
-        let mut rx = tm.register("p_test".into()).await;
+        let mut rx = tm.register("p_test".into(), None).await;
 
         let frame = RequestFrame {
             frame_type: "request".into(),
@@ -334,7 +356,7 @@ mod tests {
             }
         });
 
-        let result = tm.send_request("p_test", frame, Duration::from_secs(5)).await;
+        let result = tm.send_request("p_test", None, frame, Duration::from_secs(5)).await;
         assert!(result.is_some());
         let resp = result.unwrap();
         assert_eq!(resp.status, 200);
@@ -344,7 +366,7 @@ mod tests {
     #[tokio::test]
     async fn test_tunnel_manager_timeout() {
         let tm = TunnelManager::new();
-        let _rx = tm.register("p_test".into()).await;
+        let _rx = tm.register("p_test".into(), None).await;
         // rx is alive but never responds
 
         let frame = RequestFrame {
@@ -356,15 +378,15 @@ mod tests {
             body: None,
         };
 
-        let result = tm.send_request("p_test", frame, Duration::from_millis(50)).await;
+        let result = tm.send_request("p_test", None, frame, Duration::from_millis(50)).await;
         assert!(result.is_none());
     }
 
     #[tokio::test]
     async fn test_tunnel_manager_replaces_old_connection() {
         let tm = TunnelManager::new();
-        let _rx1 = tm.register("p_test".into()).await;
-        let mut rx2 = tm.register("p_test".into()).await;
+        let _rx1 = tm.register("p_test".into(), None).await;
+        let mut rx2 = tm.register("p_test".into(), None).await;
 
         // Old connection's receiver should be dropped
         // New connection should work
@@ -389,8 +411,92 @@ mod tests {
             }
         });
 
-        let result = tm.send_request("p_test", frame, Duration::from_secs(1)).await;
+        let result = tm.send_request("p_test", None, frame, Duration::from_secs(1)).await;
         assert!(result.is_some());
         assert_eq!(result.unwrap().status, 201);
+    }
+
+    #[tokio::test]
+    async fn test_tunnel_manager_with_listener_id() {
+        let tm = TunnelManager::new();
+
+        // Register with listener_id
+        let mut rx = tm.register("p_test".into(), Some("dev".into())).await;
+
+        // Should be connected for specific listener
+        assert!(tm.is_connected("p_test", Some("dev")).await);
+        // Should NOT be connected for None listener
+        assert!(!tm.is_connected("p_test", None).await);
+        // Should NOT be connected for different listener
+        assert!(!tm.is_connected("p_test", Some("staging")).await);
+        // is_any_connected should be true
+        assert!(tm.is_any_connected("p_test").await);
+
+        let frame = RequestFrame {
+            frame_type: "request".into(),
+            id: "evt_lid".into(),
+            method: "POST".into(),
+            path: "/test".into(),
+            headers: HashMap::new(),
+            body: None,
+        };
+
+        tokio::spawn(async move {
+            if let Some((req, resp_tx)) = rx.recv().await {
+                let _ = resp_tx.send(ResponseFrame {
+                    frame_type: "response".into(),
+                    id: req.id,
+                    status: 200,
+                    headers: None,
+                    body: None,
+                });
+            }
+        });
+
+        let result = tm.send_request("p_test", Some("dev"), frame, Duration::from_secs(1)).await;
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().status, 200);
+
+        // Sending to wrong listener should fail
+        let frame2 = RequestFrame {
+            frame_type: "request".into(),
+            id: "evt_lid2".into(),
+            method: "POST".into(),
+            path: "/test".into(),
+            headers: HashMap::new(),
+            body: None,
+        };
+        let result2 = tm.send_request("p_test", None, frame2, Duration::from_millis(50)).await;
+        assert!(result2.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_tunnel_manager_multiple_listeners() {
+        let tm = TunnelManager::new();
+
+        let _rx_none = tm.register("p_test".into(), None).await;
+        let _rx_dev = tm.register("p_test".into(), Some("dev".into())).await;
+
+        // Both should be connected independently
+        assert!(tm.is_connected("p_test", None).await);
+        assert!(tm.is_connected("p_test", Some("dev")).await);
+        assert!(tm.is_any_connected("p_test").await);
+
+        // Unregister dev, None should still work
+        tm.unregister("p_test", Some("dev")).await;
+        assert!(!tm.is_connected("p_test", Some("dev")).await);
+        assert!(tm.is_connected("p_test", None).await);
+        assert!(tm.is_any_connected("p_test").await);
+
+        // Unregister None too
+        tm.unregister("p_test", None).await;
+        assert!(!tm.is_connected("p_test", None).await);
+        assert!(!tm.is_any_connected("p_test").await);
+    }
+
+    #[tokio::test]
+    async fn test_is_any_connected_none() {
+        let tm = TunnelManager::new();
+        assert!(!tm.is_any_connected("p_test").await);
     }
 }

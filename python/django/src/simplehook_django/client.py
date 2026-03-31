@@ -143,6 +143,7 @@ def _noop_connection() -> Connection:
 def listenToWebhooks(
     application: Any,
     api_key: str,
+    listener_id: str | ListenOptions | None = None,
     opts: ListenOptions | None = None,
 ) -> Connection:
     """Connect to the SimpleHook tunnel and forward webhooks to a Django app.
@@ -154,11 +155,19 @@ def listenToWebhooks(
         any WSGI-compatible callable.
     api_key:
         Your SimpleHook API key.
+    listener_id:
+        Optional listener ID string, or an ``ListenOptions`` dict for
+        backwards compatibility.
     opts:
         Optional configuration (see ``ListenOptions``).
     """
+    if isinstance(listener_id, dict):
+        opts = listener_id
+        listener_id = None
     if opts is None:
         opts = {}
+    if isinstance(listener_id, str):
+        opts = {**opts, "listener_id": listener_id}
 
     # Check noop conditions before creating dispatch
     force_enable = opts.get("force_enable", False)

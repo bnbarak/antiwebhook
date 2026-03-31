@@ -248,6 +248,37 @@ pub async fn me(
     .fetch_optional(&state.db)
     .await?;
 
+    let (project_json, listeners_json) = match project {
+        Some(ref p) => {
+            let connected = state.tunnels.is_any_connected(&p.id).await;
+            let listeners = db::list_listeners(&state.db, &p.id).await?;
+            let mut listener_infos = Vec::new();
+            for l in listeners {
+                let l_connected = state.tunnels.is_connected(&p.id, Some(&l.listener_id)).await;
+                listener_infos.push(serde_json::json!({
+                    "id": l.id,
+                    "listener_id": l.listener_id,
+                    "label": l.label,
+                    "connected": l_connected,
+                    "created_at": l.created_at,
+                }));
+            }
+            (
+                Some(serde_json::json!({
+                    "id": p.id,
+                    "name": p.name,
+                    "api_key": p.api_key,
+                    "webhook_base_url": format!("{}/hooks/{}", state.config.base_url, p.id),
+                    "active": p.active,
+                    "billing_status": p.billing_status,
+                    "connected": connected,
+                })),
+                listener_infos,
+            )
+        }
+        None => (None, Vec::new()),
+    };
+
     Ok(Json(serde_json::json!({
         "user": {
             "id": user.id,
@@ -255,15 +286,8 @@ pub async fn me(
             "email": user.email,
             "trial_ends_at": user.trial_ends_at,
         },
-        "project": project.map(|p| serde_json::json!({
-            "id": p.id,
-            "name": p.name,
-            "api_key": p.api_key,
-            "webhook_base_url": format!("{}/hooks/{}", state.config.base_url, p.id),
-            "active": p.active,
-            "billing_status": p.billing_status,
-            "connected": false,
-        })),
+        "project": project_json,
+        "listeners": listeners_json,
     })))
 }
 

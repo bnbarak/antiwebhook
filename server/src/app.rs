@@ -28,6 +28,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/routes/trash", get(api::list_deleted_routes))
         .route("/routes/{id}", delete(api::delete_route))
         .route("/routes/{id}/restore", post(api::restore_route))
+        .route("/listeners", get(api::list_listeners).post(api::create_listener))
+        .route("/listeners/{listener_id}", delete(api::delete_listener))
         .route("/stats", get(api::get_stats))
         // Billing
         .route("/billing/checkout", post(billing::create_checkout))

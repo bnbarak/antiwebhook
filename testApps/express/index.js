@@ -5,7 +5,8 @@ const app = express();
 app.use(express.json());
 
 // Connect to simplehook — webhooks flow through this connection
-const connection = listenToWebhooks(app, process.env.SIMPLEHOOK_KEY || "ak_your_key_here", {
+const listenerId = process.env.SIMPLEHOOK_LISTENER || undefined;
+const connection = listenToWebhooks(app, process.env.SIMPLEHOOK_KEY || "ak_your_key_here", listenerId, {
   serverUrl: process.env.SIMPLEHOOK_URL || undefined,
   forceEnable: true,
 });

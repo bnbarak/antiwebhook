@@ -36,8 +36,14 @@ class MockWSServer:
         self.port: int = 0
         self._ready = threading.Event()
         self._connections: list[Any] = []
+        self.last_connection_path: str | None = None
 
     async def _handler(self, websocket: Any) -> None:
+        # websockets 12+/13: path is available as websocket.path (includes query string)
+        try:
+            self.last_connection_path = str(websocket.path)
+        except Exception:
+            self.last_connection_path = None
         self._connections.append(websocket)
         try:
             for frame in self.frames_to_send:

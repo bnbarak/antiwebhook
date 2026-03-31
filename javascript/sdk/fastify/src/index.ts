@@ -15,8 +15,16 @@ export type { Connection, ListenOptions, RequestFrame, ResponseFrame };
 export function listenToWebhooks(
   app: FastifyInstance,
   apiKey: string,
-  opts: ListenOptions = {},
+  listenerIdOrOpts?: string | ListenOptions,
+  opts?: ListenOptions,
 ): Connection {
+  let resolvedOpts: ListenOptions;
+  if (typeof listenerIdOrOpts === "string") {
+    resolvedOpts = { ...opts, listenerId: listenerIdOrOpts };
+  } else {
+    resolvedOpts = listenerIdOrOpts ?? opts ?? {};
+  }
+
   const dispatch = async (frame: RequestFrame): Promise<ResponseFrame> => {
     const bodyBuffer = frame.body ? Buffer.from(frame.body, "base64") : null;
     const headers = sanitizeHeaders(frame.headers ?? {}, bodyBuffer?.length ?? null);
@@ -54,5 +62,5 @@ export function listenToWebhooks(
     }
   };
 
-  return createClient(dispatch, apiKey, opts);
+  return createClient(dispatch, apiKey, resolvedOpts);
 }

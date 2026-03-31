@@ -65,6 +65,60 @@ class TestListenToWebhooks:
 
 
 
+class TestListenerId:
+    def test_listener_id_in_ws_url_via_opts(
+        self, flask_app: Flask, mock_ws_server: MockWSServer,
+    ) -> None:
+        # Act
+        conn = listenToWebhooks(flask_app, "test_key", {
+            "server_url": mock_ws_server.url,
+            "silent": True,
+            "listener_id": "my-listener",
+        })
+        time.sleep(0.5)
+
+        # Assert
+        assert mock_ws_server.last_connection_path is not None
+        assert "listener_id=my-listener" in mock_ws_server.last_connection_path
+
+        # Cleanup
+        conn.close()
+
+    def test_listener_id_in_ws_url_via_shorthand(
+        self, flask_app: Flask, mock_ws_server: MockWSServer,
+    ) -> None:
+        # Act
+        conn = listenToWebhooks(flask_app, "test_key", "my-listener", {
+            "server_url": mock_ws_server.url,
+            "silent": True,
+        })
+        time.sleep(0.5)
+
+        # Assert
+        assert mock_ws_server.last_connection_path is not None
+        assert "listener_id=my-listener" in mock_ws_server.last_connection_path
+
+        # Cleanup
+        conn.close()
+
+    def test_no_listener_id_when_not_set(
+        self, flask_app: Flask, mock_ws_server: MockWSServer,
+    ) -> None:
+        # Act
+        conn = listenToWebhooks(flask_app, "test_key", {
+            "server_url": mock_ws_server.url,
+            "silent": True,
+        })
+        time.sleep(0.5)
+
+        # Assert
+        assert mock_ws_server.last_connection_path is not None
+        assert "listener_id" not in mock_ws_server.last_connection_path
+
+        # Cleanup
+        conn.close()
+
+
 class TestPingPong:
     def test_responds_to_ping_with_pong(
         self, flask_app: Flask, mock_ws_server: MockWSServer,

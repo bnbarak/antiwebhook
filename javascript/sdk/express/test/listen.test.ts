@@ -139,6 +139,46 @@ describe("listenToWebhooks", () => {
       expect(received[0].body).toBe("");
     });
 
+    it("includes listener_id in WS URL when passed via opts", async () => {
+      // Arrange
+      server = createMockServer();
+      conn = listenToWebhooks({ handle: () => {} }, "ak_test", {
+        serverUrl: `ws://localhost:${server.port}`,
+        silent: true,
+        listenerId: "my-listener",
+      });
+      await server.waitForConnection();
+
+      // Assert
+      expect(server.lastConnectionUrl).toContain("listener_id=my-listener");
+    });
+
+    it("includes listener_id in WS URL when passed as shorthand string", async () => {
+      // Arrange
+      server = createMockServer();
+      conn = listenToWebhooks({ handle: () => {} }, "ak_test", "my-listener", {
+        serverUrl: `ws://localhost:${server.port}`,
+        silent: true,
+      });
+      await server.waitForConnection();
+
+      // Assert
+      expect(server.lastConnectionUrl).toContain("listener_id=my-listener");
+    });
+
+    it("does not include listener_id in WS URL when not set", async () => {
+      // Arrange
+      server = createMockServer();
+      conn = listenToWebhooks({ handle: () => {} }, "ak_test", {
+        serverUrl: `ws://localhost:${server.port}`,
+        silent: true,
+      });
+      await server.waitForConnection();
+
+      // Assert
+      expect(server.lastConnectionUrl).not.toContain("listener_id");
+    });
+
     it("lowercases forwarded headers", async () => {
       // Arrange
       server = createMockServer();

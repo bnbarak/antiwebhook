@@ -6,6 +6,7 @@ import type { RequestFrame } from "../src/types.js";
 export interface MockServer {
   port: number;
   wss: WebSocketServer;
+  lastConnectionUrl: string | null;
   close(): void;
   waitForConnection(): Promise<WebSocket>;
   sendRequest(ws: WebSocket, frame: Partial<RequestFrame> & { id: string }): void;
@@ -16,9 +17,10 @@ export function createMockServer(): MockServer {
   const wss = new WebSocketServer({ port: 0 });
   const port = (wss.address() as { port: number }).port;
 
-  return {
+  const server: MockServer = {
     port,
     wss,
+    lastConnectionUrl: null,
 
     close() {
       wss.close();
@@ -26,7 +28,10 @@ export function createMockServer(): MockServer {
 
     waitForConnection(): Promise<WebSocket> {
       return new Promise((resolve) => {
-        wss.once("connection", resolve);
+        wss.once("connection", (ws, req) => {
+          server.lastConnectionUrl = req.url ?? null;
+          resolve(ws);
+        });
       });
     },
 
@@ -57,6 +62,8 @@ export function createMockServer(): MockServer {
       });
     },
   };
+
+  return server;
 }
 
 export async function createTestApp(): Promise<{
