@@ -38,72 +38,153 @@ const CHART_COLORS = {
   pending: "#92600a",
 };
 
-// -- Quick Start code snippets --
+// -- SDK data model: language → install → frameworks --
 
-function snippet(framework: string, apiKey: string) {
-  const key = apiKey || "ak_your_api_key";
-  switch (framework) {
-    case "express":
-      return `import express from "express";
-import { simplehook } from "simplehook";
+interface Framework {
+  id: string;
+  name: string;
+  available: boolean;
+  snippet: (key: string) => string;
+}
+
+interface Language {
+  id: string;
+  name: string;
+  icon: string;
+  install: string;
+  frameworks: Framework[];
+}
+
+const LANGUAGES: Language[] = [
+  {
+    id: "node",
+    name: "Node.js",
+    icon: "⬢",
+    install: "npm install simplehook",
+    frameworks: [
+      {
+        id: "express",
+        name: "Express",
+        available: true,
+        snippet: (key) => `import express from "express";
+import { listen } from "simplehook";
 
 const app = express();
-const hook = simplehook("${key}");
+app.use(express.json());
 
-app.use(hook.middleware());
+listen(app, "${key}");
+
 app.post("/stripe/events", (req, res) => {
-  console.log("Webhook received:", req.body);
-  res.sendStatus(200);
+  console.log("Webhook:", req.body);
+  res.json({ received: true });
 });
 
-app.listen(3000);`;
-    case "fastify":
-      return `import Fastify from "fastify";
-import { simplehook } from "simplehook";
+app.listen(3000);`,
+      },
+      {
+        id: "fastify",
+        name: "Fastify",
+        available: false,
+        snippet: (key) => `import Fastify from "fastify";
+import { listen } from "simplehook-fastify";
 
 const app = Fastify();
-const hook = simplehook("${key}");
+listen(app, "${key}");
 
-app.register(hook.fastify());
-app.post("/stripe/events", async (req, reply) => {
-  console.log("Webhook received:", req.body);
-  return { ok: true };
+app.post("/stripe/events", async (req) => {
+  console.log("Webhook:", req.body);
+  return { received: true };
 });
 
-app.listen({ port: 3000 });`;
-    case "hono":
-      return `import { Hono } from "hono";
-import { simplehook } from "simplehook";
+app.listen({ port: 3000 });`,
+      },
+      {
+        id: "hono",
+        name: "Hono",
+        available: false,
+        snippet: (key) => `import { Hono } from "hono";
+import { listen } from "simplehook-hono";
 
 const app = new Hono();
-const hook = simplehook("${key}");
+listen(app, "${key}");
 
-app.use("/*", hook.hono());
 app.post("/stripe/events", (c) => {
-  console.log("Webhook received:", c.req.json());
-  return c.json({ ok: true });
+  console.log("Webhook:", c.req.json());
+  return c.json({ received: true });
 });
 
-export default app;`;
-    case "flask":
-      return `from flask import Flask, request
-from simplehook import SimpleHook
+export default app;`,
+      },
+    ],
+  },
+  {
+    id: "python",
+    name: "Python",
+    icon: "🐍",
+    install: "pip install simplehook-flask",
+    frameworks: [
+      {
+        id: "flask",
+        name: "Flask",
+        available: true,
+        snippet: (key) => `from flask import Flask, request
+from simplehook_flask import listen
 
 app = Flask(__name__)
-hook = SimpleHook("${key}")
-
-@app.before_request
-def before():
-    hook.middleware()
+listen(app, "${key}")
 
 @app.post("/stripe/events")
 def stripe_events():
-    print("Webhook received:", request.json)
-    return {"ok": True}`;
-    default:
-      return "";
-  }
-}
+    print("Webhook:", request.json)
+    return {"received": True}`,
+      },
+      {
+        id: "django",
+        name: "Django",
+        available: false,
+        snippet: (key) => `# Coming soon
+# pip install simplehook-django`,
+      },
+      {
+        id: "fastapi",
+        name: "FastAPI",
+        available: false,
+        snippet: (key) => `# Coming soon
+# pip install simplehook-fastapi`,
+      },
+    ],
+  },
+  {
+    id: "go",
+    name: "Go",
+    icon: "🔵",
+    install: "go get github.com/simplehook/simplehook-go",
+    frameworks: [
+      {
+        id: "gin",
+        name: "Gin / Chi / Echo",
+        available: false,
+        snippet: () => `// Coming soon
+// go get github.com/simplehook/simplehook-go`,
+      },
+    ],
+  },
+  {
+    id: "rust",
+    name: "Rust",
+    icon: "🦀",
+    install: "cargo add simplehook",
+    frameworks: [
+      {
+        id: "axum",
+        name: "Axum / Actix",
+        available: false,
+        snippet: () => `// Coming soon
+// cargo add simplehook`,
+      },
+    ],
+  },
+];
 
 // -- Components --
 
@@ -143,47 +224,89 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
-function ApiKeyDisplay({ apiKey }: { apiKey: string }) {
-  const [visible, setVisible] = useState(false);
+function QuickStartGuide({ apiKey, showKey }: { apiKey: string; showKey: boolean }) {
+  const [langId, setLangId] = useState(LANGUAGES[0].id);
+  const lang = LANGUAGES.find((l) => l.id === langId) ?? LANGUAGES[0];
+  const [fwId, setFwId] = useState(lang.frameworks[0]?.id ?? "");
+
+  const handleLangChange = (id: string) => {
+    setLangId(id);
+    const newLang = LANGUAGES.find((l) => l.id === id) ?? LANGUAGES[0];
+    const first = newLang.frameworks.find((f) => f.available) ?? newLang.frameworks[0];
+    setFwId(first?.id ?? "");
+  };
+
+  const fw = lang.frameworks.find((f) => f.id === fwId) ?? lang.frameworks[0];
+  const displayKey = showKey ? (apiKey || "ak_your_api_key") : "ak_••••••••••••••••••••";
+
+  return (
+    <>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1.5">1. Choose your language</p>
+        <div className="flex gap-1.5 flex-wrap">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => handleLangChange(l.id)}
+              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                l.id === langId
+                  ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+                  : "border-border hover:border-border-strong"
+              }`}
+            >
+              <span className="mr-1.5">{l.icon}</span>{l.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1.5">2. Install</p>
+        <CodeBlock code={lang.install} />
+      </div>
+
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1.5">3. Add to your app</p>
+        {lang.frameworks.length > 1 && (
+          <div className="flex gap-1.5 mb-2 flex-wrap">
+            {lang.frameworks.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => f.available && setFwId(f.id)}
+                disabled={!f.available}
+                className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  f.id === fwId && f.available
+                    ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+                    : f.available
+                      ? "border-border hover:border-border-strong"
+                      : "border-border opacity-40 cursor-not-allowed"
+                }`}
+              >
+                {f.name}
+                {!f.available && <span className="ml-1 text-[9px] text-muted-foreground">soon</span>}
+              </button>
+            ))}
+          </div>
+        )}
+        {fw && <CodeBlock code={fw.snippet(displayKey)} />}
+      </div>
+    </>
+  );
+}
+
+function QuickStartCard({ apiKey }: { apiKey: string }) {
+  const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const copy = () => {
+  const masked = apiKey ? apiKey.slice(0, 3) + "\u2022".repeat(20) : "";
+
+  const copyKey = () => {
     navigator.clipboard.writeText(apiKey);
     setCopied(true);
     toast.success("API key copied");
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const masked = apiKey ? apiKey.slice(0, 3) + "\u2022".repeat(20) : "";
-
-  return (
-    <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
-      <span className="font-mono text-sm flex-1 truncate">
-        {visible ? apiKey : masked}
-      </span>
-      <button
-        onClick={() => setVisible(!visible)}
-        className="text-muted-foreground hover:text-foreground transition-colors"
-        title={visible ? "Hide API key" : "Show API key"}
-      >
-        {visible ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-      </button>
-      <button
-        onClick={copy}
-        className="text-muted-foreground hover:text-foreground transition-colors"
-        title="Copy API key"
-      >
-        {copied ? (
-          <Check className="size-3.5 text-status-green-text" />
-        ) : (
-          <Copy className="size-3.5" />
-        )}
-      </button>
-    </div>
-  );
-}
-
-function QuickStartCard({ apiKey }: { apiKey: string }) {
   return (
     <Card>
       <CardHeader>
@@ -194,37 +317,29 @@ function QuickStartCard({ apiKey }: { apiKey: string }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-1.5">
-            Your API Key
-          </p>
-          <ApiKeyDisplay apiKey={apiKey} />
+          <p className="text-xs font-medium text-muted-foreground mb-1.5">Your API Key</p>
+          <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
+            <span className="font-mono text-sm flex-1 truncate">
+              {showKey ? apiKey : masked}
+            </span>
+            <button
+              onClick={() => setShowKey(!showKey)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title={showKey ? "Hide" : "Show"}
+            >
+              {showKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+            </button>
+            <button
+              onClick={copyKey}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Copy"
+            >
+              {copied ? <Check className="size-3.5 text-status-green-text" /> : <Copy className="size-3.5" />}
+            </button>
+          </div>
         </div>
 
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-1.5">
-            1. Install
-          </p>
-          <CodeBlock code="npm install simplehook" />
-        </div>
-
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-1.5">
-            2. Add to your app
-          </p>
-          <Tabs defaultValue="express">
-            <TabsList>
-              <TabsTrigger value="express">Express</TabsTrigger>
-              <TabsTrigger value="flask">Flask</TabsTrigger>
-              <TabsTrigger value="fastify" disabled className="opacity-50">Fastify <span className="ml-1 text-[9px] text-muted-foreground">soon</span></TabsTrigger>
-              <TabsTrigger value="hono" disabled className="opacity-50">Hono <span className="ml-1 text-[9px] text-muted-foreground">soon</span></TabsTrigger>
-            </TabsList>
-            {["express", "flask"].map((fw) => (
-              <TabsContent key={fw} value={fw}>
-                <CodeBlock code={snippet(fw, apiKey)} />
-              </TabsContent>
-            ))}
-          </Tabs>
-        </div>
+        <QuickStartGuide apiKey={apiKey} showKey={showKey} />
       </CardContent>
     </Card>
   );
