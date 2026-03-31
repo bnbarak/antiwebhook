@@ -537,6 +537,35 @@ export function DocsPage() {
               receiving webhooks.
             </p>
 
+            {/* How it works diagram */}
+            <div className="mb-10 rounded-xl border border-border bg-card/50 p-6">
+              <h3 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">How it works</h3>
+              <div className="flex items-center justify-between gap-2 font-mono text-[11px]">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="rounded-md border border-border bg-muted px-3 py-2 text-muted-foreground">Stripe / GitHub</div>
+                  <span className="text-[9px] text-muted-foreground/60">webhook provider</span>
+                </div>
+                <div className="flex flex-1 items-center gap-1 text-muted-foreground/50">
+                  <span className="flex-1 border-t border-dashed" />
+                  <span className="text-[9px]">POST</span>
+                  <span>{">"}</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="rounded-md border border-status-green-dot/30 bg-status-green-bg px-3 py-2 text-status-green-text">simplehook</div>
+                  <span className="text-[9px] text-muted-foreground/60">cloud relay</span>
+                </div>
+                <div className="flex flex-1 items-center gap-1 text-muted-foreground/50">
+                  <span className="flex-1 border-t border-dashed" />
+                  <span className="text-[9px]">WS</span>
+                  <span>{">"}</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="rounded-md border border-border bg-muted px-3 py-2 text-foreground">Your app</div>
+                  <span className="text-[9px] text-muted-foreground/60">localhost</span>
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-6">
               {/* Step 1: Language */}
               <div>

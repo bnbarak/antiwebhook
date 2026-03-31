@@ -376,7 +376,7 @@ export function HomePage() {
                   <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
                     Feature
                   </th>
-                  <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+                  <th className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-green-text">
                     simplehook
                   </th>
                   <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
@@ -401,7 +401,7 @@ export function HomePage() {
                 ].map(([feature, aw, ngrok, hookdeck]) => (
                   <tr key={feature} className="border-b last:border-0">
                     <td className="px-3 py-2.5 font-medium text-foreground">{feature}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{aw}</td>
+                    <td className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 font-medium text-status-green-text">{aw}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{ngrok}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{hookdeck}</td>
                   </tr>
