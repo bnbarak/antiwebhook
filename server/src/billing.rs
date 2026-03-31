@@ -96,6 +96,8 @@ pub struct BillingStatusResponse {
     pub trial_ends_at: Option<chrono::DateTime<Utc>>,
     pub trial_hours_remaining: Option<f64>,
     pub has_subscription: bool,
+    pub subscription_quantity: i32,
+    pub agent_limit: i64,
 }
 
 pub async fn get_billing_status(
@@ -115,11 +117,15 @@ pub async fn get_billing_status(
         (remaining.num_seconds() as f64 / 3600.0).max(0.0)
     });
 
+    let agent_limit = 3 + (project.subscription_quantity as i64 * 3);
+
     Ok(Json(BillingStatusResponse {
         billing_status: project.billing_status.clone(),
         trial_ends_at,
         trial_hours_remaining,
         has_subscription: project.stripe_subscription_id.is_some(),
+        subscription_quantity: project.subscription_quantity,
+        agent_limit,
     }))
 }
 
@@ -147,6 +153,16 @@ pub async fn stripe_webhook(
             if !project_id.is_empty() {
                 db::activate_project(&state.db, project_id, customer_id, sub_id).await?;
                 db::set_billing_status(&state.db, project_id, "active").await?;
+
+                // Fetch subscription quantity from Stripe
+                if !sub_id.is_empty() {
+                    let qty = fetch_subscription_quantity(&state, sub_id).await.unwrap_or(1);
+                    sqlx::query("UPDATE projects SET subscription_quantity = $1 WHERE id = $2")
+                        .bind(qty)
+                        .bind(project_id)
+                        .execute(&state.db)
+                        .await?;
+                }
                 tracing::info!(project_id = %project_id, "project activated via checkout");
 
                 // Send payment confirmed email
@@ -199,6 +215,21 @@ pub async fn stripe_webhook(
                 tracing::info!(customer_id = %customer_id, "subscription deleted, project deactivated");
             }
         }
+        "customer.subscription.updated" => {
+            let obj = &event["data"]["object"];
+            let customer_id = obj["customer"].as_str().unwrap_or("");
+            let qty = obj["items"]["data"][0]["quantity"].as_i64().unwrap_or(1) as i32;
+            if !customer_id.is_empty() {
+                sqlx::query(
+                    "UPDATE projects SET subscription_quantity = $1 WHERE stripe_customer_id = $2",
+                )
+                .bind(qty)
+                .bind(customer_id)
+                .execute(&state.db)
+                .await?;
+                tracing::info!(customer_id = %customer_id, qty = qty, "subscription quantity updated");
+            }
+        }
         "invoice.payment_failed" => {
             let customer_id = event["data"]["object"]["customer"]
                 .as_str()
@@ -217,6 +248,19 @@ pub async fn stripe_webhook(
     }
 
     Ok(StatusCode::OK)
+}
+
+async fn fetch_subscription_quantity(state: &AppState, sub_id: &str) -> Result<i32, AppError> {
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(&format!("https://api.stripe.com/v1/subscriptions/{}", sub_id))
+        .bearer_auth(&state.config.stripe_secret_key)
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+    let qty = resp["items"]["data"][0]["quantity"].as_i64().unwrap_or(1) as i32;
+    Ok(qty)
 }
 
 fn verify_signature(payload: &[u8], sig_header: &str, secret: &str) -> Result<(), AppError> {

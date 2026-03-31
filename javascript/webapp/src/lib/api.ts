@@ -54,6 +54,8 @@ export interface BillingStatus {
   trial_ends_at: string | null;
   trial_hours_remaining: number | null;
   has_subscription: boolean;
+  subscription_quantity: number;
+  agent_limit: number;
 }
 
 export interface TimeseriesBucket {

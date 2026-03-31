@@ -16,6 +16,7 @@ pub struct Project {
     pub active: bool,
     pub billing_status: String,
     pub subscription_period_end: Option<DateTime<Utc>>,
+    pub subscription_quantity: i32,
     pub created_at: DateTime<Utc>,
 }
 

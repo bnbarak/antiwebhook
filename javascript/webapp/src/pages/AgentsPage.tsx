@@ -31,9 +31,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
 
-const FREE_LIMIT = 3;
-const PAID_LIMIT = 6;
-
 export function AgentsPage() {
   const [listeners, setListeners] = useState<Listener[]>([]);
   const [billing, setBilling] = useState<BillingStatus | null>(null);
@@ -44,8 +41,8 @@ export function AgentsPage() {
   const [newLabel, setNewLabel] = useState("");
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
-  const isPaid = billing?.billing_status === "active";
-  const limit = isPaid ? PAID_LIMIT : FREE_LIMIT;
+  const isPaid = billing?.has_subscription ?? false;
+  const limit = billing?.agent_limit ?? 3;
   const atLimit = listeners.length >= limit;
 
   const loadData = useCallback(async () => {
@@ -107,10 +104,12 @@ export function AgentsPage() {
   const handleUpgrade = async () => {
     setUpgradeLoading(true);
     try {
-      const { url } = await api.billing.createCheckout();
+      const { url } = isPaid
+        ? await api.billing.getPortal()
+        : await api.billing.createCheckout();
       window.location.href = url;
     } catch {
-      toast.error("Failed to start checkout");
+      toast.error("Failed to open billing");
       setUpgradeLoading(false);
     }
   };
@@ -196,14 +195,12 @@ export function AgentsPage() {
         <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
           <p className="text-sm text-status-amber-text">
             {isPaid
-              ? `You've reached the maximum of ${PAID_LIMIT} agents.`
-              : `You've used all ${FREE_LIMIT} free agents.`}
+              ? `You've reached your limit of ${limit} agents. Increase your subscription quantity for more.`
+              : `You've used all ${limit} free agents.`}
           </p>
-          {!isPaid && (
-            <Button size="sm" variant="outline" onClick={handleUpgrade} disabled={upgradeLoading}>
-              Upgrade — $5/mo
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={handleUpgrade} disabled={upgradeLoading}>
+            {isPaid ? "Manage subscription" : "Upgrade — $5/mo"}
+          </Button>
         </div>
       )}
 
@@ -295,7 +292,10 @@ export function AgentsPage() {
       )}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        {isPaid ? `Paid plan: ${PAID_LIMIT} agents.` : `Free: ${FREE_LIMIT} agents. Upgrade to $5/mo for ${PAID_LIMIT}.`}
+        {listeners.length}/{limit} agents.{" "}
+        {isPaid
+          ? "Increase subscription quantity in Stripe for more."
+          : "Subscribe ($5/mo) for 3 more agent slots."}
       </p>
     </div>
   );

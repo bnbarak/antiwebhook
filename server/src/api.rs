@@ -259,15 +259,9 @@ pub async fn create_listener(
         ));
     }
 
-    // Check listener limit (free: 3, paid with quantity x2: 6)
+    // Check listener limit: 3 free + 3 per subscription unit
     let existing = db::list_listeners(&state.db, &project.id).await?;
-    let limit = if project.billing_status == "active" {
-        // Paid users get double the limit per subscription quantity
-        // For now: active subscription = 6 listeners
-        FREE_LISTENER_LIMIT * 2
-    } else {
-        FREE_LISTENER_LIMIT
-    };
+    let limit = FREE_LISTENER_LIMIT + (project.subscription_quantity as i64 * FREE_LISTENER_LIMIT);
 
     if existing.len() as i64 >= limit {
         return Err(AppError::BadRequest(
