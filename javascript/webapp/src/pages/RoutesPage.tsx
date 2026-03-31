@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown, RotateCcw, Pencil } from "lucide-react";
 import { api, type Route, type Listener } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
@@ -429,6 +430,9 @@ export function RoutesPage() {
               </Select>
               <p className="text-xs text-muted-foreground">
                 Route events to a specific agent, or leave as "All agents" to deliver to any connected SDK.
+                {agents.length === 0 && (
+                  <> No agents yet — <Link to="/agents" className="underline hover:text-foreground">create one</Link>.</>
+                )}
               </p>
             </div>
 
