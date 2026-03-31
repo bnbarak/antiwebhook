@@ -137,10 +137,16 @@ export function EventsPage() {
         )}
 
         <Input
-          placeholder="Filter by path..."
+          placeholder="stripe/events"
           value={pathFilter}
-          onChange={(e) => { setPathFilter(e.target.value); setRouteFilter("all"); setPage(0); }}
-          className="h-7 w-[200px] text-sm"
+          onChange={(e) => {
+            let val = e.target.value;
+            if (val && !val.startsWith("/")) val = "/" + val;
+            setPathFilter(val);
+            setRouteFilter("all");
+            setPage(0);
+          }}
+          className="h-7 w-[200px] font-mono text-sm"
         />
 
         <Button
@@ -174,15 +180,15 @@ export function EventsPage() {
           </p>
         </div>
       ) : (
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>Time</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Path</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Response</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[100px]">Time</TableHead>
+              <TableHead className="w-[80px]">Method</TableHead>
+              <TableHead className="w-[240px]">Path</TableHead>
+              <TableHead className="w-[100px]">Status</TableHead>
+              <TableHead className="w-[80px]">Response</TableHead>
+              <TableHead className="w-[60px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
