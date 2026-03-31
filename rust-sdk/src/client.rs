@@ -1,4 +1,4 @@
-use crate::frames::{InboundFrame, PongFrame, RequestFrame, ResponseFrame};
+use crate::frames::{InboundFrame, PongFrame, RequestFrame};
 use crate::options::{DispatchFn, ListenOptions};
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
@@ -10,6 +10,13 @@ const DEFAULT_URL: &str = "wss://hook.simplehook.dev";
 const MAX_BACKOFF_SECS: u64 = 30;
 const INITIAL_BACKOFF_SECS: u64 = 1;
 
+fn log_msg(silent: bool, msg: &str) {
+    if !silent {
+        tracing::info!("{}", msg);
+        println!("{}", msg);
+    }
+}
+
 /// Run the WebSocket client with automatic reconnection.
 pub(crate) async fn run_client(
     dispatch: DispatchFn,
@@ -17,13 +24,6 @@ pub(crate) async fn run_client(
     opts: ListenOptions,
     shutdown: Arc<Notify>,
 ) {
-    let server_url = opts
-        .server_url
-        .as_deref()
-        .or_else(|| std::env::var("SIMPLEHOOK_URL").ok().as_deref().map(|_| ""))
-        .unwrap_or(DEFAULT_URL);
-
-    // Re-read SIMPLEHOOK_URL properly
     let server_url = match &opts.server_url {
         Some(url) => url.clone(),
         None => std::env::var("SIMPLEHOOK_URL").unwrap_or_else(|_| DEFAULT_URL.to_string()),
@@ -34,30 +34,23 @@ pub(crate) async fn run_client(
         ws_url.push_str(&format!("&listener_id={}", lid));
     }
 
-    let log = {
-        let silent = opts.silent;
-        move |msg: &str| {
-            if !silent {
-                tracing::info!("{}", msg);
-                // Also print to stdout for visibility
-                println!("{}", msg);
-            }
-        }
-    };
-
+    let silent = opts.silent;
     let mut backoff = INITIAL_BACKOFF_SECS;
 
     loop {
-        match connect_and_run(&ws_url, &dispatch, &log, &opts, &shutdown).await {
+        match connect_and_run(&ws_url, &dispatch, silent, &opts, &shutdown).await {
             Ok(()) => {
                 // Clean shutdown
                 return;
             }
             Err(e) => {
-                log(&format!(
-                    "[simplehook] disconnected ({}), reconnecting in {}s...",
-                    e, backoff
-                ));
+                log_msg(
+                    silent,
+                    &format!(
+                        "[simplehook] disconnected ({}), reconnecting in {}s...",
+                        e, backoff
+                    ),
+                );
                 if let Some(ref cb) = opts.on_disconnect {
                     cb();
                 }
@@ -77,14 +70,14 @@ pub(crate) async fn run_client(
 async fn connect_and_run(
     url: &str,
     dispatch: &DispatchFn,
-    log: &dyn Fn(&str),
+    silent: bool,
     opts: &ListenOptions,
     shutdown: &Arc<Notify>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let (ws_stream, _) = tokio_tungstenite::connect_async(url).await?;
     let (mut write, mut read) = ws_stream.split();
 
-    log("[simplehook] connected");
+    log_msg(silent, "[simplehook] connected");
     if let Some(ref cb) = opts.on_connect {
         cb();
     }
@@ -112,10 +105,8 @@ async fn connect_and_run(
                                     Err(_) => continue,
                                 };
 
-                                let dispatch = dispatch.clone();
-                                // Spawn the dispatch so we don't block the read loop
-                                let resp_future = dispatch(frame);
-                                let resp = resp_future.await;
+                                // Dispatch the request
+                                let resp = dispatch(frame).await;
 
                                 let resp_json = serde_json::to_string(&resp)?;
                                 write.send(Message::Text(resp_json.into())).await?;
@@ -130,7 +121,7 @@ async fn connect_and_run(
                         return Err(Box::new(e));
                     }
                     _ => {
-                        // Binary, Ping, Pong, Frame — ignore
+                        // Binary, Ping, Pong — ignore
                     }
                 }
             }

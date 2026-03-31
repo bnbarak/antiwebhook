@@ -38,7 +38,8 @@ pub fn sanitize_headers(headers: &HashMap<String, String>, body_len: usize) -> H
 /// let conn = simplehook::listen_to_webhooks(dispatch, "ak_xxx", Default::default());
 /// ```
 pub fn axum_dispatch(router: axum::Router) -> DispatchFn {
-    use tower::ServiceExt;
+    use http_body_util::BodyExt;
+    use tower::{Service, ServiceExt};
 
     let router = Arc::new(tokio::sync::Mutex::new(router.into_service()));
 
@@ -46,7 +47,7 @@ pub fn axum_dispatch(router: axum::Router) -> DispatchFn {
         let router = router.clone();
         Box::pin(async move {
             // Decode base64 body
-            let body_bytes = match &frame.body {
+            let body_bytes: Vec<u8> = match &frame.body {
                 Some(b64) => {
                     match base64::engine::general_purpose::STANDARD.decode(b64) {
                         Ok(bytes) => bytes,
@@ -103,11 +104,13 @@ pub fn axum_dispatch(router: axum::Router) -> DispatchFn {
 
             // Dispatch through the router
             let mut svc = router.lock().await;
-            let response = match ServiceExt::<http::Request<axum::body::Body>>::ready(&mut *svc).await {
+            let response: axum::response::Response = match ServiceExt::<http::Request<axum::body::Body>>::ready(&mut *svc).await {
                 Ok(ready_svc) => {
                     match ready_svc.call(request).await {
                         Ok(resp) => resp,
-                        Err(_) => {
+                        Err(e) => {
+                            // Infallible for axum routers, but handle anyway
+                            let _ = e;
                             return ResponseFrame {
                                 frame_type: "response".into(),
                                 id: frame.id,
@@ -118,7 +121,8 @@ pub fn axum_dispatch(router: axum::Router) -> DispatchFn {
                         }
                     }
                 }
-                Err(_) => {
+                Err(e) => {
+                    let _ = e;
                     return ResponseFrame {
                         frame_type: "response".into(),
                         id: frame.id,
@@ -132,7 +136,7 @@ pub fn axum_dispatch(router: axum::Router) -> DispatchFn {
             // Read response
             let status = response.status().as_u16();
 
-            let mut resp_headers = HashMap::new();
+            let mut resp_headers: HashMap<String, String> = HashMap::new();
             for (k, v) in response.headers() {
                 if let Ok(val) = v.to_str() {
                     resp_headers.insert(k.as_str().to_string(), val.to_string());
@@ -140,11 +144,8 @@ pub fn axum_dispatch(router: axum::Router) -> DispatchFn {
             }
 
             // Read body
-            let body_bytes = match http_body_util::BodyExt::collect(response.into_body()).await {
-                Ok(collected) => {
-                    use http_body_util::BodyExt as _;
-                    collected.to_bytes().to_vec()
-                }
+            let body_bytes: Vec<u8> = match BodyExt::collect(response.into_body()).await {
+                Ok(collected) => collected.to_bytes().to_vec(),
                 Err(_) => Vec::new(),
             };
 

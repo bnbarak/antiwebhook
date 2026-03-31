@@ -1,6 +1,5 @@
 use axum::{
     extract::Request,
-    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };

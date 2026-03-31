@@ -1,5 +1,4 @@
 use axum::{
-    body::Body,
     routing::{get, post},
     Json, Router,
 };
