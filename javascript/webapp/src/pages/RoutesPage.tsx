@@ -430,23 +430,45 @@ export function RoutesPage() {
           ))}
         </div>
       ) : routes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16">
-          <GitBranch className="mb-3 size-8 text-muted-foreground/40" />
-          <p className="mb-1 text-sm font-medium text-muted-foreground">
-            No routes configured
-          </p>
-          <p className="mb-4 text-xs text-text-tertiary">
-            All paths default to queue mode. Add a route to use passthrough or assign an agent.
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={openCreate}
-            className="gap-1.5"
-          >
-            <Plus className="size-3.5" />
-            Add your first route
-          </Button>
+        <div className="flex flex-col gap-3">
+          {/* Example ghost routes */}
+          {[
+            { path: "/stripe", mode: "queue", timeout: 5 },
+            { path: "/twilio/voice", mode: "passthrough", timeout: 30 },
+            { path: "/github", mode: "queue", timeout: 5 },
+          ].map((example) => (
+            <div
+              key={example.path}
+              className="flex items-center justify-between rounded-lg border border-dashed border-border px-5 py-3.5 opacity-40"
+            >
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-sm">{example.path}</span>
+                <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+                  {example.mode}
+                </Badge>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {example.timeout}s
+                </span>
+              </div>
+            </div>
+          ))}
+          <div className="flex flex-col items-center py-6">
+            <p className="mb-1 text-sm font-medium text-muted-foreground">
+              No routes configured yet
+            </p>
+            <p className="mb-4 text-xs text-text-tertiary">
+              All paths default to queue mode. Add a route to use passthrough or assign an agent.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openCreate}
+              className="gap-1.5"
+            >
+              <Plus className="size-3.5" />
+              Add your first route
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
