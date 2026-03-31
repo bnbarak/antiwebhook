@@ -26,7 +26,14 @@ async fn main() {
     let config = config::Config::from_env();
     let port = config.port;
 
-    let db = sqlx::PgPool::connect(&config.database_url)
+    let connect_options: sqlx::postgres::PgConnectOptions = config
+        .database_url
+        .parse()
+        .expect("failed to parse DATABASE_URL");
+    let connect_options = connect_options.statement_cache_capacity(0);
+
+    let db = sqlx::postgres::PgPoolOptions::new()
+        .connect_with(connect_options)
         .await
         .expect("failed to connect to postgres");
 

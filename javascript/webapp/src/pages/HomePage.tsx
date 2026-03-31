@@ -5,6 +5,7 @@ import {
   Zap,
   RotateCcw,
   Shield,
+  Lock,
   Clock,
   Terminal,
   Radio,
@@ -464,6 +465,53 @@ export function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      {/* ── PRIVACY ── */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-[960px]">
+          <Kicker>Privacy</Kicker>
+
+          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+            Your webhook data stays yours
+          </h2>
+          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+            Security built in, not bolted on.
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <Lock className="mb-2.5 size-5 text-muted-foreground" />
+              <h3 className="mb-1.5 text-sm font-medium">Encrypted in transit</h3>
+              <p className="text-[13px] text-muted-foreground">
+                All connections use TLS and secure WebSockets (WSS). Data is encrypted from provider to your app.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <Shield className="mb-2.5 size-5 text-muted-foreground" />
+              <h3 className="mb-1.5 text-sm font-medium">Passthrough = zero storage</h3>
+              <p className="text-[13px] text-muted-foreground">
+                In passthrough mode, the request body flows through memory only and is never persisted to disk or database.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <Shield className="mb-2.5 size-5 text-muted-foreground" />
+              <h3 className="mb-1.5 text-sm font-medium">Queue = encrypted & auto-deleted</h3>
+              <p className="text-[13px] text-muted-foreground">
+                Queued bodies are encrypted at rest and deleted after successful delivery. Events auto-expire after 30 days.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-6 text-center text-[13px] text-text-tertiary">
+            No third-party analytics. No tracking. We never sell or share your data.{" "}
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">
+              Full privacy details
+            </Link>
+          </p>
         </div>
       </section>
 

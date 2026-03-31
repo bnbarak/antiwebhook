@@ -122,6 +122,7 @@ const SECTIONS = [
   { id: "quick-start", label: "Quick Start" },
   { id: "configuration", label: "Configuration" },
   { id: "agents", label: "Agents" },
+  { id: "privacy", label: "Privacy & Security" },
   { id: "route-configuration", label: "Route Configuration" },
   { id: "websocket-protocol", label: "WebSocket Protocol" },
   { id: "api-reference", label: "API Reference" },
@@ -877,6 +878,71 @@ listenToWebhooks(app)`}
                 Your webhook URL stays the same — <strong>event routing is configured in the
                 dashboard</strong>, not the URL. Routes without an agent deliver to any connected SDK.
               </p>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── Privacy & Security ─────────────────────────────────────── */}
+          <section
+            id="privacy"
+            ref={(el) => setSectionRef("privacy", el)}
+            className="py-16"
+          >
+            <Kicker>Privacy & Security</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              How your data is handled
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              simplehook is designed to store as little as possible. Here is
+              exactly what happens to your webhook data.
+            </p>
+
+            <div className="flex flex-col gap-6">
+              {/* Passthrough */}
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">Passthrough mode: body never stored</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  In passthrough mode, the request body flows through memory
+                  only. It is proxied directly to your app over the WebSocket
+                  and is <strong>never written to disk or database</strong>.
+                  Only headers and metadata are stored for debugging.
+                </p>
+              </div>
+
+              {/* Queue */}
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">Queue mode: body encrypted at rest, deleted after delivery</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  In queue mode, the request body is stored temporarily so we
+                  can retry delivery if your app is offline. The body is
+                  encrypted at rest (AES-256 via Neon Postgres) and{" "}
+                  <strong>deleted after successful delivery</strong>. Headers
+                  and metadata are retained for debugging and replay.
+                </p>
+              </div>
+
+              {/* TLS / WSS */}
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">All connections encrypted in transit</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  Every connection uses TLS (HTTPS for webhook ingress and
+                  API calls) and secure WebSockets (WSS for SDK connections).
+                  Data is encrypted from the moment it leaves the webhook
+                  provider to the moment it reaches your local app.
+                </p>
+              </div>
+
+              {/* Retention */}
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">Event metadata retained 30 days</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  Event metadata (headers, path, status, timestamps)
+                  auto-expires after 30 days. We never sell or share your
+                  webhook data with third parties and use no third-party
+                  analytics or tracking.
+                </p>
+              </div>
             </div>
           </section>
 

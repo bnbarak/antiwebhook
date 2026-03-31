@@ -61,6 +61,9 @@ export function MarketingLayout() {
             <Link to="/docs" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Docs
             </Link>
+            <Link to="/privacy" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+              Privacy
+            </Link>
             <a href="https://github.com/bnbarak/antiwebhook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               GitHub
             </a>

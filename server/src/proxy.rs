@@ -59,6 +59,8 @@ pub async fn handle_webhook(
     // 4. Store event
     let event_id = db::generate_id("evt_", 16);
     let body_bytes = if body.is_empty() { None } else { Some(body.as_ref()) };
+    // In passthrough mode, don't persist the body (data-in-transit only for privacy)
+    let stored_body = if route_match.mode == db::RouteMode::Queue { body_bytes } else { None };
     db::insert_event(
         &state.db,
         &event_id,
@@ -66,7 +68,7 @@ pub async fn handle_webhook(
         &full_path,
         method.as_str(),
         &header_map,
-        body_bytes,
+        stored_body,
         route_mode_str,
         listener_id.as_deref(),
     )
