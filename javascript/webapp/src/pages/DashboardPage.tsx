@@ -257,13 +257,13 @@ function QuickStartGuide({ apiKey, showKey }: { apiKey: string; showKey: boolean
             <button
               key={l.id}
               onClick={() => handleLangChange(l.id)}
-              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-lg border px-4 py-2.5 transition-colors ${
                 l.id === langId
                   ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
                   : "border-border hover:border-border-strong"
               }`}
             >
-              {LOGO_URLS[l.id] && <img src={LOGO_URLS[l.id]} alt={l.name} className="mr-1.5 h-4 w-auto" />}{l.name}
+              <img src={LOGO_URLS[l.id]} alt={l.name} className="h-7 w-auto" title={l.name} />
             </button>
           ))}
         </div>
