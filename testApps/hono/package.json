@@ -1,0 +1,13 @@
+{
+  "name": "simplehook-test-hono",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@hono/node-server": "^1.13.0",
+    "simplehook-hono": "^0.2.0"
+  }
+}

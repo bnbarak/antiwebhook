@@ -111,7 +111,7 @@ app.listen({ port: 3000 });`,
       {
         id: "hono",
         name: "Hono",
-        available: false,
+        available: true,
         snippet: (key, agent) => `import { Hono } from "hono";
 import { listenToWebhooks } from "simplehook-hono";
 
@@ -161,9 +161,18 @@ listenToWebhooks(application, "${key}"${agent ? `, "${agent}"` : ""})`,
       {
         id: "fastapi",
         name: "FastAPI",
-        available: false,
-        snippet: (key) => `# Coming soon
-# pip install simplehook-fastapi`,
+        available: true,
+        snippet: (key, agent) => `from fastapi import FastAPI, Request
+from simplehook_fastapi import listenToWebhooks
+
+app = FastAPI()
+listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""})
+
+@app.post("/stripe/events")
+async def stripe_webhook(request: Request):
+    body = await request.json()
+    print("Webhook:", body)
+    return {"received": True}`,
       },
     ],
   },
