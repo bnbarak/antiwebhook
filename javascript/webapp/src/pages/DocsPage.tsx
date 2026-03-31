@@ -76,6 +76,25 @@ app.post("/stripe/events", async (req) => {
 
 app.listen({ port: 3000 });`,
       },
+      {
+        id: "hono",
+        name: "Hono",
+        available: true,
+        installCmd: "npm install simplehook-hono",
+        filename: "app.ts",
+        snippet: (key) => `import { Hono } from "hono";
+import { listenToWebhooks } from "simplehook-hono";
+
+const app = new Hono();
+listenToWebhooks(app, "${key}");
+
+app.post("/stripe/events", (c) => {
+  console.log("Webhook received:", c.req.json());
+  return c.json({ received: true });
+});
+
+export default app;`,
+      },
     ],
   },
   {
@@ -111,6 +130,24 @@ from simplehook_django import listenToWebhooks
 
 application = get_wsgi_application()
 listenToWebhooks(application, "${key}")`,
+      },
+      {
+        id: "fastapi",
+        name: "FastAPI",
+        available: true,
+        installCmd: "pip install simplehook-fastapi",
+        filename: "app.py",
+        snippet: (key) => `from fastapi import FastAPI, Request
+from simplehook_fastapi import listenToWebhooks
+
+app = FastAPI()
+listenToWebhooks(app, "${key}")
+
+@app.post("/stripe/events")
+async def stripe_webhook(request: Request):
+    body = await request.json()
+    print("Webhook received:", body)
+    return {"received": True}`,
       },
     ],
   },

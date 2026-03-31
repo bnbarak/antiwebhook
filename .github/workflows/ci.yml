@@ -8,7 +8,7 @@ on:
 
 jobs:
   rust:
-    name: Rust (build + 40 unit tests)
+    name: Rust (build + unit tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +22,7 @@ jobs:
         working-directory: server
 
   sdk-express:
-    name: Express SDK (19 tests)
+    name: Express SDK tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
         working-directory: javascript/sdk/express
 
   sdk-fastify:
-    name: Fastify SDK (20 tests)
+    name: Fastify SDK tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,33 +51,65 @@ jobs:
       - run: npx vitest run
         working-directory: javascript/sdk/fastify
 
+  sdk-hono:
+    name: Hono SDK tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: javascript/sdk/hono
+      - run: npx tsc --noEmit
+        working-directory: javascript/sdk/hono
+      - run: npx vitest run
+        working-directory: javascript/sdk/hono
+
   sdk-flask:
-    name: Flask SDK (28 tests)
+    name: Flask SDK tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install simplehook-core flask websockets pytest pytest-asyncio
-      - run: pip install -e .
+      - run: pip install -e ../core
+        working-directory: python/flask
+      - run: pip install -e ".[dev]"
         working-directory: python/flask
       - run: pytest -v
         working-directory: python/flask
 
   sdk-django:
-    name: Django SDK (19 tests)
+    name: Django SDK tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install simplehook-core django websockets pytest pytest-asyncio
-      - run: pip install -e .
+      - run: pip install -e ../core
+        working-directory: python/django
+      - run: pip install -e ".[dev]"
         working-directory: python/django
       - run: pytest -v
         working-directory: python/django
+
+  sdk-fastapi:
+    name: FastAPI SDK tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ../core
+        working-directory: python/fastapi
+      - run: pip install -e ".[dev]"
+        working-directory: python/fastapi
+      - run: pytest -v
+        working-directory: python/fastapi
 
   webapp:
     name: Webapp (typecheck + build)
@@ -127,33 +159,36 @@ jobs:
       - name: Build server
         run: cargo build
         working-directory: server
+      - name: Build core SDK
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/core
+      - name: Build Express SDK
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/express
       - name: Install test deps
         run: npm install
         working-directory: tests
-      - name: Install Express SDK
-        run: npm install
-        working-directory: javascript/sdk/express
       - name: Install Express test app
         run: npm install
         working-directory: testApps/express
-      - name: Auth tests (15)
+      - name: Auth tests
         run: node --test auth.test.js
         working-directory: tests
-      - name: Billing tests (17)
+      - name: Billing tests
         run: node --test billing.test.js
         working-directory: tests
-      - name: Stats tests (14)
+      - name: Stats tests
         run: node --test stats.test.js
         working-directory: tests
-      - name: Migration tests (9)
+      - name: Migration tests
         run: node --test migrations.test.js
         working-directory: tests
-      - name: E2E webhook tests (19)
+      - name: E2E webhook tests
         run: node --test e2e.test.js
         working-directory: tests
-      - name: Stress tests (8)
+      - name: Stress tests
         run: node --test stress.test.js
         working-directory: tests
-      - name: E2E SDK tests (5)
+      - name: E2E SDK tests
         run: node --test e2e-sdk.test.js
         working-directory: testApps

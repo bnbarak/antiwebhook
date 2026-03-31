@@ -56,6 +56,16 @@ listenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"])
 def stripe():
     print("Webhook:", request.json)
     return {"received": True}` },
+  { id: "hono", name: "Hono", file: "app.ts", code: `import { Hono } from "hono";
+import { listenToWebhooks } from "simplehook-hono";
+
+const app = new Hono();
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
+
+app.post("/stripe/events", (c) => {
+  console.log("Webhook:", c.req.json());
+  return c.json({ received: true });
+});` },
   { id: "django", name: "Django", file: "wsgi.py", code: `from django.core.wsgi import get_wsgi_application
 from simplehook_django import listenToWebhooks
 
@@ -63,6 +73,16 @@ application = get_wsgi_application()
 listenToWebhooks(application, os.environ["SIMPLEHOOK_KEY"])
 
 # Your views handle webhooks as normal Django views` },
+  { id: "fastapi", name: "FastAPI", file: "app.py", code: `from fastapi import FastAPI, Request
+from simplehook_fastapi import listenToWebhooks
+
+app = FastAPI()
+listenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"])
+
+@app.post("/stripe/events")
+async def stripe(request: Request):
+    body = await request.json()
+    return {"received": True}` },
 ];
 
 function HeroCodeBlock() {
@@ -608,10 +628,14 @@ export function HomePage() {
                 <span className="text-[#27c93f]">$</span> npm install simplehook{"\n"}
                 <span className="text-[#7a7190]"># Fastify</span>{"\n"}
                 <span className="text-[#27c93f]">$</span> npm install simplehook-fastify{"\n"}
+                <span className="text-[#7a7190]"># Hono</span>{"\n"}
+                <span className="text-[#27c93f]">$</span> npm install simplehook-hono{"\n"}
                 <span className="text-[#7a7190]"># Flask</span>{"\n"}
                 <span className="text-[#27c93f]">$</span> pip install simplehook-flask{"\n"}
                 <span className="text-[#7a7190]"># Django</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> pip install simplehook-django
+                <span className="text-[#27c93f]">$</span> pip install simplehook-django{"\n"}
+                <span className="text-[#7a7190]"># FastAPI</span>{"\n"}
+                <span className="text-[#27c93f]">$</span> pip install simplehook-fastapi
               </code>
             </pre>
           </div>
@@ -633,7 +657,7 @@ export function HomePage() {
           </div>
 
           <p className="mt-6 font-mono text-xs text-text-tertiary">
-            Express &middot; Fastify &middot; Flask &middot; Django &middot; one line &middot; done
+            Express &middot; Fastify &middot; Hono &middot; Flask &middot; Django &middot; FastAPI &middot; one line &middot; done
           </p>
         </div>
       </section>
