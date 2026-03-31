@@ -1,0 +1,51 @@
+"""Flask test app for simplehook SDK."""
+
+import os
+import sys
+
+# Use local SDK if not installed via pip
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../python/flask/src"))
+
+from flask import Flask, request, jsonify
+from simplehook_flask import listen
+
+app = Flask(__name__)
+
+connection = listen(
+    app,
+    os.environ.get("SIMPLEHOOK_KEY", "ak_test"),
+    server_url=os.environ.get("SIMPLEHOOK_URL"),
+    force_enable=True,
+)
+
+
+@app.post("/stripe/events")
+def stripe_events():
+    print(f"[stripe] {request.json.get('type', 'unknown')}")
+    return jsonify(received=True)
+
+
+@app.post("/github/push")
+def github_push():
+    print(f"[github] {request.json.get('ref', 'unknown')}")
+    return jsonify(ok=True)
+
+
+@app.post("/twilio/voice")
+def twilio_voice():
+    print(f"[twilio] {request.json.get('CallSid', 'unknown')}")
+    return '<Response><Say>Hello from simplehook!</Say></Response>', 200, {"Content-Type": "text/xml"}
+
+
+@app.route("/", defaults={"path": ""}, methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+@app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+def catch_all(path):
+    print(f"[webhook] {request.method} /{path}")
+    return jsonify(received=True, path=f"/{path}", method=request.method)
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 3003))
+    print(f"Flask test app listening on :{port}")
+    print("Waiting for webhooks via simplehook...")
+    app.run(host="0.0.0.0", port=port)
