@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "simplehook-flask"
-version = "0.2.0"
+version = "0.3.0"
 description = "Simplehook SDK for Flask"
 requires-python = ">=3.10"
 dependencies = [

@@ -1,6 +1,6 @@
 {
   "name": "simplehook",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Stable webhook URLs for localhost. One line of code.",
   "type": "module",
   "main": "dist/index.js",
@@ -26,6 +26,12 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "keywords": ["webhooks", "tunnel", "ngrok", "development", "express"],
+  "keywords": [
+    "webhooks",
+    "tunnel",
+    "ngrok",
+    "development",
+    "express"
+  ],
   "license": "MIT"
 }
