@@ -2,7 +2,7 @@ app = 'simplehook-server'
 primary_region = 'ord'
 
 [build]
-  dockerfile = 'server/Dockerfile'
+  dockerfile = 'Dockerfile.fly'
 
 [env]
   BASE_URL = 'https://hook.simplehook.dev'
