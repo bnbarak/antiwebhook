@@ -361,9 +361,9 @@ describe("auth: signup, login, session, logout", () => {
 
     // Assert: empty events for new project
     assert.strictEqual(eventsRes.status, 200);
-    const events = eventsRes.json();
-    assert.ok(Array.isArray(events));
-    assert.strictEqual(events.length, 0);
+    const eventsBody = eventsRes.json();
+    assert.ok(Array.isArray(eventsBody.data));
+    assert.strictEqual(eventsBody.data.length, 0);
   });
 
   // --- Multiple sessions ---
