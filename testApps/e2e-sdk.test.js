@@ -228,7 +228,7 @@ describe("e2e-sdk: all SDKs", () => {
         SIMPLEHOOK_KEY: proj.api_key,
         SIMPLEHOOK_URL: `ws://localhost:${SERVER_PORT}`,
         PORT: "3097",
-      }, "Waiting for webhooks");
+      }, "[simplehook] connected");
     });
 
     after(() => {

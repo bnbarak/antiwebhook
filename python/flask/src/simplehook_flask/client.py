@@ -19,7 +19,7 @@ from .utils import (
     sanitize_headers,
 )
 
-DEFAULT_URL = "wss://hooks.simplehook.dev"
+DEFAULT_URL = "wss://hook.simplehook.dev"
 MAX_BACKOFF = 30.0
 
 logger = logging.getLogger("simplehook")

@@ -1,21 +1,24 @@
 """Flask test app for simplehook SDK."""
 
+import logging
 import os
 import sys
 
-# Use local SDK if not installed via pip
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../python/flask/src"))
-
 from flask import Flask, request, jsonify
 from simplehook_flask import listen
+
+# Send simplehook logs to stdout so the e2e test can detect them
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
 app = Flask(__name__)
 
 connection = listen(
     app,
     os.environ.get("SIMPLEHOOK_KEY", "ak_test"),
-    server_url=os.environ.get("SIMPLEHOOK_URL"),
-    force_enable=True,
+    {
+        "server_url": os.environ.get("SIMPLEHOOK_URL"),
+        "force_enable": True,
+    },
 )
 
 
