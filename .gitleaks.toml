@@ -1,0 +1,18 @@
+[allowlist]
+description = "Allowlist for false positives"
+
+# Placeholder API keys in code examples (not real secrets)
+regexes = [
+  '''aw_live_\.\.\.''',
+  '''ak_your_api_key''',
+  '''ak_••••••••••••••••••••''',
+]
+
+# Files that contain code examples with placeholder keys
+paths = [
+  '''docs/.*\.md''',
+  '''javascript/webapp/src/pages/DocsPage\.tsx''',
+  '''javascript/webapp/src/pages/DashboardPage\.tsx''',
+  '''javascript/webapp/src/pages/HomePage\.tsx''',
+  '''.*README\.md''',
+]
