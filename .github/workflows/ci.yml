@@ -165,12 +165,24 @@ jobs:
       - name: Build Express SDK
         run: npm install && npx tsc
         working-directory: javascript/sdk/express
+      - name: Build Fastify SDK
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/fastify
+      - name: Build Hono SDK
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/hono
       - name: Install test deps
         run: npm install
         working-directory: tests
       - name: Install Express test app
         run: npm install
         working-directory: testApps/express
+      - name: Install Fastify test app
+        run: npm install
+        working-directory: testApps/fastify
+      - name: Install Hono test app
+        run: npm install
+        working-directory: testApps/hono
       - name: Auth tests
         run: node --test auth.test.js
         working-directory: tests

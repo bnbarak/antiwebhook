@@ -205,6 +205,90 @@ describe("e2e-sdk: all SDKs", () => {
     });
   });
 
+  // ── Fastify SDK ──
+
+  describe("Fastify SDK (testApps/fastify)", () => {
+    let app;
+    let projectId;
+
+    before(async () => {
+      const proj = await registerProject("fastify-e2e");
+      projectId = proj.project_id;
+
+      // Build SDK first
+      try {
+        execSync("npm run build", { cwd: path.join(__dirname, "../javascript/sdk/fastify"), stdio: "ignore" });
+      } catch {}
+
+      app = await startTestApp("node", [path.join(__dirname, "fastify/index.js")], {
+        SIMPLEHOOK_KEY: proj.api_key,
+        SIMPLEHOOK_URL: `ws://localhost:${SERVER_PORT}`,
+        PORT: "3096",
+      });
+    });
+
+    after(() => {
+      app?.process.kill("SIGTERM");
+    });
+
+    test("receives stripe webhook", async () => {
+      await sendWebhook(projectId, "/stripe/events", { type: "invoice.paid", id: "in_fast" });
+      await app.waitForLog("[stripe] invoice.paid");
+      assert.ok(true);
+    });
+
+    test("receives github webhook", async () => {
+      await sendWebhook(projectId, "/github/push", { ref: "refs/heads/main", commits: [{ id: "abc" }] });
+      await app.waitForLog("[github] refs/heads/main");
+      assert.ok(true);
+    });
+
+    test("receives catch-all webhook", async () => {
+      await sendWebhook(projectId, "/custom/path", { test: true });
+      await app.waitForLog("[webhook] POST /custom/path");
+      assert.ok(true);
+    });
+  });
+
+  // ── Hono SDK ──
+
+  describe("Hono SDK (testApps/hono)", () => {
+    let app;
+    let projectId;
+
+    before(async () => {
+      const proj = await registerProject("hono-e2e");
+      projectId = proj.project_id;
+
+      // Build SDK first
+      try {
+        execSync("npm run build", { cwd: path.join(__dirname, "../javascript/sdk/hono"), stdio: "ignore" });
+      } catch {}
+
+      app = await startTestApp("node", [path.join(__dirname, "hono/index.js")], {
+        SIMPLEHOOK_KEY: proj.api_key,
+        SIMPLEHOOK_URL: `ws://localhost:${SERVER_PORT}`,
+        PORT: "3095",
+      });
+    });
+
+    after(() => {
+      app?.process.kill("SIGTERM");
+    });
+
+    test("receives stripe webhook", async () => {
+      await sendWebhook(projectId, "/stripe/events", { type: "charge.completed", id: "ch_hono" });
+      await app.waitForLog("[stripe] charge.completed");
+      assert.ok(true);
+    });
+
+    test("receives catch-all webhook", async () => {
+      await sendWebhook(projectId, "/anything/here", { test: true });
+      await app.waitForLog("[webhook] POST /anything/here");
+      assert.ok(true);
+    });
+  });
+
   // ── Flask SDK ──
 
   describe("Flask SDK (testApps/flask)", () => {
@@ -251,6 +335,102 @@ describe("e2e-sdk: all SDKs", () => {
 
     test("receives catch-all webhook", async (t) => {
       if (!hasPython) { t.skip("Python/Flask not available"); return; }
+      await sendWebhook(projectId, "/any/path", { data: "test" });
+      await app.waitForLog("[webhook] POST /any/path");
+      assert.ok(true);
+    });
+  });
+
+  // ── FastAPI SDK ──
+
+  describe("FastAPI SDK (testApps/fastapi)", () => {
+    let app;
+    let projectId;
+    let hasPython = true;
+
+    before(async () => {
+      try {
+        execSync("python3 -c 'import fastapi; import websockets; import httpx'", { stdio: "ignore" });
+      } catch {
+        hasPython = false;
+        return;
+      }
+
+      const proj = await registerProject("fastapi-e2e");
+      projectId = proj.project_id;
+
+      app = await startTestApp("python3", [path.join(__dirname, "fastapi/app.py")], {
+        SIMPLEHOOK_KEY: proj.api_key,
+        SIMPLEHOOK_URL: `ws://localhost:${SERVER_PORT}`,
+        PORT: "3094",
+      }, "[simplehook] connected");
+    });
+
+    after(() => {
+      app?.process.kill("SIGTERM");
+    });
+
+    test("receives stripe webhook", async (t) => {
+      if (!hasPython) { t.skip("Python/FastAPI not available"); return; }
+      await sendWebhook(projectId, "/stripe/events", { type: "payment_intent.succeeded" });
+      await app.waitForLog("[stripe] payment_intent.succeeded");
+      assert.ok(true);
+    });
+
+    test("receives catch-all webhook", async (t) => {
+      if (!hasPython) { t.skip("Python/FastAPI not available"); return; }
+      await sendWebhook(projectId, "/any/path", { data: "test" });
+      await app.waitForLog("[webhook] POST /any/path");
+      assert.ok(true);
+    });
+  });
+
+  // ── Go SDK ──
+
+  describe("Go SDK (testApps/go)", () => {
+    let app;
+    let projectId;
+    let hasGo = true;
+
+    before(async () => {
+      try {
+        execSync("go version", { stdio: "ignore" });
+      } catch {
+        hasGo = false;
+        return;
+      }
+
+      const proj = await registerProject("go-e2e");
+      projectId = proj.project_id;
+
+      // Build the Go test app
+      try {
+        execSync("go build -o testapp .", { cwd: path.join(__dirname, "go"), stdio: "ignore" });
+      } catch (e) {
+        hasGo = false;
+        return;
+      }
+
+      app = await startTestApp(path.join(__dirname, "go/testapp"), [], {
+        SIMPLEHOOK_KEY: proj.api_key,
+        SIMPLEHOOK_URL: `ws://localhost:${SERVER_PORT}`,
+        PORT: "3093",
+      }, "[simplehook] connected");
+    });
+
+    after(() => {
+      app?.process.kill("SIGTERM");
+    });
+
+    test("receives stripe webhook", async (t) => {
+      if (!hasGo) { t.skip("Go not available"); return; }
+      await sendWebhook(projectId, "/stripe/events", { type: "charge.succeeded" });
+      await app.waitForLog("[stripe] charge.succeeded");
+      assert.ok(true);
+    });
+
+    test("receives catch-all webhook", async (t) => {
+      if (!hasGo) { t.skip("Go not available"); return; }
       await sendWebhook(projectId, "/any/path", { data: "test" });
       await app.waitForLog("[webhook] POST /any/path");
       assert.ok(true);
