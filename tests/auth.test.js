@@ -17,12 +17,10 @@ const http = require("node:http");
 const path = require("node:path");
 const crypto = require("node:crypto");
 
-const AUTH_PORT = 8406;
-const RUST_PORT = 8407;
+const SERVER_PORT = 8406;
 const DB_URL = "postgres://admin:secret@localhost:5434/simplehook";
 
-let authProcess = null;
-let rustProcess = null;
+let serverProcess = null;
 
 // --- HTTP helpers ---
 
@@ -70,11 +68,11 @@ function extractCookieHeader(cookieArray) {
 function authReq(method, urlPath, body, cookies = []) {
   const headers = { origin: "http://localhost:4000" };
   if (cookies.length) headers.cookie = extractCookieHeader(cookies);
-  return request(AUTH_PORT, method, urlPath, body, headers);
+  return request(SERVER_PORT, method, urlPath, body, headers);
 }
 
 function apiReq(method, urlPath, body, headers = {}) {
-  return request(RUST_PORT, method, urlPath, body, headers);
+  return request(SERVER_PORT, method, urlPath, body, headers);
 }
 
 function sleep(ms) {
@@ -107,53 +105,36 @@ function randomEmail() {
 
 describe("auth: signup, login, session, logout", () => {
   before(async () => {
-    // Clean BetterAuth tables (ignore errors if tables don't exist yet)
+    // Clean auth tables
     try {
       execSync(
-        `psql "${DB_URL}" -c "DELETE FROM session; DELETE FROM account; DELETE FROM verification; DELETE FROM \\"user\\";" 2>/dev/null`,
+        `psql "${DB_URL}" -c "DELETE FROM sessions; DELETE FROM users WHERE email LIKE 'test-%';" 2>/dev/null`,
       );
     } catch {}
 
-    // Start auth service
-    authProcess = spawn("npx", ["tsx", "src/index.ts"], {
-      cwd: path.join(__dirname, "../javascript/auth"),
-      env: {
-        ...process.env,
-        DATABASE_URL: DB_URL,
-        BETTER_AUTH_SECRET: "test-secret-32-chars-minimum-here!",
-        BETTER_AUTH_URL: `http://localhost:${AUTH_PORT}`,
-        WEBAPP_URL: "http://localhost:4000",
-        PORT: String(AUTH_PORT),
-      },
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    authProcess.stderr.on("data", () => {});
-    authProcess.stdout.on("data", () => {});
-
-    // Start Rust server
-    rustProcess = spawn(
+    // Start Rust server (auth is built in)
+    serverProcess = spawn(
       path.join(__dirname, "../server/target/debug/simplehook-server"),
       [],
       {
         env: {
           ...process.env,
           DATABASE_URL: DB_URL,
-          PORT: String(RUST_PORT),
-          BASE_URL: `http://localhost:${RUST_PORT}`,
+          PORT: String(SERVER_PORT),
+          BASE_URL: `http://localhost:${SERVER_PORT}`,
           FRONTEND_URL: "http://localhost:4000",
           RUST_LOG: "simplehook_server=warn",
         },
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
-    rustProcess.stderr.on("data", () => {});
+    serverProcess.stderr.on("data", () => {});
 
-    await Promise.all([waitForService(AUTH_PORT), waitForService(RUST_PORT)]);
+    await waitForService(SERVER_PORT);
   });
 
   after(() => {
-    authProcess?.kill("SIGTERM");
-    rustProcess?.kill("SIGTERM");
+    serverProcess?.kill("SIGTERM");
   });
 
   // --- Signup ---
