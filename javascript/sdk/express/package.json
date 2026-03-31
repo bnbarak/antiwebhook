@@ -1,6 +1,6 @@
 {
   "name": "simplehook",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Stable webhook URLs for localhost. One line of code.",
   "type": "module",
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "simplehook-core": "file:../core",
+    "simplehook-core": "^0.1.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
