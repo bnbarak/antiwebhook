@@ -2,47 +2,65 @@
 set -e
 
 # Publish all SDKs to their registries.
-# Usage: ./scripts/publish.sh [npm|pip|all]
+# Usage: ./scripts/publish.sh [npm|pip|express|fastify|flask|django|all]
 #
 # Requires:
-#   npm: .npmrc with auth token in javascript/sdk/express/
-#   pip: TWINE_USERNAME=__token__ TWINE_PASSWORD=pypi-... in env
+#   npm: .npmrc with auth token OR NPM_TOKEN env var
+#   pip: TWINE_USERNAME + TWINE_PASSWORD env vars
 
 SCOPE="${1:-all}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-# -- npm (Express SDK) --
-publish_npm() {
-  echo "📦 Publishing simplehook to npm..."
+publish_express() {
+  echo "📦 Publishing simplehook (Express) to npm..."
   cd "$ROOT/javascript/sdk/express"
   npx tsc
   npm publish --access public
-  echo "✅ npm: simplehook@$(node -p 'require("./package.json").version')"
+  echo "✅ simplehook@$(node -p 'require("./package.json").version')"
 }
 
-# -- pip (Flask SDK) --
-publish_pip() {
+publish_fastify() {
+  echo "📦 Publishing simplehook-fastify to npm..."
+  cd "$ROOT/javascript/sdk/fastify"
+  npx tsc
+  npm publish --access public
+  echo "✅ simplehook-fastify@$(node -p 'require("./package.json").version')"
+}
+
+publish_flask() {
   echo "📦 Publishing simplehook-flask to PyPI..."
   cd "$ROOT/python/flask"
   rm -rf dist/
   python3 -m build
   python3 -m twine upload dist/*
-  VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-  echo "✅ pip: simplehook-flask@${VERSION}"
+  echo "✅ simplehook-flask published"
+}
+
+publish_django() {
+  echo "📦 Publishing simplehook-django to PyPI..."
+  cd "$ROOT/python/django"
+  rm -rf dist/
+  python3 -m build
+  python3 -m twine upload dist/*
+  echo "✅ simplehook-django published"
 }
 
 case "$SCOPE" in
-  npm)  publish_npm ;;
-  pip)  publish_pip ;;
+  npm)      publish_express; echo ""; publish_fastify ;;
+  pip)      publish_flask; echo ""; publish_django ;;
+  express)  publish_express ;;
+  fastify)  publish_fastify ;;
+  flask)    publish_flask ;;
+  django)   publish_django ;;
   all)
-    publish_npm
-    echo ""
-    publish_pip
-    echo ""
-    echo "🎉 All SDKs published!"
+    publish_express; echo ""
+    publish_fastify; echo ""
+    publish_flask; echo ""
+    publish_django; echo ""
+    echo "🎉 All 4 SDKs published!"
     ;;
   *)
-    echo "Usage: $0 [npm|pip|all]"
+    echo "Usage: $0 [npm|pip|express|fastify|flask|django|all]"
     exit 1
     ;;
 esac
