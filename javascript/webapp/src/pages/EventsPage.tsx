@@ -181,12 +181,13 @@ export function EventsPage() {
         <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Time</TableHead>
-              <TableHead className="w-[80px]">Method</TableHead>
-              <TableHead className="w-[240px]">Path</TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
-              <TableHead className="w-[80px]">Response</TableHead>
-              <TableHead className="w-[60px] text-right">Actions</TableHead>
+              <TableHead className="w-[90px]">Time</TableHead>
+              <TableHead className="w-[70px]">Method</TableHead>
+              <TableHead className="w-[200px]">Path</TableHead>
+              <TableHead className="w-[90px]">Mode</TableHead>
+              <TableHead className="w-[90px]">Status</TableHead>
+              <TableHead className="w-[70px]">Response</TableHead>
+              <TableHead className="w-[50px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -206,6 +207,21 @@ export function EventsPage() {
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate font-mono text-xs">
                   {event.path}
+                </TableCell>
+                <TableCell>
+                  {event.route_mode ? (
+                    <span className={`inline-flex rounded px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase ${
+                      event.route_mode === "passthrough"
+                        ? "bg-status-blue-bg text-status-blue-text"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {event.route_mode}
+                    </span>
+                  ) : (
+                    <span className="inline-flex rounded bg-status-amber-bg px-1.5 py-0.5 font-mono text-[9px] font-medium text-status-amber-text">
+                      no route
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={event.status} />

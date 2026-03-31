@@ -35,12 +35,20 @@ pub async fn handle_webhook(
 
     // 2. Determine route mode + timeout (longest prefix match, default: queue 5s)
     let full_path = format!("/{}", path);
-    let route_match = db::match_route(&state.db, &project_id, &full_path)
-        .await?
-        .unwrap_or(db::RouteMatch {
-            mode: db::RouteMode::Queue,
-            timeout_seconds: 5,
-        });
+    let matched_route = db::match_route(&state.db, &project_id, &full_path).await?;
+    let has_route = matched_route.is_some();
+    let route_match = matched_route.unwrap_or(db::RouteMatch {
+        mode: db::RouteMode::Queue,
+        timeout_seconds: 5,
+    });
+    let route_mode_str: Option<&str> = if has_route {
+        Some(match route_match.mode {
+            db::RouteMode::Passthrough => "passthrough",
+            db::RouteMode::Queue => "queue",
+        })
+    } else {
+        None // no matching route — will show as "unmatched" in UI
+    };
 
     // 3. Serialize headers
     let header_map = serialize_headers(&headers);
@@ -56,6 +64,7 @@ pub async fn handle_webhook(
         method.as_str(),
         &header_map,
         body_bytes,
+        route_mode_str,
     )
     .await?;
 

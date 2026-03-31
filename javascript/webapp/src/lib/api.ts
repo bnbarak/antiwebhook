@@ -23,6 +23,7 @@ export interface WebhookEvent {
   response_status: number | null;
   response_body: string | null;
   response_headers: Record<string, string> | null;
+  route_mode: string | null;
   attempts: number;
   next_retry_at: string | null;
   created_at: string;

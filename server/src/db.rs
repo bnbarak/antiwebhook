@@ -43,6 +43,7 @@ pub struct Event {
     pub response_body: Option<Vec<u8>>,
     pub attempts: i16,
     pub next_retry_at: Option<DateTime<Utc>>,
+    pub route_mode: Option<String>,
     pub created_at: DateTime<Utc>,
     pub delivered_at: Option<DateTime<Utc>>,
 }
@@ -253,9 +254,10 @@ pub async fn insert_event(
     method: &str,
     headers: &HashMap<String, String>,
     body: Option<&[u8]>,
+    route_mode: Option<&str>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
-        "INSERT INTO events (id, project_id, path, method, headers, body) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO events (id, project_id, path, method, headers, body, route_mode) VALUES ($1, $2, $3, $4, $5, $6, $7)",
     )
     .bind(id)
     .bind(project_id)
@@ -263,6 +265,7 @@ pub async fn insert_event(
     .bind(method)
     .bind(serde_json::to_value(headers).unwrap())
     .bind(body)
+    .bind(route_mode)
     .execute(pool)
     .await?;
     Ok(())
