@@ -453,57 +453,6 @@ export function DocsPage() {
 
       <SectionDivider />
 
-      {/* ── Installation ────────────────────────────────────────────── */}
-      <section className="px-6 py-16">
-        <div className="mx-auto max-w-[960px]">
-          <Kicker>Installation</Kicker>
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            Per-framework packages
-          </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            Each framework has its own lightweight package. Pick the one that
-            matches your stack.
-          </p>
-
-          {/* All frameworks rendered for SEO, active one visible */}
-          {LANGUAGES.map((language) => (
-            <div
-              key={`lang-install-${language.id}`}
-              className={activeLang === language.id ? "" : "hidden"}
-            >
-              <div className="flex flex-col gap-6">
-                {language.frameworks.map((fw) => (
-                  <div key={`fw-install-${fw.id}`}>
-                    <h3 className="mb-3 text-sm font-medium flex items-center gap-2">
-                      <img
-                        src={LOGO_URLS[language.id]}
-                        alt={language.name}
-                        className="h-4 w-auto"
-                      />
-                      {fw.name}
-                      {!fw.available && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                          coming soon
-                        </span>
-                      )}
-                    </h3>
-                    <CopyableCode code={fw.installCmd} title="Terminal" />
-                    <div className="mt-3">
-                      <CopyableCode
-                        code={fw.snippet(displayKey)}
-                        title={fw.filename}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <SectionDivider />
-
       {/* ── Configuration ───────────────────────────────────────────── */}
       <section className="px-6 py-16">
         <div className="mx-auto max-w-[960px]">
@@ -683,37 +632,70 @@ listenToWebhooks(app)`}
           </p>
 
           <div className="flex flex-col gap-6">
-            <div>
-              <h3 className="mb-3 text-sm font-medium">
-                Queue mode (default)
-              </h3>
-              <p className="mb-3 text-[13px] text-muted-foreground">
-                Returns 200 to the webhook provider immediately. Events are
-                queued and forwarded to your app with automatic retries and
-                exponential backoff.
+            {/* Passthrough */}
+            <div className="rounded-lg border border-border bg-card p-5">
+              <h3 className="mb-2 text-sm font-medium">Passthrough mode</h3>
+              <p className="mb-4 text-[13px] text-muted-foreground">
+                Your app's <strong>real response</strong> goes back to the caller. Use for Twilio (TwiML), Shopify (verification), or any provider that reads your response. Returns 502 if your app is offline.
               </p>
+              <div className="mb-4 rounded-lg bg-muted/50 p-4 font-mono text-[11px]">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="rounded bg-background px-2 py-1">Twilio</span>
+                  <span>→</span>
+                  <span className="rounded bg-background px-2 py-1">simplehook</span>
+                  <span>→</span>
+                  <span className="rounded bg-background px-2 py-1">Your app</span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-status-green-text">
+                  <span className="rounded bg-background px-2 py-1">Twilio</span>
+                  <span>←</span>
+                  <span className="rounded bg-background px-2 py-1">simplehook</span>
+                  <span>←</span>
+                  <span className="rounded bg-status-green-bg px-2 py-1">TwiML response</span>
+                </div>
+              </div>
               <CopyableCode
-                code={`{
-  "path_prefix": "/stripe",
-  "mode": "queue"
+                code={`POST /api/routes
+{
+  "path_prefix": "/twilio",
+  "mode": "passthrough",
+  "timeout_seconds": 30
 }`}
-                title="Route config"
+                title="Create passthrough route"
               />
             </div>
 
-            <div>
-              <h3 className="mb-3 text-sm font-medium">Passthrough mode</h3>
-              <p className="mb-3 text-[13px] text-muted-foreground">
-                Proxies the webhook to your app over WebSocket and returns your
-                actual HTTP response to the webhook provider. Like a tunnel but
-                without the tunnel.
+            {/* Queue */}
+            <div className="rounded-lg border border-border bg-card p-5">
+              <h3 className="mb-2 text-sm font-medium">Queue mode (default)</h3>
+              <p className="mb-4 text-[13px] text-muted-foreground">
+                Returns <strong>200 instantly</strong> to the caller. Delivers to your app async with retry. Events queue when your app is offline and drain on reconnect.
               </p>
+              <div className="mb-4 rounded-lg bg-muted/50 p-4 font-mono text-[11px]">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="rounded bg-background px-2 py-1">Stripe</span>
+                  <span>→</span>
+                  <span className="rounded bg-background px-2 py-1">simplehook</span>
+                  <span>→</span>
+                  <span className="rounded bg-status-green-bg px-2 py-1 text-status-green-text">200 OK</span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-muted-foreground">
+                  <span className="invisible rounded bg-background px-2 py-1">Stripe</span>
+                  <span className="invisible">→</span>
+                  <span className="rounded bg-background px-2 py-1">simplehook</span>
+                  <span>→</span>
+                  <span className="rounded bg-background px-2 py-1">Your app</span>
+                  <span className="text-[10px] italic">(async, with retry)</span>
+                </div>
+              </div>
               <CopyableCode
-                code={`{
-  "path_prefix": "/github",
-  "mode": "passthrough"
+                code={`POST /api/routes
+{
+  "path_prefix": "/stripe",
+  "mode": "queue",
+  "timeout_seconds": 5
 }`}
-                title="Route config"
+                title="Create queue route"
               />
             </div>
 
@@ -847,76 +829,131 @@ listenToWebhooks(app)`}
           </p>
 
           <div className="flex flex-col gap-4">
-            {/* Events */}
             <EndpointGroup
               title="Events"
               endpoints={[
-                {
-                  method: "GET",
-                  path: "/api/events",
-                  desc: "List events",
-                },
-                {
-                  method: "GET",
-                  path: "/api/events/:id",
-                  desc: "Get event detail",
-                },
-                {
-                  method: "POST",
-                  path: "/api/events/:id/replay",
-                  desc: "Replay event",
-                },
+                { method: "GET", path: "/api/events", desc: "List events (paginated, filterable)",
+                  request: `GET /api/events?status=delivered&path=/stripe&limit=25&offset=0`,
+                  response: `{
+  "data": [
+    {
+      "id": "evt_abc123",
+      "path": "/stripe/events",
+      "method": "POST",
+      "status": "delivered",
+      "route_mode": "queue",
+      "response_status": 200,
+      "created_at": "2026-03-30T10:00:00Z"
+    }
+  ],
+  "total": 142,
+  "limit": 25,
+  "offset": 0
+}` },
+                { method: "GET", path: "/api/events/:id", desc: "Get event detail",
+                  response: `{
+  "id": "evt_abc123",
+  "path": "/stripe/events",
+  "method": "POST",
+  "headers": {"content-type": "application/json"},
+  "body": "<base64>",
+  "status": "delivered",
+  "response_status": 200,
+  "response_body": "<base64>",
+  "route_mode": "queue",
+  "attempts": 1,
+  "created_at": "2026-03-30T10:00:00Z",
+  "delivered_at": "2026-03-30T10:00:01Z"
+}` },
+                { method: "POST", path: "/api/events/:id/replay", desc: "Replay an event",
+                  response: `{
+  "id": "evt_new456",
+  "path": "/stripe/events",
+  "status": "pending"
+}` },
               ]}
             />
 
-            {/* Routes */}
             <EndpointGroup
               title="Routes"
               endpoints={[
-                { method: "GET", path: "/api/routes", desc: "List routes" },
-                { method: "POST", path: "/api/routes", desc: "Create route" },
-                {
-                  method: "PATCH",
-                  path: "/api/routes/:id",
-                  desc: "Update route",
-                },
-                {
-                  method: "DELETE",
-                  path: "/api/routes/:id",
-                  desc: "Delete route",
-                },
+                { method: "GET", path: "/api/routes", desc: "List active routes",
+                  response: `[
+  {
+    "id": "uuid-here",
+    "path_prefix": "/stripe",
+    "mode": "passthrough",
+    "timeout_seconds": 30,
+    "created_at": "2026-03-30T10:00:00Z"
+  }
+]` },
+                { method: "POST", path: "/api/routes", desc: "Create route",
+                  request: `{
+  "path_prefix": "/stripe",
+  "mode": "passthrough",
+  "timeout_seconds": 30
+}`,
+                  response: `{
+  "id": "uuid-here",
+  "path_prefix": "/stripe",
+  "mode": "passthrough",
+  "timeout_seconds": 30
+}` },
+                { method: "DELETE", path: "/api/routes/:id", desc: "Soft-delete a route",
+                  response: `{"deleted": true}` },
+                { method: "GET", path: "/api/routes/trash", desc: "List deleted routes" },
+                { method: "POST", path: "/api/routes/:id/restore", desc: "Restore a deleted route",
+                  response: `{"restored": true}` },
               ]}
             />
 
-            {/* Auth & Billing */}
             <EndpointGroup
-              title="Auth & Billing"
+              title="Stats"
               endpoints={[
-                {
-                  method: "POST",
-                  path: "/api/auth/register",
-                  desc: "Create project",
-                },
-                {
-                  method: "GET",
-                  path: "/api/auth/me",
-                  desc: "Get current project",
-                },
-                {
-                  method: "GET",
-                  path: "/api/billing",
-                  desc: "Get billing info",
-                },
-                {
-                  method: "POST",
-                  path: "/api/billing/checkout",
-                  desc: "Create checkout session",
-                },
-                {
-                  method: "POST",
-                  path: "/api/billing/portal",
-                  desc: "Create billing portal link",
-                },
+                { method: "GET", path: "/api/stats?window=1d", desc: "Dashboard stats",
+                  request: `GET /api/stats?window=1d
+# windows: 1m, 10m, 1h, 1d, 7d`,
+                  response: `{
+  "total": 1234,
+  "delivered": 1100,
+  "pending": 100,
+  "failed": 34,
+  "timeseries": [
+    {"time": "2026-03-30T10:00:00Z", "total": 50, "delivered": 45, "failed": 5}
+  ],
+  "by_path": [
+    {"path": "/stripe/events", "count": 400},
+    {"path": "/github/push", "count": 300}
+  ]
+}` },
+              ]}
+            />
+
+            <EndpointGroup
+              title="Auth"
+              endpoints={[
+                { method: "POST", path: "/auth/sign-up/email", desc: "Create account (name, email, password)" },
+                { method: "POST", path: "/auth/sign-in/email", desc: "Sign in (email, password)" },
+                { method: "GET", path: "/auth/get-session", desc: "Get current session" },
+                { method: "GET", path: "/auth/me", desc: "Get user + project info" },
+                { method: "POST", path: "/auth/sign-out", desc: "Sign out" },
+              ]}
+            />
+
+            <EndpointGroup
+              title="Billing"
+              endpoints={[
+                { method: "GET", path: "/api/billing/status", desc: "Get billing status (trial, active, expired)" },
+                { method: "POST", path: "/api/billing/checkout", desc: "Create Stripe checkout session" },
+                { method: "POST", path: "/api/billing/portal", desc: "Create Stripe billing portal link" },
+              ]}
+            />
+
+            <EndpointGroup
+              title="Webhooks"
+              endpoints={[
+                { method: "POST", path: "/hooks/:project_id/*path", desc: "Receive webhook (3rd parties POST here)" },
+                { method: "GET", path: "/tunnel?key=ak_...", desc: "WebSocket tunnel (SDKs connect here)" },
               ]}
             />
           </div>
@@ -944,31 +981,67 @@ const METHOD_COLORS: Record<string, string> = {
   DELETE: "bg-status-red-bg text-status-red-text",
 };
 
-function EndpointGroup({
-  title,
-  endpoints,
-}: {
-  title: string;
-  endpoints: { method: string; path: string; desc: string }[];
-}) {
+interface Endpoint {
+  method: string;
+  path: string;
+  desc: string;
+  request?: string;
+  response?: string;
+}
+
+function EndpointRow({ ep }: { ep: Endpoint }) {
+  const [open, setOpen] = useState(false);
+  const hasExample = ep.request || ep.response;
+
+  return (
+    <div className="border-b border-border last:border-0">
+      <button
+        onClick={() => hasExample && setOpen(!open)}
+        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm ${hasExample ? "cursor-pointer hover:bg-muted/30" : ""}`}
+      >
+        <span className={`inline-flex shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium ${METHOD_COLORS[ep.method] ?? ""}`}>
+          {ep.method}
+        </span>
+        <span className="font-mono text-xs">{ep.path}</span>
+        <span className="ml-auto text-xs text-text-tertiary">{ep.desc}</span>
+        {hasExample && (
+          <span className={`text-[10px] text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}>▼</span>
+        )}
+      </button>
+      {open && hasExample && (
+        <div className="border-t border-border bg-muted/20 px-4 py-3">
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+            {ep.request && (
+              <div className="flex-1">
+                <span className="mb-1 block font-mono text-[9px] uppercase tracking-wider text-text-tertiary">Request</span>
+                <pre className="overflow-x-auto rounded-md bg-[#1e1834] px-3 py-2.5 font-mono text-[11px] leading-[1.7] text-[#e0dce8]">
+                  <code>{ep.request}</code>
+                </pre>
+              </div>
+            )}
+            {ep.response && (
+              <div className="flex-1">
+                <span className="mb-1 block font-mono text-[9px] uppercase tracking-wider text-text-tertiary">Response</span>
+                <pre className="overflow-x-auto rounded-md bg-[#1e1834] px-3 py-2.5 font-mono text-[11px] leading-[1.7] text-[#e0dce8]">
+                  <code>{ep.response}</code>
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EndpointGroup({ title, endpoints }: { title: string; endpoints: Endpoint[] }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <div className="border-b border-border bg-background px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
         {title}
       </div>
       {endpoints.map((ep) => (
-        <div
-          key={ep.path + ep.method}
-          className="flex items-center gap-3 border-b border-border px-4 py-2.5 text-sm last:border-0"
-        >
-          <span
-            className={`inline-flex rounded px-1.5 py-0.5 font-mono text-[10px] font-medium ${METHOD_COLORS[ep.method] ?? ""}`}
-          >
-            {ep.method}
-          </span>
-          <span className="font-mono text-xs">{ep.path}</span>
-          <span className="ml-auto text-xs text-text-tertiary">{ep.desc}</span>
-        </div>
+        <EndpointRow key={ep.path + ep.method} ep={ep} />
       ))}
     </div>
   );
