@@ -3,25 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "simplehook-django"
+name = "simplehook-core"
 version = "0.1.0"
-description = "Simplehook SDK for Django"
+description = "Shared core for Simplehook Python SDKs"
 requires-python = ">=3.10"
 dependencies = [
-    "simplehook-core",
     "websockets>=12.0,<14.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "django>=4.2",
     "pytest>=8.0",
-    "pytest-asyncio>=0.23",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/simplehook_django"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
+packages = ["src/simplehook_core"]

@@ -8,6 +8,7 @@ version = "0.1.1"
 description = "Simplehook SDK for Flask"
 requires-python = ">=3.10"
 dependencies = [
+    "simplehook-core",
     "websockets>=12.0,<14.0",
 ]
 
