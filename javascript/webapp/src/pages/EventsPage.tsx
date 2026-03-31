@@ -45,6 +45,7 @@ export function EventsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [pathFilter, setPathFilter] = useState("");
   const [routeFilter, setRouteFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
   const [routes, setRoutes] = useState<{ path_prefix: string }[]>([]);
   const [replayingId, setReplayingId] = useState<string | null>(null);
   const pageSize = 25;
@@ -59,6 +60,7 @@ export function EventsPage() {
       const result = await api.events.list({
         status: statusFilter === "all" ? undefined : statusFilter,
         path: routeFilter !== "all" ? routeFilter : pathFilter || undefined,
+        route_mode: modeFilter === "all" ? undefined : modeFilter,
         limit: pageSize,
         offset: page * pageSize,
       });
@@ -69,7 +71,7 @@ export function EventsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, pathFilter, routeFilter, page]);
+  }, [statusFilter, pathFilter, routeFilter, modeFilter, page]);
 
   // Initial fetch + polling
   useEffect(() => {
@@ -119,6 +121,18 @@ export function EventsPage() {
             </SelectContent>
           </Select>
         </div>
+
+        <Select value={modeFilter} onValueChange={(v) => { setModeFilter(v); setPage(0); }}>
+          <SelectTrigger size="sm" className="w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All modes</SelectItem>
+            <SelectItem value="passthrough">Passthrough</SelectItem>
+            <SelectItem value="queue">Queue</SelectItem>
+            <SelectItem value="unmatched">No route</SelectItem>
+          </SelectContent>
+        </Select>
 
         {routes.length > 0 && (
           <Select value={routeFilter} onValueChange={(v) => { setRouteFilter(v); setPage(0); }}>

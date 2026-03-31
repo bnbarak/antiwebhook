@@ -81,6 +81,7 @@ export interface EventsFilter {
   status?: string;
   path?: string;
   method?: string;
+  route_mode?: string;
   limit?: number;
   offset?: number;
 }
@@ -153,6 +154,7 @@ export const api = {
       if (filters.status) params.set("status", filters.status);
       if (filters.path) params.set("path", filters.path);
       if (filters.method) params.set("method", filters.method);
+      if (filters.route_mode) params.set("route_mode", filters.route_mode);
       if (filters.limit) params.set("limit", String(filters.limit));
       if (filters.offset) params.set("offset", String(filters.offset));
       const qs = params.toString();

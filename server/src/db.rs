@@ -61,6 +61,7 @@ pub struct EventsQuery {
     pub status: Option<String>,
     pub path: Option<String>,
     pub method: Option<String>,
+    pub route_mode: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -364,6 +365,14 @@ pub async fn list_events(
         conditions.push(format!("method = ${}", param_idx));
         param_idx += 1;
     }
+    if let Some(ref rm) = query.route_mode {
+        if rm == "unmatched" {
+            conditions.push("route_mode IS NULL".to_string());
+        } else {
+            conditions.push(format!("route_mode = ${}", param_idx));
+            param_idx += 1;
+        }
+    }
 
     let where_clause = conditions.join(" AND ");
 
@@ -378,6 +387,11 @@ pub async fn list_events(
     }
     if let Some(ref method) = query.method {
         count_query = count_query.bind(method);
+    }
+    if let Some(ref rm) = query.route_mode {
+        if rm != "unmatched" {
+            count_query = count_query.bind(rm);
+        }
     }
     let total = count_query.fetch_one(pool).await?;
 
@@ -395,6 +409,11 @@ pub async fn list_events(
     }
     if let Some(ref method) = query.method {
         data_query = data_query.bind(method);
+    }
+    if let Some(ref rm) = query.route_mode {
+        if rm != "unmatched" {
+            data_query = data_query.bind(rm);
+        }
     }
     let data = data_query.bind(limit).bind(offset).fetch_all(pool).await?;
 
