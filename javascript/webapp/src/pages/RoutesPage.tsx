@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, GitBranch, ArrowRight, ChevronDown, RotateCcw, Pencil } from "lucide-react";
+import { Plus, Trash2, GitBranch, ChevronDown, RotateCcw, Pencil } from "lucide-react";
 import { api, type Route, type Listener } from "@/lib/api.js";
+import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
@@ -25,54 +26,26 @@ import { Badge } from "@/components/ui/badge.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
 
-function FlowNode({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
-  return (
-    <span
-      className={`rounded px-2 py-1 font-mono text-[11px] ${
-        highlight
-          ? "bg-status-green-bg text-status-green-text"
-          : "bg-muted text-muted-foreground"
-      }`}
-    >
-      {children}
-    </span>
-  );
-}
-
 function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
   if (mode === "passthrough") {
     return (
       <div className="rounded-lg border border-border bg-card/50 p-4">
         <div className="mb-3 text-xs font-medium">Passthrough mode</div>
-        <div className="flex flex-col items-center gap-1 font-mono text-[11px]">
-          <div className="flex w-full items-center justify-between gap-2">
+        <div className="flex flex-col items-center gap-1.5 font-mono text-[11px]">
+          <FlowRow>
             <FlowNode>Stripe</FlowNode>
-            <div className="flex flex-1 items-center gap-1 text-muted-foreground">
-              <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
-              <span className="text-[10px]">POST</span>
-              <ArrowRight className="size-3" />
-            </div>
+            <FlowArrow label="POST" />
             <FlowNode>simplehook</FlowNode>
-            <div className="flex flex-1 items-center gap-1 text-muted-foreground">
-              <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
-              <ArrowRight className="size-3" />
-            </div>
+            <FlowArrow />
             <FlowNode>Your app</FlowNode>
-          </div>
-          <div className="flex w-full items-center justify-between gap-2">
+          </FlowRow>
+          <FlowRow>
             <FlowNode>Stripe</FlowNode>
-            <div className="flex flex-1 items-center gap-1 text-status-green-text">
-              <ArrowRight className="size-3 rotate-180" />
-              <span className="text-[10px]">TwiML / JSON</span>
-              <span className="flex-1 border-t border-dashed border-status-green-text/40" />
-            </div>
+            <FlowArrow label="TwiML / JSON" reverse highlight />
             <FlowNode>simplehook</FlowNode>
-            <div className="flex flex-1 items-center gap-1 text-status-green-text">
-              <ArrowRight className="size-3 rotate-180" />
-              <span className="flex-1 border-t border-dashed border-status-green-text/40" />
-            </div>
+            <FlowArrow reverse highlight />
             <FlowNode highlight>200 + body</FlowNode>
-          </div>
+          </FlowRow>
         </div>
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           Your app's <strong>real response</strong> goes all the way back to the caller.
@@ -85,32 +58,21 @@ function ModeExplainer({ mode }: { mode: "passthrough" | "queue" }) {
   return (
     <div className="rounded-lg border border-border bg-card/50 p-4">
       <div className="mb-3 text-xs font-medium">Queue mode</div>
-      <div className="flex flex-col items-center gap-1 font-mono text-[11px]">
-        <div className="flex w-full items-center justify-between gap-2">
+      <div className="flex flex-col items-center gap-1.5 font-mono text-[11px]">
+        <FlowRow>
           <FlowNode>Stripe</FlowNode>
-          <div className="flex flex-1 items-center gap-1 text-muted-foreground">
-            <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
-            <span className="text-[10px]">POST</span>
-            <ArrowRight className="size-3" />
-          </div>
+          <FlowArrow label="POST" />
           <FlowNode>simplehook</FlowNode>
-          <div className="flex flex-1 items-center gap-1 text-status-green-text">
-            <ArrowRight className="size-3 rotate-180" />
-            <span className="flex-1 border-t border-dashed border-status-green-text/40" />
-          </div>
+          <FlowArrow reverse highlight />
           <FlowNode highlight>200 OK</FlowNode>
-        </div>
-        <div className="mt-1 flex w-full items-center gap-2">
+        </FlowRow>
+        <FlowRow className="mt-0.5">
           <span className="w-[52px]" />
           <span className="w-0 flex-1" />
           <FlowNode>simplehook</FlowNode>
-          <div className="flex flex-1 items-center gap-1 text-muted-foreground">
-            <span className="flex-1 border-t border-dashed border-muted-foreground/40" />
-            <span className="text-[10px] italic">async</span>
-            <ArrowRight className="size-3" />
-          </div>
+          <FlowArrow label="async" />
           <FlowNode>Your app</FlowNode>
-        </div>
+        </FlowRow>
       </div>
       <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
         Returns <strong>200 instantly</strong>. Delivers async with retry.

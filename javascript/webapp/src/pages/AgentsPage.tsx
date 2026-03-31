@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Radio } from "lucide-react";
-import { api, type Listener } from "@/lib/api.js";
+import { Plus, Trash2, Radio, ExternalLink } from "lucide-react";
+import { api, type Listener, type BillingStatus } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
@@ -31,18 +31,31 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
 
+const FREE_LIMIT = 3;
+const PAID_LIMIT = 6;
+
 export function AgentsPage() {
   const [listeners, setListeners] = useState<Listener[]>([]);
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newId, setNewId] = useState("");
   const [newLabel, setNewLabel] = useState("");
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+
+  const isPaid = billing?.billing_status === "active";
+  const limit = isPaid ? PAID_LIMIT : FREE_LIMIT;
+  const atLimit = listeners.length >= limit;
 
   const loadData = useCallback(async () => {
     try {
-      const ls = await api.listeners.list();
+      const [ls, bl] = await Promise.all([
+        api.listeners.list(),
+        api.billing.getStatus(),
+      ]);
       setListeners(ls);
+      setBilling(bl);
     } catch {
       // handled
     } finally {
@@ -91,6 +104,17 @@ export function AgentsPage() {
     }
   };
 
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true);
+    try {
+      const { url } = await api.billing.createCheckout();
+      window.location.href = url;
+    } catch {
+      toast.error("Failed to start checkout");
+      setUpgradeLoading(false);
+    }
+  };
+
   const validIdPattern = /^[a-z0-9_-]{1,12}$/;
   const isIdValid = validIdPattern.test(newId.trim());
 
@@ -104,61 +128,84 @@ export function AgentsPage() {
             which SDK receives which webhooks.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="mr-1.5 size-3.5" />
-              New agent
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create agent</DialogTitle>
-              <DialogDescription>
-                Give this agent a short ID (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>,{" "}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">dev</code>).
-                Lowercase letters, numbers, hyphens, underscores. Max 12 chars.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 py-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="agent-id">Agent ID</Label>
-                <Input
-                  id="agent-id"
-                  placeholder="staging"
-                  value={newId}
-                  onChange={(e) => setNewId(e.target.value.toLowerCase())}
-                  className="font-mono"
-                  maxLength={12}
-                />
-                {newId && !isIdValid && (
-                  <p className="text-xs text-destructive">
-                    Only lowercase letters, numbers, hyphens, underscores (1-12 chars)
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="agent-label">Label (optional)</Label>
-                <Input
-                  id="agent-label"
-                  placeholder="Staging environment"
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={handleCreate}
-                disabled={!isIdValid || creating}
-                size="sm"
-              >
-                {creating ? "Creating..." : "Create agent"}
+        {atLimit && !isPaid ? (
+          <Button size="sm" onClick={handleUpgrade} disabled={upgradeLoading}>
+            <ExternalLink className="mr-1.5 size-3.5" />
+            {upgradeLoading ? "Redirecting..." : "Upgrade for more agents"}
+          </Button>
+        ) : (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" disabled={atLimit}>
+                <Plus className="mr-1.5 size-3.5" />
+                New agent
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create agent</DialogTitle>
+                <DialogDescription>
+                  Give this agent a short ID (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>,{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">dev</code>).
+                  Lowercase letters, numbers, hyphens, underscores. Max 12 chars.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-4 py-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="agent-id">Agent ID</Label>
+                  <Input
+                    id="agent-id"
+                    placeholder="staging"
+                    value={newId}
+                    onChange={(e) => setNewId(e.target.value.toLowerCase())}
+                    className="font-mono"
+                    maxLength={12}
+                  />
+                  {newId && !isIdValid && (
+                    <p className="text-xs text-destructive">
+                      Only lowercase letters, numbers, hyphens, underscores (1-12 chars)
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="agent-label">Label (optional)</Label>
+                  <Input
+                    id="agent-label"
+                    placeholder="Staging environment"
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={handleCreate}
+                  disabled={!isIdValid || creating}
+                  size="sm"
+                >
+                  {creating ? "Creating..." : "Create agent"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
+
+      {/* Limit banner */}
+      {atLimit && !loading && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
+          <p className="text-sm text-status-amber-text">
+            {isPaid
+              ? `You've reached the maximum of ${PAID_LIMIT} agents.`
+              : `You've used all ${FREE_LIMIT} free agents.`}
+          </p>
+          {!isPaid && (
+            <Button size="sm" variant="outline" onClick={handleUpgrade} disabled={upgradeLoading}>
+              Upgrade — $5/mo
+            </Button>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <Card>
@@ -187,7 +234,7 @@ export function AgentsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {listeners.length} agent{listeners.length !== 1 ? "s" : ""}
+              {listeners.length}/{limit} agent{listeners.length !== 1 ? "s" : ""}
             </CardTitle>
             <CardDescription>
               Assign agents to routes to control which SDK receives which events.
@@ -248,7 +295,7 @@ export function AgentsPage() {
       )}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Free plan: up to 3 agents. Paid plan: up to 6 agents.
+        {isPaid ? `Paid plan: ${PAID_LIMIT} agents.` : `Free: ${FREE_LIMIT} agents. Upgrade to $5/mo for ${PAID_LIMIT}.`}
       </p>
     </div>
   );
