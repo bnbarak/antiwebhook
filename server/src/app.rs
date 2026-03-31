@@ -34,7 +34,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // Billing
         .route("/billing/checkout", post(billing::create_checkout))
         .route("/billing/portal", post(billing::create_portal))
-        .route("/billing/status", get(billing::get_billing_status));
+        .route("/billing/status", get(billing::get_billing_status))
+        .route("/billing/upgrade", post(billing::upgrade_plan))
+        .route("/billing/downgrade", post(billing::downgrade_plan));
 
     let auth_routes = Router::new()
         .route("/sign-up/email", post(user_auth::sign_up))

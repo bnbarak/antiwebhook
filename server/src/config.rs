@@ -7,7 +7,8 @@ pub struct Config {
     pub frontend_url: String,
     pub stripe_secret_key: String,
     pub stripe_webhook_secret: String,
-    pub stripe_price_id: String,
+    pub stripe_price_id: String,       // $5/mo — 3 agents
+    pub stripe_price_id_6: String,     // $8/mo — 6 agents
     pub resend_api_key: String,
     pub port: u16,
 }
@@ -21,6 +22,7 @@ impl Config {
             stripe_secret_key: env::var("STRIPE_SECRET_KEY").unwrap_or_default(),
             stripe_webhook_secret: env::var("STRIPE_WEBHOOK_SECRET").unwrap_or_default(),
             stripe_price_id: env::var("STRIPE_PRICE_ID").unwrap_or_default(),
+            stripe_price_id_6: env::var("STRIPE_PRICE_ID_6").unwrap_or_default(),
             resend_api_key: env::var("RESEND_API_KEY").unwrap_or_default(),
             port: env::var("PORT")
                 .unwrap_or_else(|_| "8400".into())

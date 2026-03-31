@@ -129,6 +129,90 @@ pub async fn get_billing_status(
     }))
 }
 
+// --- Upgrade / Downgrade ---
+
+pub async fn upgrade_plan(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let sub_id = project.stripe_subscription_id.as_ref()
+        .ok_or(AppError::BadRequest("no active subscription"))?;
+
+    // Get the subscription to find the current item ID
+    let client = reqwest::Client::new();
+    let sub: serde_json::Value = client
+        .get(&format!("https://api.stripe.com/v1/subscriptions/{}", sub_id))
+        .bearer_auth(&state.config.stripe_secret_key)
+        .send().await?.json().await?;
+
+    let item_id = sub["items"]["data"][0]["id"].as_str()
+        .ok_or(AppError::Internal("could not read subscription item"))?;
+
+    // Switch to the 6-agent price
+    client
+        .post(&format!("https://api.stripe.com/v1/subscriptions/{}", sub_id))
+        .bearer_auth(&state.config.stripe_secret_key)
+        .form(&[
+            ("items[0][id]", item_id),
+            ("items[0][price]", &state.config.stripe_price_id_6),
+            ("proration_behavior", "create_prorations"),
+        ])
+        .send().await?;
+
+    sqlx::query("UPDATE projects SET subscription_quantity = 1 WHERE id = $1")
+        .bind(&project.id)
+        .execute(&state.db)
+        .await?;
+
+    tracing::info!(project_id = %project.id, "upgraded to 6-agent plan");
+    Ok(Json(serde_json::json!({"plan": "6_agents", "agent_limit": 6})))
+}
+
+pub async fn downgrade_plan(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let sub_id = project.stripe_subscription_id.as_ref()
+        .ok_or(AppError::BadRequest("no active subscription"))?;
+
+    let client = reqwest::Client::new();
+    let sub: serde_json::Value = client
+        .get(&format!("https://api.stripe.com/v1/subscriptions/{}", sub_id))
+        .bearer_auth(&state.config.stripe_secret_key)
+        .send().await?.json().await?;
+
+    let item_id = sub["items"]["data"][0]["id"].as_str()
+        .ok_or(AppError::Internal("could not read subscription item"))?;
+
+    // Switch to the 3-agent price
+    client
+        .post(&format!("https://api.stripe.com/v1/subscriptions/{}", sub_id))
+        .bearer_auth(&state.config.stripe_secret_key)
+        .form(&[
+            ("items[0][id]", item_id),
+            ("items[0][price]", &state.config.stripe_price_id),
+            ("proration_behavior", "create_prorations"),
+        ])
+        .send().await?;
+
+    sqlx::query("UPDATE projects SET subscription_quantity = 0 WHERE id = $1")
+        .bind(&project.id)
+        .execute(&state.db)
+        .await?;
+
+    // Delete excess agents (keep only the first 3)
+    let listeners = db::list_listeners(&state.db, &project.id).await?;
+    if listeners.len() > 3 {
+        for listener in listeners.iter().skip(3) {
+            let _ = db::delete_listener(&state.db, &project.id, &listener.listener_id).await;
+        }
+        tracing::info!(project_id = %project.id, deleted = listeners.len() - 3, "deleted excess agents on downgrade");
+    }
+
+    tracing::info!(project_id = %project.id, "downgraded to 3-agent plan");
+    Ok(Json(serde_json::json!({"plan": "3_agents", "agent_limit": 3})))
+}
+
 pub async fn stripe_webhook(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -154,9 +238,12 @@ pub async fn stripe_webhook(
                 db::activate_project(&state.db, project_id, customer_id, sub_id).await?;
                 db::set_billing_status(&state.db, project_id, "active").await?;
 
-                // Fetch subscription quantity from Stripe
+                // Set agent slots based on which price was purchased
                 if !sub_id.is_empty() {
-                    let qty = fetch_subscription_quantity(&state, sub_id).await.unwrap_or(1);
+                    let qty = match price_from_subscription(&state, sub_id).await {
+                        Ok(price) if price == state.config.stripe_price_id_6 => 1, // 6 agents
+                        _ => 0, // 3 agents (default)
+                    };
                     sqlx::query("UPDATE projects SET subscription_quantity = $1 WHERE id = $2")
                         .bind(qty)
                         .bind(project_id)
@@ -218,8 +305,9 @@ pub async fn stripe_webhook(
         "customer.subscription.updated" => {
             let obj = &event["data"]["object"];
             let customer_id = obj["customer"].as_str().unwrap_or("");
-            let qty = obj["items"]["data"][0]["quantity"].as_i64().unwrap_or(1) as i32;
+            let price_id = obj["items"]["data"][0]["price"]["id"].as_str().unwrap_or("");
             if !customer_id.is_empty() {
+                let qty = if price_id == state.config.stripe_price_id_6 { 1 } else { 0 };
                 sqlx::query(
                     "UPDATE projects SET subscription_quantity = $1 WHERE stripe_customer_id = $2",
                 )
@@ -227,7 +315,7 @@ pub async fn stripe_webhook(
                 .bind(customer_id)
                 .execute(&state.db)
                 .await?;
-                tracing::info!(customer_id = %customer_id, qty = qty, "subscription quantity updated");
+                tracing::info!(customer_id = %customer_id, price = %price_id, qty = qty, "subscription updated");
             }
         }
         "invoice.payment_failed" => {
@@ -250,7 +338,7 @@ pub async fn stripe_webhook(
     Ok(StatusCode::OK)
 }
 
-async fn fetch_subscription_quantity(state: &AppState, sub_id: &str) -> Result<i32, AppError> {
+async fn price_from_subscription(state: &AppState, sub_id: &str) -> Result<String, AppError> {
     let client = reqwest::Client::new();
     let resp = client
         .get(&format!("https://api.stripe.com/v1/subscriptions/{}", sub_id))
@@ -259,8 +347,10 @@ async fn fetch_subscription_quantity(state: &AppState, sub_id: &str) -> Result<i
         .await?
         .json::<serde_json::Value>()
         .await?;
-    let qty = resp["items"]["data"][0]["quantity"].as_i64().unwrap_or(1) as i32;
-    Ok(qty)
+    let price = resp["items"]["data"][0]["price"]["id"].as_str()
+        .unwrap_or("")
+        .to_string();
+    Ok(price)
 }
 
 fn verify_signature(payload: &[u8], sig_header: &str, secret: &str) -> Result<(), AppError> {

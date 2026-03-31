@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Radio, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, Radio } from "lucide-react";
 import { api, type Listener, type BillingStatus } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -32,6 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
 
 export function AgentsPage() {
+  const navigate = useNavigate();
   const [listeners, setListeners] = useState<Listener[]>([]);
   const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,6 @@ export function AgentsPage() {
   const [creating, setCreating] = useState(false);
   const [newId, setNewId] = useState("");
   const [newLabel, setNewLabel] = useState("");
-  const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   const isPaid = billing?.has_subscription ?? false;
   const limit = billing?.agent_limit ?? 3;
@@ -101,18 +102,7 @@ export function AgentsPage() {
     }
   };
 
-  const handleUpgrade = async () => {
-    setUpgradeLoading(true);
-    try {
-      const { url } = isPaid
-        ? await api.billing.getPortal()
-        : await api.billing.createCheckout();
-      window.location.href = url;
-    } catch {
-      toast.error("Failed to open billing");
-      setUpgradeLoading(false);
-    }
-  };
+  const goToSettings = () => navigate("/settings");
 
   const validIdPattern = /^[a-z0-9_-]{1,12}$/;
   const isIdValid = validIdPattern.test(newId.trim());
@@ -127,10 +117,9 @@ export function AgentsPage() {
             which SDK receives which webhooks.
           </p>
         </div>
-        {atLimit && !isPaid ? (
-          <Button size="sm" onClick={handleUpgrade} disabled={upgradeLoading}>
-            <ExternalLink className="mr-1.5 size-3.5" />
-            {upgradeLoading ? "Redirecting..." : "Upgrade for more agents"}
+        {atLimit ? (
+          <Button size="sm" onClick={goToSettings}>
+            Upgrade for more agents
           </Button>
         ) : (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -194,12 +183,10 @@ export function AgentsPage() {
       {atLimit && !loading && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
           <p className="text-sm text-status-amber-text">
-            {isPaid
-              ? `You've reached your limit of ${limit} agents. Increase your subscription quantity for more.`
-              : `You've used all ${limit} free agents.`}
+            You've used all {limit} agent slots.
           </p>
-          <Button size="sm" variant="outline" onClick={handleUpgrade} disabled={upgradeLoading}>
-            {isPaid ? "Manage subscription" : "Upgrade — $5/mo"}
+          <Button size="sm" variant="outline" onClick={goToSettings}>
+            {isPaid ? "Upgrade plan" : "Upgrade — $5/mo"}
           </Button>
         </div>
       )}

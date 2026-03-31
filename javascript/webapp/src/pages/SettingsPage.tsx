@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
 import { api, type Project, type BillingStatus } from "@/lib/api.js";
 import { useAuth } from "@/hooks/use-auth.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.js";
 import { Separator } from "@/components/ui/separator.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { toast } from "sonner";
@@ -208,6 +216,8 @@ function BillingCard({
   actionLoading: boolean;
   setActionLoading: (v: boolean) => void;
 }) {
+  const [downgradeOpen, setDowngradeOpen] = useState(false);
+
   const status = billingStatus?.billing_status ?? "trial";
   const isActive = status === "active";
   const isExpired =
@@ -215,6 +225,8 @@ function BillingCard({
     (billingStatus?.trial_hours_remaining !== null &&
       billingStatus?.trial_hours_remaining !== undefined &&
       billingStatus.trial_hours_remaining <= 0);
+  const agentLimit = billingStatus?.agent_limit ?? 3;
+  const isUpgraded = agentLimit > 3;
 
   const handleSubscribe = async () => {
     setActionLoading(true);
@@ -222,6 +234,31 @@ function BillingCard({
       const { url } = await api.billing.createCheckout();
       window.location.href = url;
     } catch {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    setActionLoading(true);
+    try {
+      await api.billing.upgrade();
+      toast.success("Upgraded to 6-agent plan");
+      window.location.reload();
+    } catch {
+      toast.error("Failed to upgrade");
+      setActionLoading(false);
+    }
+  };
+
+  const handleDowngrade = async () => {
+    setActionLoading(true);
+    setDowngradeOpen(false);
+    try {
+      await api.billing.downgrade();
+      toast.success("Downgraded to 3-agent plan. Excess agents removed.");
+      window.location.reload();
+    } catch {
+      toast.error("Failed to downgrade");
       setActionLoading(false);
     }
   };
@@ -236,61 +273,161 @@ function BillingCard({
     }
   };
 
-  if (isActive) {
+  // Trial or expired — show subscribe
+  if (!isActive) {
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-status-green-border bg-status-green-bg px-2 py-0.5 text-xs font-medium text-status-green-text">
-            <span className="inline-block size-1.5 rounded-full bg-status-green-dot" />
-            Active
-          </span>
+      <div className="flex flex-col gap-4">
+        {isExpired ? (
+          <p className="text-sm font-medium text-status-red-text">
+            Trial ended — webhooks are paused.
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Trial: {formatCountdown(billingStatus?.trial_hours_remaining ?? 0)}{" "}
+            remaining
+          </p>
+        )}
+        <div className="flex gap-3">
+          <PlanCard
+            name="Starter"
+            price="$5"
+            agents={3}
+            active={false}
+            onSelect={handleSubscribe}
+            loading={actionLoading}
+          />
+          <PlanCard
+            name="Pro"
+            price="$8"
+            agents={6}
+            active={false}
+            disabled
+            hint="Subscribe to Starter first"
+          />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleManage}
-          disabled={actionLoading}
-          className="w-fit"
-        >
-          <ExternalLink className="mr-2 size-3.5" />
-          Manage subscription
-        </Button>
       </div>
     );
   }
 
-  if (isExpired) {
-    return (
-      <div className="flex flex-col gap-3">
-        <p className="text-sm font-medium text-status-red-text">
-          Trial ended — webhooks are paused.
-        </p>
-        <Button
-          size="sm"
-          onClick={handleSubscribe}
-          disabled={actionLoading}
-          className="w-fit"
-        >
-          Subscribe — $5/mo
-        </Button>
-      </div>
-    );
-  }
-
+  // Active subscriber — show plan options
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Trial: {formatCountdown(billingStatus?.trial_hours_remaining ?? 0)}{" "}
-        remaining
-      </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-status-green-border bg-status-green-bg px-2 py-0.5 text-xs font-medium text-status-green-text">
+          <span className="inline-block size-1.5 rounded-full bg-status-green-dot" />
+          Active
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {agentLimit} agents
+        </span>
+      </div>
+
+      <div className="flex gap-3">
+        <PlanCard
+          name="Starter"
+          price="$5"
+          agents={3}
+          active={!isUpgraded}
+          onSelect={isUpgraded ? () => setDowngradeOpen(true) : undefined}
+          loading={actionLoading}
+          actionLabel={isUpgraded ? "Downgrade" : undefined}
+        />
+        <PlanCard
+          name="Pro"
+          price="$8"
+          agents={6}
+          active={isUpgraded}
+          onSelect={!isUpgraded ? handleUpgrade : undefined}
+          loading={actionLoading}
+          actionLabel={!isUpgraded ? "Upgrade" : undefined}
+        />
+      </div>
+
       <Button
+        variant="outline"
         size="sm"
-        onClick={handleSubscribe}
+        onClick={handleManage}
         disabled={actionLoading}
         className="w-fit"
       >
-        Subscribe — $5/mo
+        <ExternalLink className="mr-2 size-3.5" />
+        Manage payment method
       </Button>
+
+      {/* Downgrade confirmation */}
+      <Dialog open={downgradeOpen} onOpenChange={setDowngradeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Downgrade to Starter?</DialogTitle>
+            <DialogDescription>
+              The Starter plan supports 3 agents. If you currently have more than 3,
+              the extra agents will be permanently deleted. Events already routed to
+              those agents won't be affected.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDowngradeOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDowngrade}
+              disabled={actionLoading}
+            >
+              <ArrowDown className="mr-1.5 size-3.5" />
+              {actionLoading ? "Downgrading..." : "Downgrade & remove extra agents"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function PlanCard({
+  name,
+  price,
+  agents,
+  active,
+  onSelect,
+  loading,
+  disabled,
+  hint,
+  actionLabel,
+}: {
+  name: string;
+  price: string;
+  agents: number;
+  active: boolean;
+  onSelect?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  hint?: string;
+  actionLabel?: string;
+}) {
+  return (
+    <div
+      className={`flex flex-1 flex-col rounded-lg border px-4 py-4 transition-colors ${
+        active
+          ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+          : "border-border"
+      }`}
+    >
+      <div className="mb-1 text-sm font-medium">{name}</div>
+      <div className="mb-0.5 text-xl font-semibold">
+        {price}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+      </div>
+      <div className="mb-3 text-xs text-muted-foreground">{agents} agents</div>
+      {active ? (
+        <span className="text-xs font-medium text-status-green-text">Current plan</span>
+      ) : hint ? (
+        <span className="text-xs text-muted-foreground">{hint}</span>
+      ) : onSelect ? (
+        <Button size="sm" variant="outline" onClick={onSelect} disabled={loading || disabled}>
+          {actionLabel ?? name}
+        </Button>
+      ) : null}
     </div>
   );
 }

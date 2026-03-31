@@ -241,6 +241,12 @@ export const api = {
     getPortal(): Promise<{ url: string }> {
       return request("/billing/portal", { method: "POST" });
     },
+    upgrade(): Promise<{ plan: string; agent_limit: number }> {
+      return request("/billing/upgrade", { method: "POST" });
+    },
+    downgrade(): Promise<{ plan: string; agent_limit: number }> {
+      return request("/billing/downgrade", { method: "POST" });
+    },
   },
 
   project: {
