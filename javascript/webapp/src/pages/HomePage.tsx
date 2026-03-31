@@ -96,7 +96,7 @@ function HeroCodeBlock() {
         ))}
       </div>
       {/* Code */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640]/50 px-4 py-1.5">
+      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-1.5">
         <span className="font-mono text-[10px] text-[#7a7190]">{sdk.file}</span>
       </div>
       <pre className="min-h-[200px] overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
@@ -537,7 +537,7 @@ export function HomePage() {
             One install. One line of code. Every webhook provider works.
           </p>
 
-          <div className="mx-auto mb-6 inline-block overflow-hidden rounded-xl text-left shadow-lg">
+          <div className="mx-auto mb-6 overflow-hidden rounded-xl text-left shadow-lg" style={{maxWidth: 480}}>
             <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
@@ -547,8 +547,17 @@ export function HomePage() {
               <span className="mx-auto font-mono text-[11px] text-[#9a91b0]">Terminal</span>
               <div className="w-[44px]" />
             </div>
-            <pre className="bg-[#1e1834] px-5 py-4 font-mono text-[13px] leading-[1.8] text-[#e0dce8]">
-              <code><span className="text-[#27c93f]">$</span> npm install simplehook</code>
+            <pre className="bg-[#1e1834] px-5 py-4 font-mono text-[12px] leading-[2.2] text-[#e0dce8]">
+              <code>
+                <span className="text-[#7a7190]"># Express</span>{"\n"}
+                <span className="text-[#27c93f]">$</span> npm install simplehook{"\n"}
+                <span className="text-[#7a7190]"># Fastify</span>{"\n"}
+                <span className="text-[#27c93f]">$</span> npm install simplehook-fastify{"\n"}
+                <span className="text-[#7a7190]"># Flask</span>{"\n"}
+                <span className="text-[#27c93f]">$</span> pip install simplehook-flask{"\n"}
+                <span className="text-[#7a7190]"># Django</span>{"\n"}
+                <span className="text-[#27c93f]">$</span> pip install simplehook-django
+              </code>
             </pre>
           </div>
 
@@ -569,7 +578,7 @@ export function HomePage() {
           </div>
 
           <p className="mt-6 font-mono text-xs text-text-tertiary">
-            npm install simplehook &middot; one line &middot; done
+            Express &middot; Fastify &middot; Flask &middot; Django &middot; one line &middot; done
           </p>
         </div>
       </section>
