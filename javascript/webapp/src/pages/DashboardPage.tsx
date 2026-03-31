@@ -214,11 +214,11 @@ function QuickStartCard({ apiKey }: { apiKey: string }) {
           <Tabs defaultValue="express">
             <TabsList>
               <TabsTrigger value="express">Express</TabsTrigger>
-              <TabsTrigger value="fastify">Fastify</TabsTrigger>
-              <TabsTrigger value="hono">Hono</TabsTrigger>
               <TabsTrigger value="flask">Flask</TabsTrigger>
+              <TabsTrigger value="fastify" disabled className="opacity-50">Fastify <span className="ml-1 text-[9px] text-muted-foreground">soon</span></TabsTrigger>
+              <TabsTrigger value="hono" disabled className="opacity-50">Hono <span className="ml-1 text-[9px] text-muted-foreground">soon</span></TabsTrigger>
             </TabsList>
-            {["express", "fastify", "hono", "flask"].map((fw) => (
+            {["express", "flask"].map((fw) => (
               <TabsContent key={fw} value={fw}>
                 <CodeBlock code={snippet(fw, apiKey)} />
               </TabsContent>
@@ -245,13 +245,15 @@ function StatCard({
     <Card className="flex-1 min-w-0">
       <CardContent className="pt-4 pb-3 px-4">
         <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-        {loading ? (
-          <Skeleton className="h-7 w-16" />
-        ) : (
-          <p className="text-2xl font-semibold tabular-nums" style={color ? { color } : undefined}>
-            {value.toLocaleString()}
-          </p>
-        )}
+        <div className="h-8 flex items-end">
+          {loading ? (
+            <Skeleton className="h-7 w-20" />
+          ) : (
+            <p className="text-2xl font-semibold tabular-nums leading-none" style={color ? { color } : undefined}>
+              {value.toLocaleString()}
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
