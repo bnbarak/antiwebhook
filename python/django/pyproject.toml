@@ -4,8 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "simplehook-django"
-version = "0.3.0"
-description = "Simplehook SDK for Django"
+version = "0.3.1"
+description = "Stable webhook URLs for localhost. One line of code. Django adapter."
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "simplehook-core",
