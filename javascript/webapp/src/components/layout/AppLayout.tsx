@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils.js";
 import { Separator } from "@/components/ui/separator.js";
 import { useAuth } from "@/hooks/use-auth.js";
+import { HexLogo } from "@/components/shared/HexLogo.js";
 import { TrialBanner } from "@/components/shared/TrialBanner.js";
 import {
   DropdownMenu,
@@ -48,9 +49,7 @@ export function AppLayout() {
       <aside className="flex w-60 shrink-0 flex-col border-r bg-card">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-4">
-          <div className="flex size-6 items-center justify-center rounded-md bg-foreground text-background">
-            <Webhook className="size-3" />
-          </div>
+          <HexLogo size={28} />
           <div className="flex flex-col">
             <span className="text-base font-semibold leading-tight tracking-tight">
               simplehook

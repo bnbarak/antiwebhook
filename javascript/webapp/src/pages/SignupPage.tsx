@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Webhook, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { HexLogo } from "@/components/shared/HexLogo.js";
 import { useAuth } from "@/hooks/use-auth.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -53,9 +54,7 @@ export function SignupPage() {
     <div className="flex min-h-svh items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <Link to="/" className="mb-8 flex items-center justify-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-foreground text-background">
-            <Webhook className="size-4" />
-          </div>
+          <HexLogo size={32} />
           <span className="font-mono text-[15px] font-medium tracking-[0.04em]">
             simplehook
           </span>
