@@ -218,6 +218,8 @@ pub struct ListenerInfo {
     pub connected: bool,
 }
 
+const FREE_LISTENER_LIMIT: i64 = 3;
+
 pub async fn create_listener(
     State(state): State<Arc<AppState>>,
     AuthProject(project): AuthProject,
@@ -228,6 +230,22 @@ pub async fn create_listener(
     if !re.is_match(&body.listener_id) {
         return Err(AppError::BadRequest(
             "listener_id must match ^[a-z0-9_-]{1,12}$",
+        ));
+    }
+
+    // Check listener limit (free: 3, paid with quantity x2: 6)
+    let existing = db::list_listeners(&state.db, &project.id).await?;
+    let limit = if project.billing_status == "active" {
+        // Paid users get double the limit per subscription quantity
+        // For now: active subscription = 6 listeners
+        FREE_LISTENER_LIMIT * 2
+    } else {
+        FREE_LISTENER_LIMIT
+    };
+
+    if existing.len() as i64 >= limit {
+        return Err(AppError::BadRequest(
+            "listener limit reached — upgrade your subscription for more listeners",
         ));
     }
 
