@@ -277,7 +277,7 @@ function BaseUrlCard({ projectId }: { projectId?: string }) {
 function DocsSidebar({ activeId }: { activeId: string }) {
   return (
     <nav className="hidden lg:block w-[200px] shrink-0">
-      <div className="sticky top-[80px]">
+      <div className="sticky top-[80px] pt-16">
         <span className="mb-2 block px-2.5 font-mono text-[11px] font-medium uppercase tracking-widest text-muted-foreground/60">
           On this page
         </span>
@@ -1121,26 +1121,6 @@ listenToWebhooks(app)`}
     {"path": "/github/push", "count": 300}
   ]
 }` },
-                ]}
-              />
-
-              <EndpointGroup
-                title="Auth"
-                endpoints={[
-                  { method: "POST", path: "/auth/sign-up/email", desc: "Create account (name, email, password)" },
-                  { method: "POST", path: "/auth/sign-in/email", desc: "Sign in (email, password)" },
-                  { method: "GET", path: "/auth/get-session", desc: "Get current session" },
-                  { method: "GET", path: "/auth/me", desc: "Get user + project info" },
-                  { method: "POST", path: "/auth/sign-out", desc: "Sign out" },
-                ]}
-              />
-
-              <EndpointGroup
-                title="Billing"
-                endpoints={[
-                  { method: "GET", path: "/api/billing/status", desc: "Get billing status (trial, active, expired)" },
-                  { method: "POST", path: "/api/billing/checkout", desc: "Create Stripe checkout session" },
-                  { method: "POST", path: "/api/billing/portal", desc: "Create Stripe billing portal link" },
                 ]}
               />
 
