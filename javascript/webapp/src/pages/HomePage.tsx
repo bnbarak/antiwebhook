@@ -38,8 +38,8 @@ const STEPS = [
   {
     num: "2",
     title: "Add one line of code",
-    desc: "Import the SDK and call listen(). Works with Express, Fastify, Hono, Flask, and more.",
-    code: `import { listen } from 'simplehook'\n\nlisten(app, process.env.SIMPLEHOOK_KEY)\n\n// That's it. Your routes work as normal.`,
+    desc: "Import the SDK and call listenToWebhooks(). Works with Express, Fastify, Hono, Flask, and more.",
+    code: `import { listenToWebhooks } from 'simplehook'\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY)\n\n// That's it. Your routes work as normal.`,
     icon: (
       <svg viewBox="0 0 256 292" className="size-5" fill="currentColor">
         <path d="M116.504 3.58c6.962-3.985 16.03-4.003 22.986 0 34.995 19.774 70.001 39.517 104.99 59.303 6.581 3.707 10.983 11.031 10.916 18.614v118.968c.049 7.897-4.788 15.396-11.731 19.019-34.88 19.665-69.742 39.354-104.616 59.019-7.106 4.063-16.356 3.75-23.24-.646-10.457-6.062-20.932-12.094-31.39-18.15-2.137-1.274-4.546-2.288-6.055-4.36 1.334-1.798 3.719-2.022 5.657-2.807 4.428-1.621 8.532-3.908 12.6-6.234.643-.32 1.46-.163 2.07.235 8.964 5.282 17.946 10.537 26.908 15.822 1.378.703 2.622-.358 3.783-1.054 34.007-19.166 68.03-38.3 102.038-57.469 1.097-.587 1.567-1.874 1.48-3.086V82.305c.133-1.338-.517-2.686-1.727-3.347-34.87-19.698-69.726-39.425-104.6-59.115-.781-.442-1.804-.443-2.59.009-34.875 19.69-69.739 39.398-104.617 59.106-1.218.65-1.876 2.014-1.735 3.347v119.417c.086 1.18.556 2.432 1.612 3.042 9.498 5.408 19.014 10.784 28.52 16.18.606.279 1.298.551 1.98.467 4.407-.572 9.157-.849 13.053-3.2 2.572-1.464 3.774-4.455 3.664-7.37V82.652c-.06-1.27 1.042-2.36 2.296-2.298h10.015c1.217-.048 2.293.975 2.253 2.195v120.58c0 7.693-3.643 16.11-10.727 19.872-8.23 4.527-18.222 4.578-27.199 2.885-7.988-1.43-15.725-4.89-22.176-9.57-1.061-.722-2.064-1.537-3.166-2.178-5.702-3.347-10.04-9.31-10.09-16.043V81.49c-.052-7.604 4.352-14.946 10.963-18.643C46.503 43.089 81.49 23.394 116.504 3.58z" />
@@ -209,7 +209,7 @@ export function HomePage() {
                     {"\n\n"}
                     <span className="text-[#61afef]">webhooks</span>
                     <span className="text-[#7a7190]">.</span>
-                    <span className="text-[#e5c07b]">listen</span>
+                    <span className="text-[#e5c07b]">listenToWebhooks</span>
                     {"("}
                     <span className="text-[#d19a66]">3000</span>
                     {")"}

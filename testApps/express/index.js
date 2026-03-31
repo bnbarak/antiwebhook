@@ -1,11 +1,11 @@
 import express from "express";
-import { listen } from "simplehook";
+import { listenToWebhooks } from "simplehook";
 
 const app = express();
 app.use(express.json());
 
 // Connect to simplehook — webhooks flow through this connection
-const connection = listen(app, process.env.SIMPLEHOOK_KEY || "ak_your_key_here", {
+const connection = listenToWebhooks(app, process.env.SIMPLEHOOK_KEY || "ak_your_key_here", {
   serverUrl: process.env.SIMPLEHOOK_URL || undefined,
   forceEnable: true,
 });

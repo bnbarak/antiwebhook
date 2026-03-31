@@ -1,7 +1,6 @@
 import WebSocket from "ws";
-import http from "node:http";
+import type { FastifyInstance } from "fastify";
 import type {
-  App,
   Connection,
   ListenOptions,
   RequestFrame,
@@ -9,13 +8,17 @@ import type {
 } from "./types.js";
 import { isExplicitlyDisabled, isProduction, parseFrame, sanitizeHeaders } from "./utils.js";
 
-export type { App, Connection, ListenOptions, RequestFrame, ResponseFrame };
+export type { Connection, ListenOptions, RequestFrame, ResponseFrame };
 
 const DEFAULT_URL = "wss://hook.simplehook.dev";
 const MAX_BACKOFF = 30_000;
 const NOOP_CONNECTION: Connection = { close() {} };
 
-export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions = {}): Connection {
+export function listenToWebhooks(
+  app: FastifyInstance,
+  apiKey: string,
+  opts: ListenOptions = {},
+): Connection {
   if (!opts.forceEnable && isProduction()) return NOOP_CONNECTION;
   if (isExplicitlyDisabled()) return NOOP_CONNECTION;
 
@@ -26,13 +29,7 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
   let currentWs: WebSocket | null = null;
   let backoff = 1000;
 
-  const loopback = http.createServer((req, res) => app.handle(req, res));
-  let loopbackPort: number;
-
-  loopback.listen(0, "127.0.0.1", () => {
-    loopbackPort = (loopback.address() as { port: number }).port;
-    connect();
-  });
+  connect();
 
   function connect() {
     if (closed) return;
@@ -58,7 +55,7 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
       }
 
       if (frame.type === "request") {
-        forwardToLoopback(ws, frame as RequestFrame);
+        forwardViaInject(ws, frame as RequestFrame);
       }
     });
 
@@ -73,40 +70,33 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
     ws.on("error", () => {});
   }
 
-  function forwardToLoopback(ws: WebSocket, frame: RequestFrame) {
-    const body = frame.body ? Buffer.from(frame.body, "base64") : null;
-    const headers = sanitizeHeaders(frame.headers ?? {}, body?.length ?? null);
+  async function forwardViaInject(ws: WebSocket, frame: RequestFrame) {
+    const bodyBuffer = frame.body ? Buffer.from(frame.body, "base64") : null;
+    const headers = sanitizeHeaders(frame.headers ?? {}, bodyBuffer?.length ?? null);
 
-    const proxyReq = http.request(
-      {
-        hostname: "127.0.0.1",
-        port: loopbackPort,
-        path: frame.path,
-        method: frame.method,
+    try {
+      const response = await app.inject({
+        method: frame.method as any,
+        url: frame.path,
         headers,
-      },
-      (proxyRes) => {
-        const chunks: Buffer[] = [];
-        proxyRes.on("data", (chunk: Buffer) => chunks.push(chunk));
-        proxyRes.on("end", () => {
-          const responseBody = Buffer.concat(chunks);
-          const respHeaders: Record<string, string> = {};
-          for (const [k, v] of Object.entries(proxyRes.headers)) {
-            if (typeof v === "string") respHeaders[k] = v;
-          }
+        payload: bodyBuffer ?? undefined,
+      });
 
-          sendResponse(ws, {
-            type: "response",
-            id: frame.id,
-            status: proxyRes.statusCode ?? 500,
-            headers: respHeaders,
-            body: responseBody.length > 0 ? responseBody.toString("base64") : null,
-          });
-        });
-      },
-    );
+      const respHeaders: Record<string, string> = {};
+      for (const [k, v] of Object.entries(response.headers)) {
+        if (typeof v === "string") respHeaders[k] = v;
+      }
 
-    proxyReq.on("error", () => {
+      const responseBody = response.rawPayload;
+
+      sendResponse(ws, {
+        type: "response",
+        id: frame.id,
+        status: response.statusCode,
+        headers: respHeaders,
+        body: responseBody.length > 0 ? responseBody.toString("base64") : null,
+      });
+    } catch {
       sendResponse(ws, {
         type: "response",
         id: frame.id,
@@ -114,10 +104,7 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
         headers: {},
         body: null,
       });
-    });
-
-    if (body) proxyReq.write(body);
-    proxyReq.end();
+    }
   }
 
   function sendResponse(ws: WebSocket, frame: ResponseFrame) {
@@ -131,10 +118,6 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
       closed = true;
       currentWs?.close();
       currentWs = null;
-      loopback.close();
     },
   };
 }
-
-/** @deprecated Use `listenToWebhooks` instead. */
-export const listen = listenToWebhooks;

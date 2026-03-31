@@ -5,14 +5,14 @@ import os
 import sys
 
 from flask import Flask, request, jsonify
-from simplehook_flask import listen
+from simplehook_flask import listenToWebhooks
 
 # Send simplehook logs to stdout so the e2e test can detect them
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
 app = Flask(__name__)
 
-connection = listen(
+connection = listenToWebhooks(
     app,
     os.environ.get("SIMPLEHOOK_KEY", "ak_test"),
     {

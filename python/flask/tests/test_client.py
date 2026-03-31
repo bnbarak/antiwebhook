@@ -7,19 +7,19 @@ import time
 
 from flask import Flask
 
-from simplehook_flask import listen
+from simplehook_flask import listen, listenToWebhooks
 from simplehook_flask.client import Connection
 
 from .conftest import MockWSServer
 
 
-class TestListen:
+class TestListenToWebhooks:
     def test_returns_noop_in_production(self, flask_app: Flask) -> None:
         # Arrange
         os.environ["FLASK_ENV"] = "production"
 
         # Act
-        conn = listen(flask_app, "test_key")
+        conn = listenToWebhooks(flask_app, "test_key")
 
         # Assert
         assert isinstance(conn, Connection)
@@ -33,7 +33,7 @@ class TestListen:
         os.environ["SIMPLEHOOK_ENABLED"] = "false"
 
         # Act
-        conn = listen(flask_app, "test_key")
+        conn = listenToWebhooks(flask_app, "test_key")
 
         # Assert
         assert conn._closed is True
@@ -48,7 +48,7 @@ class TestListen:
         os.environ["FLASK_ENV"] = "production"
 
         # Act
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "force_enable": True,
             "server_url": mock_ws_server.url,
             "silent": True,
@@ -63,6 +63,28 @@ class TestListen:
         del os.environ["FLASK_ENV"]
 
 
+class TestListenDeprecated:
+    def test_listen_emits_deprecation_warning(self, flask_app: Flask) -> None:
+        # Arrange
+        os.environ["FLASK_ENV"] = "production"
+
+        # Act / Assert
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            conn = listen(flask_app, "test_key")
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "listenToWebhooks" in str(w[0].message)
+
+        # Assert it still works
+        assert isinstance(conn, Connection)
+        assert conn._closed is True
+
+        # Cleanup
+        del os.environ["FLASK_ENV"]
+
+
 class TestPingPong:
     def test_responds_to_ping_with_pong(
         self, flask_app: Flask, mock_ws_server: MockWSServer,
@@ -71,7 +93,7 @@ class TestPingPong:
         mock_ws_server.frames_to_send = [{"type": "ping"}]
 
         # Act
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "server_url": mock_ws_server.url,
             "silent": True,
         })
@@ -101,7 +123,7 @@ class TestRequestForwarding:
         }]
 
         # Act
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "server_url": mock_ws_server.url,
             "silent": True,
         })
@@ -137,7 +159,7 @@ class TestRequestForwarding:
         }]
 
         # Act
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "server_url": mock_ws_server.url,
             "silent": True,
         })
@@ -171,7 +193,7 @@ class TestRequestForwarding:
         }]
 
         # Act
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "server_url": mock_ws_server.url,
             "silent": True,
         })
@@ -196,7 +218,7 @@ class TestCallbacks:
         connected = []
 
         # Act
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "server_url": mock_ws_server.url,
             "silent": True,
             "on_connect": lambda: connected.append(True),
@@ -215,7 +237,7 @@ class TestConnectionClose:
         self, flask_app: Flask, mock_ws_server: MockWSServer,
     ) -> None:
         # Arrange
-        conn = listen(flask_app, "test_key", {
+        conn = listenToWebhooks(flask_app, "test_key", {
             "server_url": mock_ws_server.url,
             "silent": True,
         })

@@ -1,0 +1,12 @@
+{
+  "name": "simplehook-test-fastify",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "simplehook-fastify": "^0.1.0"
+  }
+}

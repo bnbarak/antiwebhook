@@ -1,4 +1,4 @@
-from .client import Connection, listen, listenToWebhooks
+from .client import Connection, listenToWebhooks
 from .types import ListenOptions, RequestFrame, ResponseFrame
 
 __all__ = [
@@ -6,6 +6,5 @@ __all__ = [
     "ListenOptions",
     "RequestFrame",
     "ResponseFrame",
-    "listen",
     "listenToWebhooks",
 ]

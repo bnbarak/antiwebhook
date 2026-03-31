@@ -68,7 +68,7 @@ Tiny library that the developer adds to their app. For Node.js/Express:
 // simplehook npm package — ~100 lines of code
 const WebSocket = require('ws');
 
-function listen(app, apiKey, opts = {}) {
+function listenToWebhooks(app, apiKey, opts = {}) {
   const ws = new WebSocket(`wss://hooks.simplehook.dev/tunnel?key=${apiKey}`);
 
   ws.on('message', (raw) => {
@@ -91,7 +91,7 @@ function listen(app, apiKey, opts = {}) {
     app.handle(req, res);
   });
 
-  ws.on('close', () => setTimeout(() => listen(app, apiKey, opts), 3000)); // reconnect
+  ws.on('close', () => setTimeout(() => listenToWebhooks(app, apiKey, opts), 3000)); // reconnect
 }
 ```
 

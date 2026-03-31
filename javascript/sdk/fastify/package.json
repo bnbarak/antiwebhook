@@ -1,7 +1,7 @@
 {
-  "name": "simplehook",
-  "version": "0.2.0",
-  "description": "Stable webhook URLs for localhost. One line of code.",
+  "name": "simplehook-fastify",
+  "version": "0.1.0",
+  "description": "Stable webhook URLs for localhost. One line of code. Fastify adapter.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,12 +19,16 @@
   "dependencies": {
     "ws": "^8.18.0"
   },
+  "peerDependencies": {
+    "fastify": "^4.0.0 || ^5.0.0"
+  },
   "devDependencies": {
     "@types/ws": "^8.5.0",
     "@types/node": "^22.0.0",
+    "fastify": "^5.0.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "keywords": ["webhooks", "tunnel", "ngrok", "development", "express"],
+  "keywords": ["webhooks", "tunnel", "ngrok", "development", "fastify", "simplehook"],
   "license": "MIT"
 }

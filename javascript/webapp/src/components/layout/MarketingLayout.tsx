@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { HexLogo } from "@/components/shared/HexLogo.js";
+import { Webhook } from "lucide-react";
 
 function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
@@ -23,7 +23,9 @@ export function MarketingLayout() {
         <div className="mx-auto flex h-14 max-w-[960px] items-center justify-between px-6">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
-            <HexLogo size={28} />
+            <div className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
+              <Webhook className="size-3.5" />
+            </div>
             <span className="font-mono text-sm font-medium tracking-[0.04em]">
               simplehook
             </span>

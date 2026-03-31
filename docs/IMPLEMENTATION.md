@@ -5,7 +5,7 @@
 | Deliverable | Language | Description |
 |-------------|----------|-------------|
 | Cloud server | Rust | Receives webhooks, manages tunnels, dashboard, billing |
-| Node.js SDK | JavaScript | `simplehook.listen(app, key)` — ~100 lines |
+| Node.js SDK | JavaScript | `simplehook.listenToWebhooks(app, key)` — ~100 lines |
 | Landing page | HTML | Static page at simplehook.dev |
 
 ---
@@ -35,7 +35,7 @@
 ├── sdk/
 │   └── node/
 │       ├── package.json
-│       ├── index.js                    # simplehook.listen(app, key)
+│       ├── index.js                    # simplehook.listenToWebhooks(app, key)
 │       └── README.md
 ├── site/
 │   └── index.html                      # landing page
@@ -209,7 +209,7 @@ const http = require('http');
 
 const SERVER = process.env.SIMPLEHOOK_URL || 'wss://hooks.simplehook.dev';
 
-exports.listen = function listen(app, apiKey) {
+exports.listenToWebhooks = function listenToWebhooks(app, apiKey) {
   function connect() {
     const ws = new WebSocket(`${SERVER}/tunnel?key=${apiKey}`);
 

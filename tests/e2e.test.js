@@ -19,7 +19,7 @@ const path = require('node:path');
 
 const SERVER_BIN = path.join(__dirname, '../server/target/debug/simplehook-server');
 const SDK_PATH = path.join(__dirname, '../javascript/sdk/express');
-const { listen } = require(SDK_PATH);
+const { listenToWebhooks } = require(SDK_PATH);
 
 const DB_URL = 'postgres://admin:secret@localhost:5434/simplehook';
 const SERVER_PORT = 8401; // Use non-default to avoid conflicts
@@ -253,7 +253,7 @@ describe('e2e: full webhook flow', () => {
       global.__receivedWebhooks = receivedWebhooks;
       global.__testApp = app;
 
-      sdkConnection = listen(app, apiKey, {
+      sdkConnection = listenToWebhooks(app, apiKey, {
         serverUrl: `ws://localhost:${SERVER_PORT}`,
         silent: true,
         onConnect: () => {

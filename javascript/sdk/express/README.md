@@ -10,12 +10,12 @@ npm install simplehook
 
 ```typescript
 import express from "express";
-import { listen } from "simplehook";
+import { listenToWebhooks } from "simplehook";
 
 const app = express();
 app.use(express.json());
 
-listen(app, process.env.SIMPLEHOOK_KEY);
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
 app.post("/stripe/events", (req, res) => {
   console.log("Webhook received!", req.body);
@@ -36,7 +36,7 @@ No CLI. No tunnel process. No URL that changes every session.
 ## Options
 
 ```typescript
-listen(app, apiKey, {
+listenToWebhooks(app, apiKey, {
   forceEnable: false,   // Connect even in production
   serverUrl: "...",     // Override server URL
   onConnect: () => {},  // Called when connected

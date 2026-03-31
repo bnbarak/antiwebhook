@@ -64,12 +64,12 @@ npm install
 
 ```javascript
 const express = require('express');
-const { listen } = require('./index'); // or 'simplehook' when published
+const { listenToWebhooks } = require('./index'); // or 'simplehook' when published
 
 const app = express();
 app.use(express.json());
 
-listen(app, 'ak_YOUR_KEY', { serverUrl: 'ws://localhost:8400' });
+listenToWebhooks(app, 'ak_YOUR_KEY', { serverUrl: 'ws://localhost:8400' });
 
 app.post('/stripe/webhook', (req, res) => {
   console.log('Webhook received!', req.body);

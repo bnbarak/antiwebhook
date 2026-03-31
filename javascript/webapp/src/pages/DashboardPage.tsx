@@ -76,12 +76,12 @@ const LANGUAGES: Language[] = [
         name: "Express",
         available: true,
         snippet: (key) => `import express from "express";
-import { listen } from "simplehook";
+import { listenToWebhooks } from "simplehook";
 
 const app = express();
 app.use(express.json());
 
-listen(app, "${key}");
+listenToWebhooks(app, "${key}");
 
 app.post("/stripe/events", (req, res) => {
   console.log("Webhook:", req.body);
@@ -95,10 +95,10 @@ app.listen(3000);`,
         name: "Fastify",
         available: false,
         snippet: (key) => `import Fastify from "fastify";
-import { listen } from "simplehook-fastify";
+import { listenToWebhooks } from "simplehook-fastify";
 
 const app = Fastify();
-listen(app, "${key}");
+listenToWebhooks(app, "${key}");
 
 app.post("/stripe/events", async (req) => {
   console.log("Webhook:", req.body);
@@ -112,10 +112,10 @@ app.listen({ port: 3000 });`,
         name: "Hono",
         available: false,
         snippet: (key) => `import { Hono } from "hono";
-import { listen } from "simplehook-hono";
+import { listenToWebhooks } from "simplehook-hono";
 
 const app = new Hono();
-listen(app, "${key}");
+listenToWebhooks(app, "${key}");
 
 app.post("/stripe/events", (c) => {
   console.log("Webhook:", c.req.json());
@@ -137,10 +137,10 @@ export default app;`,
         name: "Flask",
         available: true,
         snippet: (key) => `from flask import Flask, request
-from simplehook_flask import listen
+from simplehook_flask import listenToWebhooks
 
 app = Flask(__name__)
-listen(app, "${key}")
+listenToWebhooks(app, "${key}")
 
 @app.post("/stripe/events")
 def stripe_events():

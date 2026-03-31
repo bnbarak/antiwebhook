@@ -18,7 +18,7 @@ const http = require('node:http');
 const path = require('node:path');
 
 const SERVER_BIN = path.join(__dirname, '../server/target/debug/simplehook-server');
-const { listen } = require(path.join(__dirname, '../javascript/sdk/express'));
+const { listenToWebhooks } = require(path.join(__dirname, '../javascript/sdk/express'));
 
 const DB_URL = 'postgres://admin:secret@localhost:5434/simplehook';
 const SERVER_PORT = 8405;
@@ -95,7 +95,7 @@ function connectSDK(apiKey) {
       },
     };
 
-    const conn = listen(app, apiKey, {
+    const conn = listenToWebhooks(app, apiKey, {
       serverUrl: `ws://localhost:${SERVER_PORT}`,
       silent: true,
       onConnect: () => {

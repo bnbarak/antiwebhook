@@ -9,7 +9,7 @@ const simplehook = require('simplehook');
 const app = express();
 
 // Connect to simplehook — webhooks flow through this connection
-simplehook.listen(app, process.env.SIMPLEHOOK_KEY);
+simplehook.listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
 // Your route — works exactly like a normal Express route
 app.post('/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
@@ -52,7 +52,7 @@ const simplehook = require('simplehook');
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 
-simplehook.listen(app, process.env.SIMPLEHOOK_KEY);
+simplehook.listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
 // Twilio calls this and reads the XML response
 app.post('/twilio/voice', (req, res) => {
@@ -106,7 +106,7 @@ const simplehook = require('simplehook');
 const app = express();
 app.use(express.json());
 
-simplehook.listen(app, process.env.SIMPLEHOOK_KEY);
+simplehook.listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
 app.post('/github/push', (req, res) => {
   const { repository, commits } = req.body;
@@ -124,7 +124,7 @@ GitHub webhook URL: `https://hooks.simplehook.dev/p_8f3k2n/github/push`
 
 ## What changes vs. a normal Express app?
 
-One line: `simplehook.listen(app, key)`
+One line: `simplehook.listenToWebhooks(app, key)`
 
 Everything else is identical. Your routes, middleware, `req`, `res` — all work exactly the same. The SDK handles the WebSocket connection and feeds webhooks into Express's router.
 
@@ -134,7 +134,7 @@ Everything else is identical. Your routes, middleware, `req`, `res` — all work
 
   const app = express();
 
-+ simplehook.listen(app, process.env.SIMPLEHOOK_KEY);
++ simplehook.listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
   app.post('/stripe/webhook', (req, res) => {
     // your existing code — no changes
@@ -151,7 +151,7 @@ In production, webhooks hit your server directly. In development, they go throug
 
 ```javascript
 if (process.env.NODE_ENV !== 'production') {
-  require('simplehook').listen(app, process.env.SIMPLEHOOK_KEY);
+  require('simplehook').listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 }
 ```
 
@@ -167,7 +167,7 @@ import simplehook
 
 app = FastAPI()
 
-simplehook.listen(app, "ak_x7f2k9m3p4...")
+simplehook.listenToWebhooks(app, "ak_x7f2k9m3p4...")
 
 @app.post("/stripe/webhook")
 async def stripe_webhook(request: Request):
@@ -184,7 +184,7 @@ Same concept. Same WebSocket protocol. ~100 lines of Python SDK.
 
 **Day 1 (setup)**:
 1. `npm install simplehook` (10 seconds)
-2. Add `simplehook.listen(app, key)` to your app (10 seconds)
+2. Add `simplehook.listenToWebhooks(app, key)` to your app (10 seconds)
 3. Set webhook URLs in Stripe/Twilio/GitHub (2 minutes)
 
 **Every other day**:

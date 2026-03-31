@@ -6,7 +6,7 @@
 const app = express();
 
 // This one line replaces ngrok, Hookdeck, and everything else
-require('simplehook').listen(app, 'ak_x7f2k9m3p4...');
+require('simplehook').listenToWebhooks(app, 'ak_x7f2k9m3p4...');
 
 app.post('/stripe/webhook', (req, res) => {
   // This runs on your laptop. Stripe thinks it's talking to a real server.
@@ -64,7 +64,7 @@ npm install simplehook
 ```
 
 ```javascript
-require('simplehook').listen(app, 'ak_x7f2k9m3p4...');
+require('simplehook').listenToWebhooks(app, 'ak_x7f2k9m3p4...');
 ```
 
 ### 4. Start your app normally
