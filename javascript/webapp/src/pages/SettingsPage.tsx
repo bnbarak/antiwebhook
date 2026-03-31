@@ -78,6 +78,27 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Billing */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Billing</CardTitle>
+            <CardDescription>
+              Manage your subscription and payment details.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingProject ? (
+              <Skeleton className="h-9 w-full" />
+            ) : (
+              <BillingCard
+                billingStatus={billingStatus}
+                actionLoading={actionLoading}
+                setActionLoading={setActionLoading}
+              />
+            )}
+          </CardContent>
+        </Card>
+
         {/* Webhook URL */}
         <Card>
           <CardHeader>
@@ -175,26 +196,6 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Billing */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing</CardTitle>
-            <CardDescription>
-              Manage your subscription and payment details.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingProject ? (
-              <Skeleton className="h-9 w-full" />
-            ) : (
-              <BillingCard
-                billingStatus={billingStatus}
-                actionLoading={actionLoading}
-                setActionLoading={setActionLoading}
-              />
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
