@@ -17,7 +17,6 @@ You should not need to install this package directly. Use one of the framework S
 
 - [Documentation](https://www.simplehook.dev/docs)
 - [Dashboard](https://www.simplehook.dev/dashboard)
-- [GitHub](https://github.com/bnbarak/antiwebhook)
 
 ## License
 

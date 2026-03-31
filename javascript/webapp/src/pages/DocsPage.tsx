@@ -102,11 +102,14 @@ def stripe_events():
       {
         id: "django",
         name: "Django",
-        available: false,
+        available: true,
         installCmd: "pip install simplehook-django",
-        filename: "settings.py",
-        snippet: () => `# Coming soon
-# pip install simplehook-django`,
+        filename: "wsgi.py",
+        snippet: (key) => `from django.core.wsgi import get_wsgi_application
+from simplehook_django import listenToWebhooks
+
+application = get_wsgi_application()
+listenToWebhooks(application, "${key}")`,
       },
     ],
   },

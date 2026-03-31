@@ -23,6 +23,89 @@ function SectionDivider() {
   return <div className="border-t border-border" />;
 }
 
+const HERO_SDKS = [
+  { id: "express", name: "Express", file: "app.ts", code: `import express from "express";
+import { listenToWebhooks } from "simplehook";
+
+const app = express();
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
+
+app.post("/stripe/events", (req, res) => {
+  console.log("Webhook:", req.body);
+  res.json({ received: true });
+});` },
+  { id: "fastify", name: "Fastify", file: "app.ts", code: `import Fastify from "fastify";
+import { listenToWebhooks } from "simplehook-fastify";
+
+const app = Fastify();
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
+
+app.post("/stripe/events", async (req) => {
+  console.log("Webhook:", req.body);
+  return { received: true };
+});` },
+  { id: "flask", name: "Flask", file: "app.py", code: `from flask import Flask, request
+from simplehook_flask import listenToWebhooks
+
+app = Flask(__name__)
+listenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"])
+
+@app.post("/stripe/events")
+def stripe():
+    print("Webhook:", request.json)
+    return {"received": True}` },
+  { id: "django", name: "Django", file: "wsgi.py", code: `from django.core.wsgi import get_wsgi_application
+from simplehook_django import listenToWebhooks
+
+application = get_wsgi_application()
+listenToWebhooks(application, os.environ["SIMPLEHOOK_KEY"])
+
+# Your views handle webhooks as normal Django views` },
+];
+
+function HeroCodeBlock() {
+  const [activeSDK, setActiveSDK] = useState(0);
+  const sdk = HERO_SDKS[activeSDK];
+
+  return (
+    <div className="max-w-[860px] overflow-hidden rounded-xl shadow-lg">
+      {/* Terminal title bar */}
+      <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+          <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+          <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+        </div>
+        <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">Terminal</span>
+        <div className="w-[52px]" />
+      </div>
+      {/* SDK tabs */}
+      <div className="flex border-b border-white/[0.06] bg-[#2d2640]">
+        {HERO_SDKS.map((s, i) => (
+          <button
+            key={s.id}
+            onClick={() => setActiveSDK(i)}
+            className={`px-4 py-2 font-mono text-[11px] transition-colors ${
+              i === activeSDK
+                ? "bg-[#1e1834] text-[#e0dce8]"
+                : "text-[#7a7190] hover:text-[#9a91b0]"
+            }`}
+          >
+            {s.name}
+          </button>
+        ))}
+      </div>
+      {/* Code */}
+      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640]/50 px-4 py-1.5">
+        <span className="font-mono text-[10px] text-[#7a7190]">{sdk.file}</span>
+      </div>
+      <pre className="min-h-[200px] overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+        <code>{sdk.code}</code>
+      </pre>
+    </div>
+  );
+}
+
 const STEPS = [
   {
     num: "1",
@@ -178,70 +261,8 @@ export function HomePage() {
             </a>
           </div>
 
-          {/* Code split panes — terminal theme */}
-          <div className="max-w-[860px] overflow-hidden rounded-xl shadow-lg">
-            {/* Terminal title bar */}
-            <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
-                <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
-                <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
-              </div>
-              <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">Terminal</span>
-              <div className="w-[52px]" />
-            </div>
-            {/* Split panes */}
-            <div className="grid md:grid-cols-2">
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
-                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#9a91b0]">
-                    Your app
-                  </span>
-                  <span className="font-mono text-[11px] text-[#7a7190]">app.ts</span>
-                </div>
-                <pre className="flex-1 overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-                  <code>
-                    <span className="text-[#c678dd]">import</span>
-                    {" { webhooks } "}
-                    <span className="text-[#c678dd]">from</span>
-                    {" "}
-                    <span className="text-[#98c379]">'simplehook'</span>
-                    {"\n\n"}
-                    <span className="text-[#61afef]">webhooks</span>
-                    <span className="text-[#7a7190]">.</span>
-                    <span className="text-[#e5c07b]">listenToWebhooks</span>
-                    {"("}
-                    <span className="text-[#d19a66]">3000</span>
-                    {")"}
-                    {"\n\n"}
-                    <span className="text-[#7a7190] italic">{"// That's it. Webhooks flow to localhost:3000"}</span>
-                  </code>
-                </pre>
-              </div>
-              <div className="flex flex-col border-t border-white/[0.06] md:border-l md:border-t-0">
-                <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
-                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#9a91b0]">
-                    Webhook URL
-                  </span>
-                  <span className="font-mono text-[11px] text-[#7a7190]">Stripe Dashboard</span>
-                </div>
-                <pre className="flex-1 overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-                  <code>
-                    <span className="text-[#7a7190] italic">{"// Set your webhook URL to:"}</span>
-                    {"\n\n"}
-                    <span className="text-[#98c379]">https://hook.simplehook.dev</span>
-                    {"\n  "}
-                    <span className="text-[#61afef]">/</span>
-                    <span className="text-[#c678dd]">{"<your-project-id>"}</span>
-                    {"\n  "}
-                    <span className="text-[#61afef]">/stripe/events</span>
-                    {"\n\n"}
-                    <span className="text-[#7a7190] italic">{"// Events forward to your localhost"}</span>
-                  </code>
-                </pre>
-              </div>
-            </div>
-          </div>
+          {/* Code with SDK tabs — terminal theme */}
+          <HeroCodeBlock />
 
           <p className="mt-3.5 font-mono text-[11px] text-text-tertiary">
             Works with Stripe, GitHub, Twilio, Shopify, and every webhook provider.

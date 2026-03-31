@@ -1,8 +1,22 @@
-# simplehook-flask
+# simplehook / simplehook-flask
 
-Stable webhook URLs for localhost. One line of code.
+**One line of code. Webhooks just work.**
 
-> Part of the [simplehook](https://simplehook.dev) ecosystem.
+Stop tunneling. Stop polling. Stop building webhook infrastructure. Add one SDK call and your local app receives real webhooks from Stripe, GitHub, Twilio — any provider.
+
+```python
+listenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"])
+```
+
+Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev). When a webhook arrives at your stable URL, it's forwarded through the connection to your local server. Your response goes back to the caller. No CLI. No tunnel process. No URL that changes every session.
+
+## Why simplehook?
+
+- **No CLI** — just `pip install` and one function call
+- **Permanent URLs** — set once in Stripe/GitHub, never change them
+- **Real responses** — passthrough mode returns your actual response to the caller (TwiML, verification, etc.)
+- **Queue + retry** — if your app is offline, events queue and deliver when you reconnect
+- **Dev mode by default** — only connects in development, never in production
 
 ## Install
 
@@ -26,12 +40,6 @@ def stripe_webhook():
     return jsonify(received=True)
 ```
 
-## How it works
-
-Your app opens an outbound WebSocket to simplehook. When a webhook arrives at your stable URL, it's forwarded through the connection to your Flask routes. Your response goes back to the caller.
-
-No CLI. No tunnel process. No URL that changes every session.
-
 ## Options
 
 ```python
@@ -50,20 +58,10 @@ By default, simplehook only connects in development. Set `SIMPLEHOOK_ENABLED=fal
 
 Production is detected when `FLASK_ENV === "production"` or `FLASK_DEBUG` is not set.
 
-## Migration
-
-The `listen` function is still available as a deprecated alias for `listenToWebhooks`. Update your code when convenient:
-
-```diff
-- from simplehook_flask import listen
-+ from simplehook_flask import listenToWebhooks
-```
-
 ## Links
 
 - [Documentation](https://www.simplehook.dev/docs)
 - [Dashboard](https://www.simplehook.dev/dashboard)
-- [GitHub](https://github.com/bnbarak/antiwebhook)
 
 ## License
 
