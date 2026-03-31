@@ -83,7 +83,7 @@ func TestIsExplicitlyDisabled_True(t *testing.T) {
 
 // --- Noop in production ---
 
-func TestNoopInProduction(t *testing.T) {
+func TestListenToWebhooks_ProductionNoop(t *testing.T) {
 	os.Setenv("GO_ENV", "production")
 	defer os.Unsetenv("GO_ENV")
 
@@ -91,12 +91,12 @@ func TestNoopInProduction(t *testing.T) {
 		t.Error("handler should not be called in production")
 	})
 
-	conn := ListenToWebhooks(handler, "ak_test_key", nil)
+	conn := ListenToWebhooks(handler, "ak_test_key")
 	// Should return immediately and be closeable without blocking.
 	conn.Close()
 }
 
-func TestNoopWhenDisabled(t *testing.T) {
+func TestListenToWebhooks_DisabledNoop(t *testing.T) {
 	os.Unsetenv("GO_ENV")
 	os.Unsetenv("ENV")
 	os.Setenv("SIMPLEHOOK_ENABLED", "false")
@@ -106,19 +106,18 @@ func TestNoopWhenDisabled(t *testing.T) {
 		t.Error("handler should not be called when disabled")
 	})
 
-	conn := ListenToWebhooks(handler, "ak_test_key", nil)
+	conn := ListenToWebhooks(handler, "ak_test_key")
 	conn.Close()
 }
 
 // --- ForceEnable overrides production ---
 
-func TestForceEnable(t *testing.T) {
+func TestListenToWebhooks_ForceEnable(t *testing.T) {
 	os.Setenv("GO_ENV", "production")
 	defer os.Unsetenv("GO_ENV")
 
 	// Create a mock WS server so the connection succeeds.
 	mockServer := newMockWSServer(t, func(ws *websocket.Conn) {
-		// Just wait for the connection to close.
 		for {
 			_, _, err := ws.ReadMessage()
 			if err != nil {
@@ -131,7 +130,7 @@ func TestForceEnable(t *testing.T) {
 	connected := make(chan struct{}, 1)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,
@@ -149,6 +148,110 @@ func TestForceEnable(t *testing.T) {
 		// Success: connection was established despite production env.
 	case <-time.After(3 * time.Second):
 		t.Error("expected connection to be established with ForceEnable in production")
+	}
+}
+
+// --- Frame serialization tests ---
+
+func TestFrameSerialization_RequestFrame(t *testing.T) {
+	body := "aGVsbG8="
+	frame := RequestFrame{
+		Type:    "request",
+		ID:      "req-1",
+		Method:  "POST",
+		Path:    "/webhook",
+		Headers: map[string]string{"content-type": "application/json"},
+		Body:    &body,
+	}
+
+	data, err := json.Marshal(frame)
+	if err != nil {
+		t.Fatalf("failed to marshal RequestFrame: %v", err)
+	}
+
+	var decoded RequestFrame
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("failed to unmarshal RequestFrame: %v", err)
+	}
+
+	if decoded.Type != frame.Type {
+		t.Errorf("Type mismatch: got %s, want %s", decoded.Type, frame.Type)
+	}
+	if decoded.ID != frame.ID {
+		t.Errorf("ID mismatch: got %s, want %s", decoded.ID, frame.ID)
+	}
+	if decoded.Method != frame.Method {
+		t.Errorf("Method mismatch: got %s, want %s", decoded.Method, frame.Method)
+	}
+	if decoded.Path != frame.Path {
+		t.Errorf("Path mismatch: got %s, want %s", decoded.Path, frame.Path)
+	}
+	if decoded.Body == nil || *decoded.Body != *frame.Body {
+		t.Errorf("Body mismatch: got %v, want %v", decoded.Body, frame.Body)
+	}
+	if decoded.Headers["content-type"] != "application/json" {
+		t.Errorf("Headers mismatch: got %v", decoded.Headers)
+	}
+}
+
+func TestFrameSerialization_ResponseFrame(t *testing.T) {
+	body := "eyJvayI6dHJ1ZX0="
+	frame := ResponseFrame{
+		Type:    "response",
+		ID:      "resp-1",
+		Status:  200,
+		Headers: map[string]string{"Content-Type": "application/json"},
+		Body:    &body,
+	}
+
+	data, err := json.Marshal(frame)
+	if err != nil {
+		t.Fatalf("failed to marshal ResponseFrame: %v", err)
+	}
+
+	var decoded ResponseFrame
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("failed to unmarshal ResponseFrame: %v", err)
+	}
+
+	if decoded.Type != frame.Type {
+		t.Errorf("Type mismatch: got %s, want %s", decoded.Type, frame.Type)
+	}
+	if decoded.ID != frame.ID {
+		t.Errorf("ID mismatch: got %s, want %s", decoded.ID, frame.ID)
+	}
+	if decoded.Status != frame.Status {
+		t.Errorf("Status mismatch: got %d, want %d", decoded.Status, frame.Status)
+	}
+	if decoded.Body == nil || *decoded.Body != *frame.Body {
+		t.Errorf("Body mismatch: got %v, want %v", decoded.Body, frame.Body)
+	}
+}
+
+func TestFrameSerialization_NilBody(t *testing.T) {
+	frame := ResponseFrame{
+		Type:    "response",
+		ID:      "resp-2",
+		Status:  204,
+		Headers: map[string]string{},
+	}
+
+	data, err := json.Marshal(frame)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	// body should be omitted from JSON when nil
+	var raw map[string]interface{}
+	json.Unmarshal(data, &raw)
+	if _, exists := raw["body"]; exists {
+		t.Error("expected body to be omitted from JSON when nil")
+	}
+
+	var decoded ResponseFrame
+	json.Unmarshal(data, &decoded)
+	if decoded.Body != nil {
+		t.Error("expected decoded body to be nil")
 	}
 }
 
@@ -192,6 +295,29 @@ func TestDispatch(t *testing.T) {
 	}
 	if string(decoded) != `{"received":true}` {
 		t.Errorf("expected body={\"received\":true}, got %s", string(decoded))
+	}
+}
+
+func TestDispatch_EmptyBody(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(204)
+	})
+
+	frame := RequestFrame{
+		Type:    "request",
+		ID:      "req-empty",
+		Method:  "DELETE",
+		Path:    "/resource/123",
+		Headers: map[string]string{},
+	}
+
+	resp := dispatch(handler, frame)
+
+	if resp.Status != 204 {
+		t.Errorf("expected status=204, got %d", resp.Status)
+	}
+	if resp.Body != nil {
+		t.Errorf("expected nil body for 204 response, got %v", resp.Body)
 	}
 }
 
@@ -388,7 +514,7 @@ func TestPingPong(t *testing.T) {
 	defer mockServer.Close()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,
@@ -453,7 +579,7 @@ func TestRequestForwarding(t *testing.T) {
 		w.Write([]byte(`{"received":true}`))
 	})
 
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,
@@ -526,7 +652,7 @@ func TestRequestForwarding_404(t *testing.T) {
 		w.WriteHeader(200)
 	})
 
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,
@@ -540,6 +666,68 @@ func TestRequestForwarding_404(t *testing.T) {
 		}
 	case <-time.After(3 * time.Second):
 		t.Error("expected response within 3 seconds")
+	}
+}
+
+func TestListenerID(t *testing.T) {
+	os.Unsetenv("GO_ENV")
+	os.Unsetenv("ENV")
+	os.Unsetenv("SIMPLEHOOK_ENABLED")
+
+	receivedURL := make(chan string, 1)
+
+	mockServer := newMockWSServer(t, func(ws *websocket.Conn) {
+		// Keep connection open.
+		for {
+			_, _, err := ws.ReadMessage()
+			if err != nil {
+				return
+			}
+		}
+	})
+	defer mockServer.Close()
+
+	// Intercept the URL by wrapping in a custom test server that records the request URL.
+	var capturedPath string
+	interceptServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.RequestURI()
+		receivedURL <- capturedPath
+		// Upgrade to websocket
+		upgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer ws.Close()
+		for {
+			_, _, err := ws.ReadMessage()
+			if err != nil {
+				return
+			}
+		}
+	}))
+	defer interceptServer.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(interceptServer.URL, "http")
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+
+	conn := ListenToWebhooksWithID(handler, "ak_test_key", "staging", ListenOptions{
+		ForceEnable: true,
+		ServerURL:   wsURL,
+		Silent:      true,
+	})
+	defer conn.Close()
+
+	select {
+	case url := <-receivedURL:
+		if !strings.Contains(url, "listener_id=staging") {
+			t.Errorf("expected URL to contain listener_id=staging, got %s", url)
+		}
+		if !strings.Contains(url, "key=ak_test_key") {
+			t.Errorf("expected URL to contain key=ak_test_key, got %s", url)
+		}
+	case <-time.After(3 * time.Second):
+		t.Error("timed out waiting for connection with listener_id")
 	}
 }
 
@@ -561,7 +749,7 @@ func TestConnectionClose(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	connected := make(chan struct{}, 1)
 
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,
@@ -595,7 +783,6 @@ func TestConnectionClose(t *testing.T) {
 }
 
 func TestReconnectBackoff(t *testing.T) {
-	// Test the backoff calculation directly.
 	b := initialBackoff
 	if b != 1*time.Second {
 		t.Errorf("expected initial backoff=1s, got %v", b)
@@ -668,7 +855,7 @@ func TestReconnectAfterServerDrop(t *testing.T) {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,
@@ -691,11 +878,10 @@ func TestReconnectAfterServerDrop(t *testing.T) {
 	mu.Unlock()
 }
 
-// --- Header sanitization tests (in dispatch.go) ---
+// --- Header sanitization tests ---
 
 func TestHopByHopHeadersRemoved(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Verify hop-by-hop headers were stripped from the request.
 		if r.Header.Get("Host") != "" {
 			t.Error("expected Host header to be stripped")
 		}
@@ -705,7 +891,6 @@ func TestHopByHopHeadersRemoved(t *testing.T) {
 		if r.Header.Get("Transfer-Encoding") != "" {
 			t.Error("expected Transfer-Encoding header to be stripped")
 		}
-		// Custom headers should survive.
 		if r.Header.Get("X-Custom") != "value" {
 			t.Errorf("expected X-Custom=value, got %s", r.Header.Get("X-Custom"))
 		}
@@ -753,7 +938,7 @@ func TestConnectionDone(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	connected := make(chan struct{}, 1)
 
-	conn := ListenToWebhooks(handler, "ak_test_key", &ListenOptions{
+	conn := ListenToWebhooks(handler, "ak_test_key", ListenOptions{
 		ForceEnable: true,
 		ServerURL:   mockServer.wsURL(),
 		Silent:      true,

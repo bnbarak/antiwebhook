@@ -29,7 +29,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Build core from source
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/core
       - run: npm install
+        working-directory: javascript/sdk/express
+      - run: cp -R ../core/dist node_modules/simplehook-core/dist
         working-directory: javascript/sdk/express
       - run: npx tsc --noEmit
         working-directory: javascript/sdk/express
@@ -44,7 +49,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Build core from source
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/core
       - run: npm install
+        working-directory: javascript/sdk/fastify
+      - run: cp -R ../core/dist node_modules/simplehook-core/dist
         working-directory: javascript/sdk/fastify
       - run: npx tsc --noEmit
         working-directory: javascript/sdk/fastify
@@ -59,7 +69,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Build core from source
+        run: npm install && npx tsc
+        working-directory: javascript/sdk/core
       - run: npm install
+        working-directory: javascript/sdk/hono
+      - run: cp -R ../core/dist node_modules/simplehook-core/dist
         working-directory: javascript/sdk/hono
       - run: npx tsc --noEmit
         working-directory: javascript/sdk/hono
@@ -163,13 +178,13 @@ jobs:
         run: npm install && npx tsc
         working-directory: javascript/sdk/core
       - name: Build Express SDK
-        run: npm install && npx tsc
+        run: npm install && cp -R ../core/dist node_modules/simplehook-core/dist && npx tsc
         working-directory: javascript/sdk/express
       - name: Build Fastify SDK
-        run: npm install && npx tsc
+        run: npm install && cp -R ../core/dist node_modules/simplehook-core/dist && npx tsc
         working-directory: javascript/sdk/fastify
       - name: Build Hono SDK
-        run: npm install && npx tsc
+        run: npm install && cp -R ../core/dist node_modules/simplehook-core/dist && npx tsc
         working-directory: javascript/sdk/hono
       - name: Install test deps
         run: npm install

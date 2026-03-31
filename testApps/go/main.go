@@ -19,7 +19,11 @@ func main() {
 	mux.HandleFunc("/stripe/events", func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]interface{}
 		json.NewDecoder(r.Body).Decode(&body)
-		log.Printf("[stripe] %v", body["type"])
+		eventType, _ := body["type"].(string)
+		if eventType == "" {
+			eventType = "unknown event"
+		}
+		log.Printf("[stripe] %s", eventType)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]bool{"received": true})
 	})
@@ -28,12 +32,14 @@ func main() {
 	mux.HandleFunc("/github/push", func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]interface{}
 		json.NewDecoder(r.Body).Decode(&body)
-		log.Printf("[github] ref=%v", body["ref"])
+		ref, _ := body["ref"].(string)
+		commits, _ := body["commits"].([]interface{})
+		log.Printf("[github] %s %d commits", ref, len(commits))
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 	})
 
-	// Twilio voice
+	// Twilio voice (passthrough -- response goes back to Twilio)
 	mux.HandleFunc("/twilio/voice", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		log.Printf("[twilio] CallSid=%s CallStatus=%s", r.FormValue("CallSid"), r.FormValue("CallStatus"))
@@ -41,8 +47,8 @@ func main() {
 		fmt.Fprint(w, `<Response><Say>Hello from simplehook test app!</Say></Response>`)
 	})
 
-	// Generic webhook endpoint
-	mux.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
+	// Generic catch-all
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[webhook] %s %s", r.Method, r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -52,33 +58,29 @@ func main() {
 		})
 	})
 
-	// Health check
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		fmt.Fprint(w, "ok")
-	})
-
 	// Connect to simplehook
 	apiKey := os.Getenv("SIMPLEHOOK_KEY")
 	if apiKey == "" {
 		apiKey = "ak_your_key_here"
 	}
 
-	opts := &simplehook.ListenOptions{
+	opts := simplehook.ListenOptions{
 		ForceEnable: true,
-	}
-	if listenerID := os.Getenv("SIMPLEHOOK_LISTENER"); listenerID != "" {
-		opts.ListenerID = listenerID
 	}
 	if serverURL := os.Getenv("SIMPLEHOOK_URL"); serverURL != "" {
 		opts.ServerURL = serverURL
 	}
 
-	conn := simplehook.ListenToWebhooks(mux, apiKey, opts)
+	var conn *simplehook.Connection
+	if listenerID := os.Getenv("SIMPLEHOOK_LISTENER"); listenerID != "" {
+		conn = simplehook.ListenToWebhooksWithID(mux, apiKey, listenerID, opts)
+	} else {
+		conn = simplehook.ListenToWebhooks(mux, apiKey, opts)
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3002"
+		port = "3003"
 	}
 
 	log.Printf("Go test app listening on :%s", port)

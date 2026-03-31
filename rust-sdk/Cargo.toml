@@ -16,10 +16,10 @@ futures-util = "0.3"
 http = "1"
 tracing = "0.1"
 url = "2"
+axum = "0.8"
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
 
 [dev-dependencies]
-axum = "0.8"
 hyper = { version = "1", features = ["full"] }
-tower = { version = "0.5", features = ["util"] }
 tokio-test = "0.4"
-http-body-util = "0.1"

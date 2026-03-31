@@ -1,8 +1,6 @@
-# simplehook-go
+# simplehook / simplehook-go
 
-One line of code. Webhooks just work.
-
-Go SDK for [simplehook](https://simplehook.dev) -- receive webhooks in local development via a WebSocket tunnel. No ngrok, no port forwarding, no config.
+**One line of code. Webhooks just work.**
 
 ## Install
 
@@ -16,8 +14,7 @@ go get github.com/bnbarak/antiwebhook/go
 package main
 
 import (
-    "encoding/json"
-    "log"
+    "fmt"
     "net/http"
     "os"
 
@@ -26,36 +23,30 @@ import (
 
 func main() {
     mux := http.NewServeMux()
-
-    mux.HandleFunc("/stripe/events", func(w http.ResponseWriter, r *http.Request) {
-        log.Println("[stripe] received event")
-        json.NewEncoder(w).Encode(map[string]bool{"received": true})
+    mux.HandleFunc("POST /stripe/events", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("Webhook received!")
+        w.Header().Set("Content-Type", "application/json")
+        w.Write([]byte(`{"received": true}`))
     })
 
-    mux.HandleFunc("/github/push", func(w http.ResponseWriter, r *http.Request) {
-        log.Println("[github] received push")
-        json.NewEncoder(w).Encode(map[string]bool{"ok": true})
-    })
-
-    // One line -- webhooks flow through this connection
-    conn := simplehook.ListenToWebhooks(mux, os.Getenv("SIMPLEHOOK_KEY"), nil)
-    defer conn.Close()
-
-    log.Println("Listening on :8080")
-    http.ListenAndServe(":8080", mux)
+    simplehook.ListenToWebhooks(mux, os.Getenv("SIMPLEHOOK_KEY"))
+    http.ListenAndServe(":3000", mux)
 }
+```
+
+## Agents
+
+```go
+simplehook.ListenToWebhooksWithID(mux, os.Getenv("SIMPLEHOOK_KEY"), "staging")
 ```
 
 ## Options
 
 ```go
-conn := simplehook.ListenToWebhooks(mux, apiKey, &simplehook.ListenOptions{
-    ListenerID:  "staging",           // identify this listener
-    ForceEnable: true,                // enable even in production
-    ServerURL:   "wss://custom.url",  // custom server
-    Silent:      true,                // suppress logs
-    OnConnect:   func() { log.Println("connected") },
-    OnDisconnect: func() { log.Println("disconnected") },
+simplehook.ListenToWebhooks(mux, apiKey, simplehook.ListenOptions{
+    ForceEnable: true,
+    Silent:      false,
+    OnConnect:   func() { fmt.Println("Connected!") },
 })
 ```
 
@@ -70,16 +61,6 @@ conn := simplehook.ListenToWebhooks(mux, apiKey, &simplehook.ListenOptions{
 ## Production safety
 
 By default, the SDK is a no-op in production (`GO_ENV=production` or `ENV=production`). It also respects `SIMPLEHOOK_ENABLED=false` to explicitly disable.
-
-## Agents
-
-If you have multiple developers or environments, use listener IDs:
-
-```go
-conn := simplehook.ListenToWebhooks(mux, apiKey, &simplehook.ListenOptions{
-    ListenerID: "alice-laptop",
-})
-```
 
 ## Links
 
