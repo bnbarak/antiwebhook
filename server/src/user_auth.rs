@@ -1,5 +1,5 @@
 use axum::{
-    extract::State,
+    extract::{Query, State},
     http::{header::SET_COOKIE, HeaderMap, StatusCode},
     response::IntoResponse,
     Json,
@@ -23,6 +23,7 @@ pub struct User {
     pub trial_reminder_sent: bool,
     pub trial_expired_sent: bool,
     pub welcome_email_sent: bool,
+    pub github_id: Option<String>,
     pub created_at: chrono::DateTime<Utc>,
 }
 
@@ -307,6 +308,150 @@ pub async fn sign_out(
     resp_headers.insert(SET_COOKIE, cookie.parse().unwrap());
 
     Ok((StatusCode::OK, resp_headers, Json(serde_json::json!({"ok": true}))))
+}
+
+#[derive(Deserialize)]
+pub struct GitHubCallbackQuery {
+    pub code: String,
+}
+
+pub async fn github_auth(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, AppError> {
+    let url = format!(
+        "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}/auth/github/callback&scope=user:email",
+        state.config.github_client_id,
+        state.config.frontend_url,
+    );
+    Ok(axum::response::Redirect::temporary(&url))
+}
+
+pub async fn github_callback(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<GitHubCallbackQuery>,
+) -> Result<impl IntoResponse, AppError> {
+    let client = reqwest::Client::new();
+
+    // Exchange code for token
+    let token_resp = client
+        .post("https://github.com/login/oauth/access_token")
+        .header("Accept", "application/json")
+        .json(&serde_json::json!({
+            "client_id": state.config.github_client_id,
+            "client_secret": state.config.github_client_secret,
+            "code": query.code,
+        }))
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    let access_token = token_resp["access_token"]
+        .as_str()
+        .ok_or(AppError::BadRequest("github auth failed"))?;
+
+    // Fetch profile
+    let profile = client
+        .get("https://api.github.com/user")
+        .header("Authorization", format!("Bearer {}", access_token))
+        .header("User-Agent", "simplehook")
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    let github_id = profile["id"]
+        .as_i64()
+        .ok_or(AppError::Internal("missing github id"))?
+        .to_string();
+    let name = profile["name"]
+        .as_str()
+        .or(profile["login"].as_str())
+        .unwrap_or("GitHub User")
+        .to_string();
+
+    // Fetch email
+    let emails = client
+        .get("https://api.github.com/user/emails")
+        .header("Authorization", format!("Bearer {}", access_token))
+        .header("User-Agent", "simplehook")
+        .send()
+        .await?
+        .json::<Vec<serde_json::Value>>()
+        .await?;
+
+    let email = emails
+        .iter()
+        .find(|e| e["primary"].as_bool() == Some(true))
+        .and_then(|e| e["email"].as_str())
+        .or(profile["email"].as_str())
+        .ok_or(AppError::BadRequest("no email from github"))?
+        .to_lowercase();
+
+    // Find or create user
+    let user: User = if let Some(existing) =
+        sqlx::query_as::<_, User>("SELECT * FROM users WHERE github_id = $1")
+            .bind(&github_id)
+            .fetch_optional(&state.db)
+            .await?
+    {
+        existing
+    } else if let Some(existing) =
+        sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+            .bind(&email)
+            .fetch_optional(&state.db)
+            .await?
+    {
+        // Link GitHub to existing account
+        sqlx::query("UPDATE users SET github_id = $1 WHERE id = $2")
+            .bind(&github_id)
+            .bind(&existing.id)
+            .execute(&state.db)
+            .await?;
+        existing
+    } else {
+        // Create new user + project
+        let user_id = db::generate_id("u_", 16);
+        let trial_ends_at = Utc::now() + Duration::hours(24);
+        let user: User = sqlx::query_as(
+            "INSERT INTO users (id, name, email, password_hash, github_id, trial_ends_at) VALUES ($1, $2, $3, '', $4, $5) RETURNING *",
+        )
+        .bind(&user_id)
+        .bind(&name)
+        .bind(&email)
+        .bind(&github_id)
+        .bind(trial_ends_at)
+        .fetch_one(&state.db)
+        .await?;
+
+        let project_id = db::generate_id("p_", 12);
+        let api_key = db::generate_id("ak_", 24);
+        sqlx::query(
+            "INSERT INTO projects (id, name, api_key, user_id, active, billing_status) VALUES ($1, $2, $3, $4, true, 'trial')",
+        )
+        .bind(&project_id)
+        .bind(format!("{}'s project", name))
+        .bind(&api_key)
+        .bind(&user_id)
+        .execute(&state.db)
+        .await?;
+
+        user
+    };
+
+    // Create session and redirect
+    let (_token, cookie) = create_session(&state, &user.id).await?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, cookie.parse().unwrap());
+    headers.insert(
+        "Location",
+        format!("{}/dashboard", state.config.frontend_url)
+            .parse()
+            .unwrap(),
+    );
+
+    Ok((StatusCode::FOUND, headers))
 }
 
 // --- Helpers ---

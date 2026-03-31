@@ -69,6 +69,7 @@ fn build_user_from_candidate(c: &db::TrialCandidate) -> User {
         trial_reminder_sent: false,
         trial_expired_sent: false,
         welcome_email_sent: false,
+        github_id: None,
         created_at: chrono::Utc::now(),
     }
 }

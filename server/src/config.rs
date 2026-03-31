@@ -10,6 +10,8 @@ pub struct Config {
     pub stripe_price_id: String,       // $5/mo — 3 agents
     pub stripe_price_id_6: String,     // $8/mo — 6 agents
     pub resend_api_key: String,
+    pub github_client_id: String,
+    pub github_client_secret: String,
     pub port: u16,
 }
 
@@ -24,6 +26,8 @@ impl Config {
             stripe_price_id: env::var("STRIPE_PRICE_ID").unwrap_or_default(),
             stripe_price_id_6: env::var("STRIPE_PRICE_ID_6").unwrap_or_default(),
             resend_api_key: env::var("RESEND_API_KEY").unwrap_or_default(),
+            github_client_id: env::var("GITHUB_CLIENT_ID").unwrap_or_default(),
+            github_client_secret: env::var("GITHUB_CLIENT_SECRET").unwrap_or_default(),
             port: env::var("PORT")
                 .unwrap_or_else(|_| "8400".into())
                 .parse()
