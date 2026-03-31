@@ -75,6 +75,14 @@ export interface StatsResponse {
   by_path: PathCount[];
 }
 
+export interface Listener {
+  id: string;
+  listener_id: string;
+  label: string | null;
+  connected: boolean;
+  created_at: string;
+}
+
 export type StatsWindow = "1m" | "10m" | "1h" | "1d" | "7d";
 
 export interface EventsFilter {
@@ -190,6 +198,21 @@ export const api = {
     },
     restore(id: string): Promise<void> {
       return request(`/routes/${id}/restore`, { method: "POST" });
+    },
+  },
+
+  listeners: {
+    list(): Promise<Listener[]> {
+      return request("/listeners");
+    },
+    create(data: { listener_id: string; label?: string }): Promise<Listener> {
+      return request("/listeners", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    delete(listenerId: string): Promise<void> {
+      return request(`/listeners/${listenerId}`, { method: "DELETE" });
     },
   },
 

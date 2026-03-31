@@ -13,6 +13,7 @@ import { EventDetailPage } from "@/pages/EventDetailPage.js";
 import { RoutesPage } from "@/pages/RoutesPage.js";
 import { SettingsPage } from "@/pages/SettingsPage.js";
 import { DashboardPage } from "@/pages/DashboardPage.js";
+import { AgentsPage } from "@/pages/AgentsPage.js";
 import { Webhook } from "lucide-react";
 
 function ProtectedRoute() {
@@ -69,6 +70,7 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/events/:id" element={<EventDetailPage />} />
+                <Route path="/agents" element={<AgentsPage />} />
                 <Route path="/routes" element={<RoutesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

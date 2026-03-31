@@ -3,6 +3,7 @@ import {
   Activity,
   GitBranch,
   LayoutDashboard,
+  Radio,
   Settings,
   Webhook,
   LogOut,
@@ -29,6 +30,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/events", label: "Events", icon: Activity },
+  { to: "/agents", label: "Agents", icon: Radio },
   { to: "/routes", label: "Routes", icon: GitBranch },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
