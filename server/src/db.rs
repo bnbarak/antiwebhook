@@ -371,7 +371,7 @@ pub async fn list_events(
         count_query = count_query.bind(status);
     }
     if let Some(ref path) = query.path {
-        count_query = count_query.bind(format!("{}%", path));
+        count_query = count_query.bind(format!("%{}%", path));
     }
     if let Some(ref method) = query.method {
         count_query = count_query.bind(method);
@@ -388,7 +388,7 @@ pub async fn list_events(
         data_query = data_query.bind(status);
     }
     if let Some(ref path) = query.path {
-        data_query = data_query.bind(format!("{}%", path));
+        data_query = data_query.bind(format!("%{}%", path));
     }
     if let Some(ref method) = query.method {
         data_query = data_query.bind(method);
@@ -527,6 +527,114 @@ pub async fn insert_email_log(
         .execute(pool)
         .await?;
     Ok(())
+}
+
+// --- Stats queries ---
+
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct StatsCounts {
+    pub total: i64,
+    pub delivered: i64,
+    pub pending: i64,
+    pub failed: i64,
+}
+
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct TimeseriesBucket {
+    pub time: DateTime<Utc>,
+    pub total: i64,
+    pub delivered: i64,
+    pub failed: i64,
+}
+
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct PathCount {
+    pub path: String,
+    pub count: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct StatsResponse {
+    pub total: i64,
+    pub delivered: i64,
+    pub pending: i64,
+    pub failed: i64,
+    pub timeseries: Vec<TimeseriesBucket>,
+    pub by_path: Vec<PathCount>,
+}
+
+pub fn parse_window(window: &str) -> (&str, &str) {
+    match window {
+        "1m" => ("1 minute", "5 seconds"),
+        "10m" => ("10 minutes", "30 seconds"),
+        "1h" => ("1 hour", "5 minutes"),
+        "1d" => ("1 day", "1 hour"),
+        "7d" => ("7 days", "6 hours"),
+        _ => ("1 day", "1 hour"),
+    }
+}
+
+pub async fn get_stats(
+    pool: &PgPool,
+    project_id: &str,
+    window: &str,
+) -> Result<StatsResponse, sqlx::Error> {
+    let (interval, bucket) = parse_window(window);
+
+    // Counts
+    let counts_sql = format!(
+        "SELECT \
+           COUNT(*) AS total, \
+           COUNT(*) FILTER (WHERE status = 'delivered') AS delivered, \
+           COUNT(*) FILTER (WHERE status = 'pending') AS pending, \
+           COUNT(*) FILTER (WHERE status = 'failed') AS failed \
+         FROM events \
+         WHERE project_id = $1 AND created_at >= now() - interval '{}'",
+        interval
+    );
+    let counts: StatsCounts = sqlx::query_as(&counts_sql)
+        .bind(project_id)
+        .fetch_one(pool)
+        .await?;
+
+    // Timeseries
+    let ts_sql = format!(
+        "SELECT \
+           date_bin(interval '{}', created_at, now() - interval '{}') AS time, \
+           COUNT(*) AS total, \
+           COUNT(*) FILTER (WHERE status = 'delivered') AS delivered, \
+           COUNT(*) FILTER (WHERE status = 'failed') AS failed \
+         FROM events \
+         WHERE project_id = $1 AND created_at >= now() - interval '{}' \
+         GROUP BY 1 ORDER BY 1",
+        bucket, interval, interval
+    );
+    let timeseries: Vec<TimeseriesBucket> = sqlx::query_as(&ts_sql)
+        .bind(project_id)
+        .fetch_all(pool)
+        .await?;
+
+    // By path
+    let path_sql = format!(
+        "SELECT path, COUNT(*) AS count \
+         FROM events \
+         WHERE project_id = $1 AND created_at >= now() - interval '{}' \
+         GROUP BY path ORDER BY count DESC LIMIT 10",
+        interval
+    );
+    let by_path: Vec<PathCount> = sqlx::query_as(&path_sql)
+        .bind(project_id)
+        .fetch_all(pool)
+        .await?;
+
+    Ok(StatsResponse {
+        total: counts.total,
+        delivered: counts.delivered,
+        pending: counts.pending,
+        failed: counts.failed,
+        timeseries,
+        by_path,
+    })
 }
 
 // --- Helpers ---

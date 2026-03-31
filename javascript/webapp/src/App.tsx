@@ -12,6 +12,7 @@ import { EventsPage } from "@/pages/EventsPage.js";
 import { EventDetailPage } from "@/pages/EventDetailPage.js";
 import { RoutesPage } from "@/pages/RoutesPage.js";
 import { SettingsPage } from "@/pages/SettingsPage.js";
+import { DashboardPage } from "@/pages/DashboardPage.js";
 import { Webhook } from "lucide-react";
 
 function ProtectedRoute() {
@@ -39,7 +40,7 @@ function ProtectedRoute() {
 function GuestOnly() {
   const { session, loading } = useAuth();
   if (loading) return null;
-  if (session) return <Navigate to="/events" replace />;
+  if (session) return <Navigate to="/dashboard" replace />;
   return <Outlet />;
 }
 
@@ -65,11 +66,12 @@ function App() {
             {/* Protected dashboard routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/events/:id" element={<EventDetailPage />} />
                 <Route path="/routes" element={<RoutesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/events" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Route>
           </Routes>

@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
   GitBranch,
+  LayoutDashboard,
   Settings,
   Webhook,
   LogOut,
@@ -26,6 +27,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/events", label: "Events", icon: Activity },
   { to: "/routes", label: "Routes", icon: GitBranch },
   { to: "/settings", label: "Settings", icon: Settings },

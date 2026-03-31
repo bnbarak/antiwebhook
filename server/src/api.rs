@@ -202,6 +202,27 @@ pub async fn restore_route(
     Ok(Json(serde_json::json!({"restored": true})))
 }
 
+// --- Stats ---
+
+#[derive(Deserialize)]
+pub struct StatsQuery {
+    pub window: Option<String>,
+}
+
+pub async fn get_stats(
+    State(state): State<Arc<AppState>>,
+    AuthProject(project): AuthProject,
+    Query(query): Query<StatsQuery>,
+) -> Result<Json<db::StatsResponse>, AppError> {
+    let window = query.window.as_deref().unwrap_or("1d");
+    let valid = ["1m", "10m", "1h", "1d", "7d"];
+    if !valid.contains(&window) {
+        return Err(AppError::BadRequest("window must be 1m, 10m, 1h, 1d, or 7d"));
+    }
+    let stats = db::get_stats(&state.db, &project.id, window).await?;
+    Ok(Json(stats))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

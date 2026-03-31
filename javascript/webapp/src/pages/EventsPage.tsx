@@ -137,16 +137,14 @@ export function EventsPage() {
         )}
 
         <Input
-          placeholder="stripe/events"
+          placeholder="Search paths..."
           value={pathFilter}
           onChange={(e) => {
-            let val = e.target.value;
-            if (val && !val.startsWith("/")) val = "/" + val;
-            setPathFilter(val);
+            setPathFilter(e.target.value);
             setRouteFilter("all");
             setPage(0);
           }}
-          className="h-7 w-[200px] font-mono text-sm"
+          className="h-7 w-[180px] text-sm"
         />
 
         <Button

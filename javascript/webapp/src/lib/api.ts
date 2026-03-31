@@ -53,6 +53,29 @@ export interface BillingStatus {
   has_subscription: boolean;
 }
 
+export interface TimeseriesBucket {
+  time: string;
+  total: number;
+  delivered: number;
+  failed: number;
+}
+
+export interface PathCount {
+  path: string;
+  count: number;
+}
+
+export interface StatsResponse {
+  total: number;
+  delivered: number;
+  pending: number;
+  failed: number;
+  timeseries: TimeseriesBucket[];
+  by_path: PathCount[];
+}
+
+export type StatsWindow = "1m" | "10m" | "1h" | "1d" | "7d";
+
 export interface EventsFilter {
   status?: string;
   path?: string;
@@ -109,6 +132,12 @@ export const api = {
     },
     me(): Promise<Project> {
       return request("/auth/me");
+    },
+  },
+
+  stats: {
+    get(window: StatsWindow = "1d"): Promise<StatsResponse> {
+      return request(`/stats?window=${window}`);
     },
   },
 
