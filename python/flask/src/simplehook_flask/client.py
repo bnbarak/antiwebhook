@@ -111,17 +111,3 @@ def listenToWebhooks(
         opts,
         is_production=None,  # Already checked above
     )
-
-
-def listen(
-    app: Flask,
-    api_key: str,
-    opts: ListenOptions | None = None,
-) -> Connection:
-    """Deprecated: use listenToWebhooks() instead."""
-    warnings.warn(
-        "listen() is deprecated, use listenToWebhooks() instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return listenToWebhooks(app, api_key, opts)

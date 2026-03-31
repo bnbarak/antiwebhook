@@ -56,6 +56,3 @@ export function listenToWebhooks(
 
   return createClient(dispatch, apiKey, opts);
 }
-
-/** @deprecated Use `listenToWebhooks` instead. */
-export const listen = listenToWebhooks;

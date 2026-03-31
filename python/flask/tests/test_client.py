@@ -7,7 +7,7 @@ import time
 
 from flask import Flask
 
-from simplehook_flask import listen, listenToWebhooks
+from simplehook_flask import listenToWebhooks
 from simplehook_flask.client import Connection
 
 from .conftest import MockWSServer
@@ -63,26 +63,6 @@ class TestListenToWebhooks:
         del os.environ["FLASK_ENV"]
 
 
-class TestListenDeprecated:
-    def test_listen_emits_deprecation_warning(self, flask_app: Flask) -> None:
-        # Arrange
-        os.environ["FLASK_ENV"] = "production"
-
-        # Act / Assert
-        import warnings
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            conn = listen(flask_app, "test_key")
-            assert len(w) == 1
-            assert issubclass(w[0].category, DeprecationWarning)
-            assert "listenToWebhooks" in str(w[0].message)
-
-        # Assert it still works
-        assert isinstance(conn, Connection)
-        assert conn._closed is True
-
-        # Cleanup
-        del os.environ["FLASK_ENV"]
 
 
 class TestPingPong:

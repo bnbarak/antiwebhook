@@ -91,6 +91,3 @@ export function listenToWebhooks(app: App, apiKey: string, opts: ListenOptions =
     },
   };
 }
-
-/** @deprecated Use `listenToWebhooks` instead. */
-export const listen = listenToWebhooks;
