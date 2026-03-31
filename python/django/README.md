@@ -72,6 +72,8 @@ Production is detected when `DJANGO_SETTINGS_MODULE` is set and `DEBUG` is `Fals
 
 ## Links
 
+- [GitHub](https://github.com/bnbarak/antiwebhook)
+
 - [Documentation](https://www.simplehook.dev/docs)
 - [Dashboard](https://www.simplehook.dev/dashboard)
 

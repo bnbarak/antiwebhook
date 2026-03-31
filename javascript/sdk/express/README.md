@@ -63,6 +63,8 @@ Production is detected when `NODE_ENV === "production"`.
 
 ## Links
 
+- [GitHub](https://github.com/bnbarak/antiwebhook)
+
 - [Documentation](https://www.simplehook.dev/docs)
 - [Dashboard](https://www.simplehook.dev/dashboard)
 

@@ -1,0 +1,188 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DATABASE_URL: postgres://admin:secret@localhost:5434/simplehook
+  RUST_LOG: simplehook_server=warn
+
+jobs:
+  # ── Rust server ──────────────────────────────────────────────────────
+  rust:
+    name: Rust server (build + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - run: cargo build --release
+        working-directory: server
+      - run: cargo test
+        working-directory: server
+
+  # ── Express SDK ──────────────────────────────────────────────────────
+  sdk-express:
+    name: Express SDK (typecheck + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: javascript/sdk/core
+      - run: npx tsc
+        working-directory: javascript/sdk/core
+      - run: npm install
+        working-directory: javascript/sdk/express
+      - run: npx tsc --noEmit
+        working-directory: javascript/sdk/express
+      - run: ./node_modules/.bin/vitest run
+        working-directory: javascript/sdk/express
+
+  # ── Fastify SDK ──────────────────────────────────────────────────────
+  sdk-fastify:
+    name: Fastify SDK (typecheck + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: javascript/sdk/core
+      - run: npx tsc
+        working-directory: javascript/sdk/core
+      - run: npm install
+        working-directory: javascript/sdk/fastify
+      - run: npx tsc --noEmit
+        working-directory: javascript/sdk/fastify
+      - run: ./node_modules/.bin/vitest run
+        working-directory: javascript/sdk/fastify
+
+  # ── Flask SDK ────────────────────────────────────────────────────────
+  sdk-flask:
+    name: Flask SDK (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+        working-directory: python/core
+      - run: pip install -e ".[dev]"
+        working-directory: python/flask
+      - run: pytest -v
+        working-directory: python/flask
+
+  # ── Django SDK ───────────────────────────────────────────────────────
+  sdk-django:
+    name: Django SDK (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+        working-directory: python/core
+      - run: pip install -e ".[dev]"
+        working-directory: python/django
+      - run: pytest -v
+        working-directory: python/django
+
+  # ── Webapp ───────────────────────────────────────────────────────────
+  webapp:
+    name: Webapp (typecheck + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: javascript/webapp
+      - run: npx tsc --noEmit
+        working-directory: javascript/webapp
+      - run: npx vite build
+        working-directory: javascript/webapp
+
+  # ── Integration tests ────────────────────────────────────────────────
+  integration:
+    name: Integration tests (auth + billing + stats + migrations + e2e)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: simplehook
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U admin"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Build server
+      - run: cargo build
+        working-directory: server
+
+      # Install test deps
+      - run: npm install
+        working-directory: tests
+      - run: npm install
+        working-directory: javascript/sdk/express
+      - run: npx tsc
+        working-directory: javascript/sdk/express
+
+      # Install Express test app deps
+      - run: npm install
+        working-directory: testApps/express
+
+      # Run integration test suites
+      - name: Auth tests
+        run: node --test auth.test.js
+        working-directory: tests
+
+      - name: Billing tests
+        run: node --test billing.test.js
+        working-directory: tests
+
+      - name: Stats tests
+        run: node --test stats.test.js
+        working-directory: tests
+
+      - name: Migration tests
+        run: node --test migrations.test.js
+        working-directory: tests
+
+      - name: E2E webhook tests
+        run: node --test e2e.test.js
+        working-directory: tests
+
+      - name: Stress tests
+        run: node --test stress.test.js
+        working-directory: tests
+
+      - name: E2E SDK tests
+        run: node --test e2e-sdk.test.js
+        working-directory: testApps

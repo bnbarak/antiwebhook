@@ -60,6 +60,8 @@ Production is detected when `FLASK_ENV === "production"` or `FLASK_DEBUG` is not
 
 ## Links
 
+- [GitHub](https://github.com/bnbarak/antiwebhook)
+
 - [Documentation](https://www.simplehook.dev/docs)
 - [Dashboard](https://www.simplehook.dev/dashboard)
 
