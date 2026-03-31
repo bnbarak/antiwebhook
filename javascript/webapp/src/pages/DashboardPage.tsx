@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { api, type Project, type StatsResponse, type StatsWindow } from "@/lib/api.js";
+import { api, type Project, type Listener, type StatsResponse, type StatsWindow } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import {
   Card,
@@ -44,7 +44,7 @@ interface Framework {
   id: string;
   name: string;
   available: boolean;
-  snippet: (key: string) => string;
+  snippet: (key: string, agent?: string) => string;
 }
 
 interface Language {
@@ -75,13 +75,13 @@ const LANGUAGES: Language[] = [
         id: "express",
         name: "Express",
         available: true,
-        snippet: (key) => `import express from "express";
+        snippet: (key, agent) => `import express from "express";
 import { listenToWebhooks } from "simplehook";
 
 const app = express();
 app.use(express.json());
 
-listenToWebhooks(app, "${key}");
+listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""});
 
 app.post("/stripe/events", (req, res) => {
   console.log("Webhook:", req.body);
@@ -94,11 +94,11 @@ app.listen(3000);`,
         id: "fastify",
         name: "Fastify",
         available: true,
-        snippet: (key) => `import Fastify from "fastify";
+        snippet: (key, agent) => `import Fastify from "fastify";
 import { listenToWebhooks } from "simplehook-fastify";
 
 const app = Fastify();
-listenToWebhooks(app, "${key}");
+listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""});
 
 app.post("/stripe/events", async (req) => {
   console.log("Webhook:", req.body);
@@ -111,11 +111,11 @@ app.listen({ port: 3000 });`,
         id: "hono",
         name: "Hono",
         available: false,
-        snippet: (key) => `import { Hono } from "hono";
+        snippet: (key, agent) => `import { Hono } from "hono";
 import { listenToWebhooks } from "simplehook-hono";
 
 const app = new Hono();
-listenToWebhooks(app, "${key}");
+listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""});
 
 app.post("/stripe/events", (c) => {
   console.log("Webhook:", c.req.json());
@@ -136,11 +136,11 @@ export default app;`,
         id: "flask",
         name: "Flask",
         available: true,
-        snippet: (key) => `from flask import Flask, request
+        snippet: (key, agent) => `from flask import Flask, request
 from simplehook_flask import listenToWebhooks
 
 app = Flask(__name__)
-listenToWebhooks(app, "${key}")
+listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""})
 
 @app.post("/stripe/events")
 def stripe_events():
@@ -151,11 +151,11 @@ def stripe_events():
         id: "django",
         name: "Django",
         available: true,
-        snippet: (key) => `from django.core.wsgi import get_wsgi_application
+        snippet: (key, agent) => `from django.core.wsgi import get_wsgi_application
 from simplehook_django import listenToWebhooks
 
 application = get_wsgi_application()
-listenToWebhooks(application, "${key}")`,
+listenToWebhooks(application, "${key}"${agent ? `, "${agent}"` : ""})`,
       },
       {
         id: "fastapi",
@@ -236,10 +236,11 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
-function QuickStartGuide({ apiKey, showKey }: { apiKey: string; showKey: boolean }) {
+function QuickStartGuide({ apiKey, showKey, listeners }: { apiKey: string; showKey: boolean; listeners: Listener[] }) {
   const [langId, setLangId] = useState(LANGUAGES[0].id);
   const lang = LANGUAGES.find((l) => l.id === langId) ?? LANGUAGES[0];
   const [fwId, setFwId] = useState(lang.frameworks[0]?.id ?? "");
+  const [agentId, setAgentId] = useState("");
 
   const handleLangChange = (id: string) => {
     setLangId(id);
@@ -300,13 +301,43 @@ function QuickStartGuide({ apiKey, showKey }: { apiKey: string; showKey: boolean
             ))}
           </div>
         )}
-        {fw && <CodeBlock code={fw.snippet(displayKey)} />}
+        {listeners.length > 0 && (
+          <div className="mb-2">
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">Agent</p>
+            <div className="flex gap-1.5 flex-wrap">
+              <button
+                onClick={() => setAgentId("")}
+                className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  agentId === ""
+                    ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+                    : "border-border hover:border-border-strong"
+                }`}
+              >
+                No agent
+              </button>
+              {listeners.map((l) => (
+                <button
+                  key={l.listener_id}
+                  onClick={() => setAgentId(l.listener_id)}
+                  className={`rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium transition-colors ${
+                    agentId === l.listener_id
+                      ? "border-foreground/30 bg-card ring-1 ring-foreground/10"
+                      : "border-border hover:border-border-strong"
+                  }`}
+                >
+                  {l.listener_id}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {fw && <CodeBlock code={fw.snippet(displayKey, agentId || undefined)} />}
       </div>
     </>
   );
 }
 
-function QuickStartCard({ apiKey, webhookUrl }: { apiKey: string; webhookUrl: string }) {
+function QuickStartCard({ apiKey, webhookUrl, listeners }: { apiKey: string; webhookUrl: string; listeners: Listener[] }) {
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -370,7 +401,7 @@ function QuickStartCard({ apiKey, webhookUrl }: { apiKey: string; webhookUrl: st
           </div>
         </div>
 
-        <QuickStartGuide apiKey={apiKey} showKey={showKey} />
+        <QuickStartGuide apiKey={apiKey} showKey={showKey} listeners={listeners} />
       </CardContent>
     </Card>
   );
@@ -566,15 +597,21 @@ function PathBarChart({
 
 export function DashboardPage() {
   const [projectData, setProjectData] = useState<Project | null>(null);
+  const [listeners, setListeners] = useState<Listener[]>([]);
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [window, setWindow] = useState<StatsWindow>("1d");
   const [loadingProject, setLoadingProject] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    api.project
-      .get()
-      .then(setProjectData)
+    Promise.all([
+      api.project.get(),
+      api.listeners.list(),
+    ])
+      .then(([proj, ls]) => {
+        setProjectData(proj);
+        setListeners(ls);
+      })
       .catch(() => {})
       .finally(() => setLoadingProject(false));
   }, []);
@@ -614,7 +651,7 @@ export function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <QuickStartCard apiKey={apiKey} webhookUrl={webhookUrl} />
+          <QuickStartCard apiKey={apiKey} webhookUrl={webhookUrl} listeners={listeners} />
         )}
 
         {/* Stats Cards */}
