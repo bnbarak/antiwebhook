@@ -124,9 +124,9 @@ pub async fn ws_upgrade(
         }
     }
 
-    // Limit concurrent WebSocket connections per project (max 10)
+    // Limit concurrent WebSocket connections per project
     let conn_count = state.tunnels.connection_count(&project.id).await;
-    if conn_count >= 10 {
+    if conn_count >= 50 {
         return Err(AppError::TooManyRequests);
     }
 
