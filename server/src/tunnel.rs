@@ -64,6 +64,12 @@ impl TunnelManager {
         conns.get(&key).map_or(false, |tx| !tx.is_closed())
     }
 
+    /// Count active connections for a project (across all listener IDs).
+    pub async fn connection_count(&self, project_id: &str) -> usize {
+        let conns = self.connections.read().await;
+        conns.iter().filter(|((pid, _), tx)| pid == project_id && !tx.is_closed()).count()
+    }
+
     /// Check if ANY connection exists for this project (any listener_id).
     /// Used by the dashboard to show overall connectivity.
     pub async fn is_any_connected(&self, project_id: &str) -> bool {
@@ -118,8 +124,16 @@ pub async fn ws_upgrade(
         }
     }
 
+    // Limit concurrent WebSocket connections per project (max 10)
+    let conn_count = state.tunnels.connection_count(&project.id).await;
+    if conn_count >= 10 {
+        return Err(AppError::TooManyRequests);
+    }
+
     let listener_id = params.listener_id;
-    Ok(ws.on_upgrade(move |socket| handle_ws(socket, state, project, listener_id)))
+    Ok(ws
+        .max_message_size(1_048_576)
+        .on_upgrade(move |socket| handle_ws(socket, state, project, listener_id)))
 }
 
 async fn handle_ws(socket: WebSocket, state: Arc<AppState>, project: db::Project, listener_id: Option<String>) {

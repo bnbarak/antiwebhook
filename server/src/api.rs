@@ -174,6 +174,7 @@ pub async fn create_route(
     let default_timeout = if body.mode == "passthrough" { 30 } else { 5 };
     let timeout = body.timeout_seconds.unwrap_or(default_timeout).clamp(1, 300);
     let route = db::create_route(&state.db, &project.id, &body.path_prefix, &body.mode, timeout, body.listener_id.as_deref()).await?;
+    tracing::info!(project_id = %project.id, path_prefix = %body.path_prefix, "route created");
     Ok(Json(route))
 }
 
@@ -187,6 +188,7 @@ pub async fn delete_route(
     if !deleted {
         return Err(AppError::NotFound("route not found"));
     }
+    tracing::info!(project_id = %project.id, route_id = %route_id, "route deleted");
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -285,6 +287,8 @@ pub async fn create_listener(
         AppError::Db(e)
     })?;
 
+    tracing::info!(project_id = %project.id, listener_id = %body.listener_id, "listener created");
+
     Ok(Json(listener))
 }
 
@@ -316,6 +320,7 @@ pub async fn delete_listener(
     if !deleted {
         return Err(AppError::NotFound("listener not found"));
     }
+    tracing::info!(project_id = %project.id, listener_id = %listener_id, "listener deleted");
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 

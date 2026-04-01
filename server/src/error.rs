@@ -6,6 +6,7 @@ pub enum AppError {
     Unauthorized,
     BadRequest(&'static str),
     Internal(&'static str),
+    TooManyRequests,
     Db(sqlx::Error),
     Json(serde_json::Error),
     Reqwest(reqwest::Error),
@@ -16,6 +17,7 @@ impl IntoResponse for AppError {
         let (status, message) = match &self {
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, *msg),
             AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "unauthorized"),
+            AppError::TooManyRequests => (StatusCode::TOO_MANY_REQUESTS, "too many requests"),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, *msg),
             AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, *msg),
             AppError::Db(e) => {

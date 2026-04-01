@@ -7,6 +7,7 @@ use axum::{
 };
 use base64::Engine;
 use std::{collections::HashMap, sync::Arc, time::Duration};
+use tracing::warn;
 
 use crate::{app::AppState, db, error::AppError, tunnel::RequestFrame};
 
@@ -17,6 +18,16 @@ pub async fn handle_webhook(
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<Response, AppError> {
+    // Rate limit: 100 webhooks per minute per project
+    if !state.rate_limiter.check(
+        &format!("hooks:{}", project_id),
+        100,
+        Duration::from_secs(60),
+    ).await {
+        warn!(project_id = %project_id, "webhook rate limit exceeded");
+        return Ok((StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded").into_response());
+    }
+
     // 1. Verify project exists
     let project = db::get_project_by_id(&state.db, &project_id)
         .await?
@@ -53,8 +64,12 @@ pub async fn handle_webhook(
         None // no matching route — will show as "unmatched" in UI
     };
 
-    // 3. Serialize headers
+    // 3. Serialize headers + enforce size limit (64KB)
     let header_map = serialize_headers(&headers);
+    let headers_json = serde_json::to_value(&header_map).unwrap_or_default();
+    if headers_json.to_string().len() > 65_536 {
+        return Ok((StatusCode::REQUEST_HEADER_FIELDS_TOO_LARGE, "headers too large").into_response());
+    }
 
     // 4. Store event
     let event_id = db::generate_id("evt_", 16);

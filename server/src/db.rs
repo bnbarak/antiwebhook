@@ -791,7 +791,7 @@ pub async fn delete_listener(
 pub fn generate_id(prefix: &str, len: usize) -> String {
     use rand::Rng;
     let mut rng = rand::rng();
-    let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
+    let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chars().collect();
     let random: String = (0..len).map(|_| chars[rng.random_range(0..chars.len())]).collect();
     format!("{}{}", prefix, random)
 }
@@ -817,6 +817,6 @@ mod tests {
     #[test]
     fn test_generate_id_charset() {
         let id = generate_id("", 100);
-        assert!(id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
+        assert!(id.chars().all(|c| c.is_ascii_alphanumeric()));
     }
 }

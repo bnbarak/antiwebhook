@@ -71,12 +71,19 @@ pub struct SessionResponse {
 
 pub async fn sign_up(
     State(state): State<Arc<AppState>>,
+    req_headers: HeaderMap,
     Json(body): Json<SignUpRequest>,
 ) -> Result<impl IntoResponse, AppError> {
+    // Rate limit: 10 sign-up attempts per minute per IP
+    let ip = extract_client_ip(&req_headers);
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 10, std::time::Duration::from_secs(60)).await {
+        return Err(AppError::TooManyRequests);
+    }
+
     let email = body.email.trim().to_lowercase();
 
-    if body.password.len() < 8 {
-        return Err(AppError::BadRequest("password must be at least 8 characters"));
+    if body.password.len() < 10 {
+        return Err(AppError::BadRequest("password must be at least 10 characters"));
     }
 
     if email.is_empty() || !email.contains('@') {
@@ -134,6 +141,8 @@ pub async fn sign_up(
         }
     });
 
+    tracing::info!(email = %email, user_id = %user_id, "user signed up");
+
     // Create session
     let (token, cookie) = create_session(&state, &user_id).await?;
 
@@ -156,19 +165,33 @@ pub async fn sign_up(
 
 pub async fn sign_in(
     State(state): State<Arc<AppState>>,
+    req_headers: HeaderMap,
     Json(body): Json<SignInRequest>,
 ) -> Result<impl IntoResponse, AppError> {
+    // Rate limit: 10 sign-in attempts per minute per IP
+    let ip = extract_client_ip(&req_headers);
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 10, std::time::Duration::from_secs(60)).await {
+        return Err(AppError::TooManyRequests);
+    }
+
     let email = body.email.trim().to_lowercase();
 
-    let user: User = sqlx::query_as("SELECT * FROM users WHERE email = $1")
+    let user: Option<User> = sqlx::query_as("SELECT * FROM users WHERE email = $1")
         .bind(&email)
         .fetch_optional(&state.db)
-        .await?
-        .ok_or(AppError::Unauthorized)?;
+        .await?;
+
+    let Some(user) = user else {
+        // Hash dummy to prevent timing-based enumeration
+        let _ = hash_password("dummy_password_to_prevent_timing_attack");
+        return Err(AppError::Unauthorized);
+    };
 
     if !verify_password(&body.password, &user.password_hash)? {
         return Err(AppError::Unauthorized);
     }
+
+    tracing::info!(email = %email, user_id = %user.id, "user signed in");
 
     let (token, cookie) = create_session(&state, &user.id).await?;
 
@@ -297,6 +320,14 @@ pub async fn sign_out(
     headers: HeaderMap,
 ) -> Result<impl IntoResponse, AppError> {
     if let Some(token) = extract_token(&headers) {
+        // Look up user_id before deleting for audit logging
+        let session: Option<Session> = sqlx::query_as("SELECT * FROM sessions WHERE token = $1")
+            .bind(&token)
+            .fetch_optional(&state.db)
+            .await?;
+        if let Some(ref s) = session {
+            tracing::info!(user_id = %s.user_id, "user signed out");
+        }
         sqlx::query("DELETE FROM sessions WHERE token = $1")
             .bind(&token)
             .execute(&state.db)
@@ -313,23 +344,48 @@ pub async fn sign_out(
 #[derive(Deserialize)]
 pub struct GitHubCallbackQuery {
     pub code: String,
+    pub state: Option<String>,
 }
 
 pub async fn github_auth(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, AppError> {
+    let oauth_state = crate::db::generate_id("ghst_", 24);
     let url = format!(
-        "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}/auth/github/callback&scope=user:email",
+        "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}/auth/github/callback&scope=user:email&state={}",
         state.config.github_client_id,
         state.config.frontend_url,
+        oauth_state,
     );
-    Ok(axum::response::Redirect::temporary(&url))
+    let cookie = format!(
+        "sh_oauth_state={}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=600",
+        oauth_state,
+    );
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, cookie.parse().unwrap());
+    Ok((headers, axum::response::Redirect::temporary(&url)))
 }
 
 pub async fn github_callback(
     State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
     Query(query): Query<GitHubCallbackQuery>,
 ) -> Result<impl IntoResponse, AppError> {
+    // Validate OAuth state parameter
+    let expected_state = headers
+        .get("cookie")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|cookie_str| {
+            cookie_str.split(';').find_map(|part| {
+                let part = part.trim();
+                part.strip_prefix("sh_oauth_state=").map(String::from)
+            })
+        });
+    let query_state = query.state.as_deref().unwrap_or("");
+    match expected_state {
+        Some(ref expected) if !expected.is_empty() && expected == query_state => {}
+        _ => return Err(AppError::BadRequest("oauth state mismatch")),
+    }
     let client = reqwest::Client::new();
 
     // Exchange code for token
@@ -439,6 +495,8 @@ pub async fn github_callback(
         user
     };
 
+    tracing::info!(email = %email, github_id = %github_id, user_id = %user.id, "github oauth callback");
+
     // Create session and redirect via HTML page (Vercel rewrites don't forward Set-Cookie on 302)
     let (_token, cookie) = create_session(&state, &user.id).await?;
     let redirect_url = format!("{}/dashboard", state.config.frontend_url);
@@ -473,12 +531,22 @@ async fn create_session(state: &AppState, user_id: &str) -> Result<(String, Stri
     .await?;
 
     let cookie = format!(
-        "sh_session={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}",
+        "sh_session={}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age={}",
         token,
         30 * 24 * 3600
     );
 
     Ok((token, cookie))
+}
+
+fn extract_client_ip(headers: &HeaderMap) -> String {
+    headers
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.split(',').next())
+        .unwrap_or("unknown")
+        .trim()
+        .to_string()
 }
 
 fn extract_token(headers: &HeaderMap) -> Option<String> {

@@ -1,4 +1,6 @@
 use axum::{
+    extract::DefaultBodyLimit,
+    http::{header::{AUTHORIZATION, CONTENT_TYPE, COOKIE}, HeaderValue, Method},
     routing::{any, delete, get, post},
     Router,
 };
@@ -6,16 +8,26 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use crate::{api, billing, config::Config, proxy, tunnel::TunnelManager, user_auth};
+use crate::{api, billing, config::Config, proxy, rate_limit::RateLimiter, tunnel::TunnelManager, user_auth};
 
 pub struct AppState {
     pub db: PgPool,
     pub tunnels: TunnelManager,
     pub config: Config,
+    pub rate_limiter: RateLimiter,
 }
 
 
 pub fn build_router(state: Arc<AppState>) -> Router {
+    let cors = CorsLayer::new()
+        .allow_origin([
+            state.config.frontend_url.parse::<HeaderValue>().unwrap(),
+            state.config.base_url.parse::<HeaderValue>().unwrap(),
+        ])
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers([AUTHORIZATION, CONTENT_TYPE, COOKIE])
+        .allow_credentials(true);
+
     let api_routes = Router::new()
         // Public
         .route("/register", post(api::register))
@@ -55,8 +67,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .nest("/auth", auth_routes)
         .nest("/api", api_routes)
         .route("/billing/stripe-webhook", post(billing::stripe_webhook))
+        .layer(DefaultBodyLimit::max(1_048_576))
         .layer(TraceLayer::new_for_http())
-        .layer(CorsLayer::permissive())
+        .layer(cors)
         .with_state(state)
 }
 

@@ -372,6 +372,13 @@ fn verify_signature(payload: &[u8], sig_header: &str, secret: &str) -> Result<()
         return Err(AppError::BadRequest("invalid signature format"));
     }
 
+    // Validate timestamp is within 300 seconds of now
+    let ts: i64 = timestamp.parse().map_err(|_| AppError::BadRequest("invalid timestamp"))?;
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+    if (now - ts).abs() > 300 {
+        return Err(AppError::BadRequest("webhook timestamp too old"));
+    }
+
     let payload_str =
         std::str::from_utf8(payload).map_err(|_| AppError::BadRequest("invalid payload"))?;
     let signed = format!("{}.{}", timestamp, payload_str);
@@ -398,7 +405,11 @@ mod tests {
         use sha2::Sha256;
 
         let secret = "whsec_test_secret";
-        let timestamp = "1234567890";
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            .to_string();
         let payload = r#"{"type":"checkout.session.completed"}"#;
         let signed = format!("{}.{}", timestamp, payload);
 

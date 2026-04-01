@@ -8,11 +8,13 @@ mod email;
 mod error;
 mod proxy;
 mod queue;
+mod rate_limit;
 mod trial_worker;
 mod tunnel;
 mod user_auth;
 
 use std::sync::Arc;
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() {
@@ -46,11 +48,22 @@ async fn main() {
         db,
         tunnels: tunnel::TunnelManager::new(),
         config,
+        rate_limiter: rate_limit::RateLimiter::new(),
     });
 
     // Spawn background workers
     tokio::spawn(queue::run_worker(state.clone()));
     tokio::spawn(trial_worker::run_trial_checker(state.clone()));
+
+    // Spawn rate limiter cleanup task
+    let cleanup_state = state.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(60));
+        loop {
+            interval.tick().await;
+            cleanup_state.rate_limiter.cleanup().await;
+        }
+    });
 
     let router = app::build_router(state);
     let listener = tokio::net::TcpListener::bind(("0.0.0.0", port))
