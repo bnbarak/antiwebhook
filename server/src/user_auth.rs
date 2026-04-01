@@ -76,7 +76,7 @@ pub async fn sign_up(
 ) -> Result<impl IntoResponse, AppError> {
     // Rate limit: 10 sign-up attempts per minute per IP
     let ip = extract_client_ip(&req_headers);
-    if !state.rate_limiter.check(&format!("auth:{}", ip), 10, std::time::Duration::from_secs(60)).await {
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 30, std::time::Duration::from_secs(60)).await {
         return Err(AppError::TooManyRequests);
     }
 
@@ -170,7 +170,7 @@ pub async fn sign_in(
 ) -> Result<impl IntoResponse, AppError> {
     // Rate limit: 10 sign-in attempts per minute per IP
     let ip = extract_client_ip(&req_headers);
-    if !state.rate_limiter.check(&format!("auth:{}", ip), 10, std::time::Duration::from_secs(60)).await {
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 30, std::time::Duration::from_secs(60)).await {
         return Err(AppError::TooManyRequests);
     }
 

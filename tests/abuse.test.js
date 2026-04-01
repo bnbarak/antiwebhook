@@ -192,9 +192,9 @@ describe("abuse: rate limiting and abuse protection", () => {
   // Sign-in and sign-up SHARE the same bucket (10/min per IP).
   // We test sign-in first to avoid consuming the shared bucket with sign-ups.
 
-  test("login rate limit: 429 after 10 attempts", async () => {
-    // Send 10 login requests (they fail with 401 but count toward rate limit)
-    for (let i = 0; i < 10; i++) {
+  test("login rate limit: 429 after 30 attempts", async () => {
+    // Send 30 login requests (they fail with 401 but count toward rate limit)
+    for (let i = 0; i < 30; i++) {
       const res = await authReq("POST", "/auth/sign-in/email", {
         email: `ratelimit${i}@test.com`,
         password: "wrongpassword",
@@ -206,7 +206,7 @@ describe("abuse: rate limiting and abuse protection", () => {
       );
     }
 
-    // 11th should get 429
+    // 31st should get 429
     const res = await authReq("POST", "/auth/sign-in/email", {
       email: "ratelimit@test.com",
       password: "wrongpassword",
@@ -217,7 +217,7 @@ describe("abuse: rate limiting and abuse protection", () => {
   });
 
   // --- 2. Signup rate limiting ---
-  // Since sign-in already consumed 10+1 requests on the "auth:unknown" bucket,
+  // Since sign-in already consumed 30+1 requests on the "auth:unknown" bucket,
   // sign-up requests from the same IP should also be rate limited immediately.
 
   test("signup rate limit: 429 because shared auth bucket is exhausted", async () => {
