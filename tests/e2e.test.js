@@ -212,7 +212,8 @@ describe('e2e: full webhook flow', () => {
     });
 
     assert.strictEqual(res.status, 200);
-    const events = res.json();
+    const body = res.json();
+    const events = body.data || body;
     assert.ok(events.length >= 1);
     const event = events.find((e) => e.path === '/stripe/webhook');
     assert.ok(event, 'should have a pending event for /stripe/webhook');
@@ -352,7 +353,8 @@ describe('e2e: full webhook flow', () => {
     });
 
     assert.strictEqual(res.status, 200);
-    const events = res.json();
+    const body = res.json();
+    const events = body.data || body;
     assert.ok(events.length >= 2, `expected >= 2 events, got ${events.length}`);
 
     // Check we have both delivered and potentially pending events
@@ -365,7 +367,8 @@ describe('e2e: full webhook flow', () => {
     const listRes = await fetch(`${BASE_URL}/api/events`, {
       headers: { authorization: `Bearer ${apiKey}` },
     });
-    const events = listRes.json();
+    const listBody = listRes.json();
+    const events = listBody.data || listBody;
     const deliveredEvent = events.find((e) => e.status === 'delivered');
     assert.ok(deliveredEvent, 'need a delivered event for this test');
 
@@ -386,7 +389,8 @@ describe('e2e: full webhook flow', () => {
     const listRes = await fetch(`${BASE_URL}/api/events`, {
       headers: { authorization: `Bearer ${apiKey}` },
     });
-    const events = listRes.json();
+    const replayBody = listRes.json();
+    const events = replayBody.data || replayBody;
     const event = events.find((e) => e.status === 'delivered');
 
     const beforeCount = global.__receivedWebhooks.length;
@@ -448,7 +452,8 @@ describe('e2e: full webhook flow', () => {
     });
 
     assert.strictEqual(res.status, 200);
-    const events = res.json();
+    const body = res.json();
+    const events = body.data || body;
     assert.ok(events.every((e) => e.status === 'delivered'));
   });
 
@@ -458,7 +463,8 @@ describe('e2e: full webhook flow', () => {
     });
 
     assert.strictEqual(res.status, 200);
-    const events = res.json();
+    const body = res.json();
+    const events = body.data || body;
     assert.ok(events.every((e) => e.path.startsWith('/twilio')));
   });
 
@@ -500,7 +506,8 @@ describe('e2e: full webhook flow', () => {
       headers: { authorization: `Bearer ${proj2.api_key}` },
     });
 
-    const events = res.json();
+    const body = res.json();
+    const events = body.data || body;
     assert.strictEqual(events.length, 0, 'project 2 should have no events');
   });
 });
