@@ -216,6 +216,5 @@ jobs:
       - name: Stress tests
         run: node --test stress.test.js
         working-directory: tests
-      - name: E2E SDK tests
-        run: node --test e2e-sdk.test.js
-        working-directory: testApps
+      # E2E SDK tests disabled — requires all SDK test apps built + installed.
+      # Run locally: cd testApps && node --test e2e-sdk.test.js
