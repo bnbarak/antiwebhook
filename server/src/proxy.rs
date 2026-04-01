@@ -18,10 +18,10 @@ pub async fn handle_webhook(
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<Response, AppError> {
-    // Rate limit: 100 webhooks per minute per project
+    // Rate limit: 500 webhooks per minute per project
     if !state.rate_limiter.check(
         &format!("hooks:{}", project_id),
-        100,
+        500,
         Duration::from_secs(60),
     ).await {
         warn!(project_id = %project_id, "webhook rate limit exceeded");
