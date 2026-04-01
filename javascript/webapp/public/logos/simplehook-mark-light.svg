@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="12" fill="#f8f7fa"/>
+  <!-- Hook shape: circle at top + J-curve -->
+  <circle cx="32" cy="18" r="4" fill="none" stroke="#1a1625" stroke-width="3"/>
+  <path d="M32 22 L32 38 Q32 48 42 48" fill="none" stroke="#1a1625" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Small notch/barb to suggest catching -->
+  <path d="M42 48 L38 44" fill="none" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
