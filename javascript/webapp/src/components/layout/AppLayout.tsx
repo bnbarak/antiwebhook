@@ -50,14 +50,10 @@ export function AppLayout() {
       <aside className="flex w-60 shrink-0 flex-col border-r bg-card">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-4">
-          <div className="flex size-6 items-center justify-center rounded-md bg-foreground text-background">
-            <Webhook className="size-3" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base font-semibold leading-tight tracking-tight">
-              simplehook
-            </span>
-          </div>
+          <img src="/logos/simplehook-mark-dark.svg" alt="simplehook" className="size-7 rounded-md" />
+          <span className="text-base font-semibold leading-tight tracking-tight">
+            simplehook
+          </span>
         </div>
 
         <Separator />

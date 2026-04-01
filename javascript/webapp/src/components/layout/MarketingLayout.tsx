@@ -23,9 +23,7 @@ export function MarketingLayout() {
         <div className="mx-auto flex h-14 max-w-[960px] items-center justify-between px-6">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
-              <Webhook className="size-3.5" />
-            </div>
+            <img src="/logos/simplehook-mark-dark.svg" alt="simplehook" className="size-7 rounded-md" />
             <span className="font-mono text-sm font-medium tracking-[0.04em]">
               simplehook
             </span>
