@@ -265,7 +265,7 @@ export function HomePage() {
           </h1>
 
           <p className="mb-10 max-w-[480px] text-lg font-light leading-relaxed text-muted-foreground">
-            Stop tunneling. Stop polling. Stop building webhook infrastructure.
+            Stop tunneling. Stop polling. Stop using ngrok. One line of code to solve webhooks.
             Add one SDK call and your local app receives real webhooks.
           </p>
 

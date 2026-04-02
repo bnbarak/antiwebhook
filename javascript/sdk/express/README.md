@@ -2,7 +2,7 @@
 
 **One line of code. Webhooks just work.**
 
-Stop tunneling. Stop polling. Stop building webhook infrastructure. Add one SDK call and your local app receives real webhooks from Stripe, GitHub, Twilio — any provider.
+Stop tunneling. Stop polling. Stop using ngrok. One line of code to solve webhooks. Add one SDK call and your local app receives real webhooks from Stripe, GitHub, Twilio — any provider.
 
 ```typescript
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
