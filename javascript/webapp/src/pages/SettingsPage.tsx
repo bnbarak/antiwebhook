@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Copy, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
+import { Copy, Eye, EyeOff, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
 import { api, type Project, type BillingStatus } from "@/lib/api.js";
 import { useAuth } from "@/hooks/use-auth.js";
 import { Button } from "@/components/ui/button.js";
@@ -23,6 +23,7 @@ export function SettingsPage() {
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [loadingProject, setLoadingProject] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -178,9 +179,17 @@ export function SettingsPage() {
               <div className="flex items-center gap-2">
                 <Input
                   readOnly
-                  value={projectData?.api_key ?? ""}
+                  value={showApiKey ? (projectData?.api_key ?? "") : (projectData?.api_key ? projectData.api_key.slice(0, 3) + "\u2022".repeat(20) : "")}
                   className="font-mono text-sm"
                 />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  title={showApiKey ? "Hide" : "Show"}
+                >
+                  {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                </Button>
                 <Button
                   variant="outline"
                   size="icon"
