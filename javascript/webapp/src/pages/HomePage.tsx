@@ -609,7 +609,6 @@ export function HomePage() {
             >
               Start free trial
             </Link>
-            </div>
           </div>
         </div>
       </section>
