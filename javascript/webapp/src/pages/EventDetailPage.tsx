@@ -8,10 +8,23 @@ import { Skeleton } from "@/components/ui/skeleton.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.js";
 import { toast } from "sonner";
 
-function JsonViewer({ data }: { data: string | Record<string, string> | null }) {
-  if (!data) return <span className="text-xs text-text-tertiary">No data</span>;
+function decodeBody(data: unknown): string | null {
+  if (!data) return null;
+  if (typeof data === "string") return data;
+  // Postgres BYTEA comes as number array — decode to UTF-8 string
+  if (Array.isArray(data) && data.every((n) => typeof n === "number")) {
+    try {
+      const decoded = new TextDecoder().decode(new Uint8Array(data));
+      // Try to pretty-print if it's JSON
+      try { return JSON.stringify(JSON.parse(decoded), null, 2); } catch { return decoded; }
+    } catch { /* fall through */ }
+  }
+  return JSON.stringify(data, null, 2);
+}
 
-  const text = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+function JsonViewer({ data }: { data: unknown }) {
+  const text = decodeBody(data);
+  if (!text) return <span className="text-xs text-text-tertiary">No data</span>;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
