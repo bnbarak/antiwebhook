@@ -1,6 +1,6 @@
 {
   "name": "simplehook-hono",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Stable webhook URLs for localhost. One line of code. Hono adapter.",
   "type": "module",
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "simplehook-core": "^0.1.1",
+    "simplehook-core": "^0.2.0",
     "ws": "^8.18.0"
   },
   "peerDependencies": {

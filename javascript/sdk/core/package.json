@@ -1,6 +1,6 @@
 {
   "name": "simplehook-core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Core WebSocket client for simplehook SDKs.",
   "type": "module",
   "main": "dist/index.js",
@@ -22,6 +22,11 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
   },
-  "keywords": ["webhooks", "tunnel", "simplehook", "core"],
+  "keywords": [
+    "webhooks",
+    "tunnel",
+    "simplehook",
+    "core"
+  ],
   "license": "MIT"
 }

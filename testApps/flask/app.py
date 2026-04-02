@@ -13,15 +13,13 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 app = Flask(__name__)
 
 listener_id = os.environ.get("SIMPLEHOOK_LISTENER") or None
-connection = listenToWebhooks(
-    app,
-    os.environ.get("SIMPLEHOOK_KEY", "ak_test"),
-    listener_id,
-    {
-        "server_url": os.environ.get("SIMPLEHOOK_URL"),
-        "force_enable": True,
-    },
-)
+opts = {
+    "server_url": os.environ.get("SIMPLEHOOK_URL"),
+    "force_enable": True,
+}
+if listener_id:
+    opts["listener_id"] = listener_id
+connection = listenToWebhooks(app, os.environ.get("SIMPLEHOOK_KEY", "ak_test"), opts)
 
 
 @app.post("/stripe/events")
