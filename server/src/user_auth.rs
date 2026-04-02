@@ -503,6 +503,16 @@ pub async fn github_callback(
         .execute(&state.db)
         .await?;
 
+        // Send welcome email in background
+        let welcome_state = state.clone();
+        let welcome_user = user.clone();
+        let webhook_url = format!("{}/hooks/{}", state.config.base_url, project_id);
+        tokio::spawn(async move {
+            if let Err(e) = crate::email::send_welcome(&welcome_state, &welcome_user, &webhook_url).await {
+                tracing::error!(error = %e, "failed to send welcome email");
+            }
+        });
+
         user
     };
 
