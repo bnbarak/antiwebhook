@@ -25,7 +25,6 @@ pub async fn create_checkout(
         .bearer_auth(&state.config.stripe_secret_key)
         .form(&[
             ("mode", "subscription"),
-            ("payment_method_types[0]", "card"),
             ("line_items[0][price]", &state.config.stripe_price_id),
             ("line_items[0][quantity]", "1"),
             (
