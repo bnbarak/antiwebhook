@@ -502,7 +502,7 @@ pub async fn github_callback(
     let redirect_url = format!("{}/dashboard", state.config.frontend_url);
 
     let html = format!(
-        r#"<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url={}"></head><body>Redirecting...</body></html>"#,
+        r#"<!DOCTYPE html><html><head><script>window.location.replace("{}")</script></head><body>Redirecting...</body></html>"#,
         redirect_url
     );
 
