@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, Radio } from "lucide-react";
+import { Plus, Trash2, Radio, Copy, Check } from "lucide-react";
 import { api, type Listener, type BillingStatus } from "@/lib/api.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -278,12 +278,96 @@ export function AgentsPage() {
         </Card>
       )}
 
+      {/* Code example */}
+      {listeners.length > 0 && <AgentCodeExample />}
+
       <p className="mt-4 text-xs text-muted-foreground">
         {listeners.length}/{limit} agents.{" "}
         {isPaid
           ? "Increase subscription quantity in Stripe for more."
           : "Subscribe ($5/mo) for 3 more agent slots."}
       </p>
+    </div>
+  );
+}
+
+const SNIPPETS: Record<string, Record<string, (id: string) => string>> = {
+  "Node.js": {
+    Express: (id) => `import { listenToWebhooks } from "simplehook";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
+    Fastify: (id) => `import { listenToWebhooks } from "simplehook-fastify";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
+    Hono: (id) => `import { listenToWebhooks } from "simplehook-hono";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
+  },
+  Python: {
+    Flask: (id) => `from simplehook_flask import listenToWebhooks\n\nlistenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"], "${id}")`,
+    Django: (id) => `from simplehook_django import listenToWebhooks\n\nlistenToWebhooks(application, os.environ["SIMPLEHOOK_KEY"], "${id}")`,
+    FastAPI: (id) => `from simplehook_fastapi import listenToWebhooks\n\nlistenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"], "${id}")`,
+  },
+};
+
+function AgentCodeExample() {
+  const [lang, setLang] = useState(Object.keys(SNIPPETS)[0]);
+  const [fw, setFw] = useState(Object.keys(SNIPPETS[lang])[0]);
+  const [copied, setCopied] = useState(false);
+
+  const frameworks = Object.keys(SNIPPETS[lang] ?? {});
+  const code = SNIPPETS[lang]?.[fw]?.("my-agent") ?? "";
+
+  const handleLangChange = (l: string) => {
+    setLang(l);
+    setFw(Object.keys(SNIPPETS[l])[0]);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="mt-4 overflow-hidden rounded-lg border border-border">
+      <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-2.5">
+        <div className="flex gap-1.5">
+          {Object.keys(SNIPPETS).map((l) => (
+            <button
+              key={l}
+              onClick={() => handleLangChange(l)}
+              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                l === lang
+                  ? "bg-card border border-foreground/20 ring-1 ring-foreground/5"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        <span className="text-muted-foreground/30">|</span>
+        <div className="flex gap-1.5">
+          {frameworks.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFw(f)}
+              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                f === fw
+                  ? "bg-card border border-foreground/20 ring-1 ring-foreground/5"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={handleCopy}
+          className="ml-auto text-muted-foreground/50 hover:text-foreground transition-colors"
+          title="Copy"
+        >
+          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+        </button>
+      </div>
+      <pre className="overflow-x-auto bg-[#1e1834] px-4 py-3 font-mono text-[13px] leading-relaxed text-white/90">
+        <code>{code}</code>
+      </pre>
     </div>
   );
 }
