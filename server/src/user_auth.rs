@@ -67,6 +67,17 @@ pub struct SessionResponse {
     pub user: Option<UserInfo>,
 }
 
+#[derive(Deserialize)]
+pub struct ForgotPasswordRequest {
+    pub email: String,
+}
+
+#[derive(Deserialize)]
+pub struct ResetPasswordRequest {
+    pub token: String,
+    pub password: String,
+}
+
 // --- Handlers ---
 
 pub async fn sign_up(
@@ -511,6 +522,109 @@ pub async fn github_callback(
     headers.insert("Content-Type", "text/html".parse().unwrap());
 
     Ok((StatusCode::OK, headers, html))
+}
+
+pub async fn forgot_password(
+    State(state): State<Arc<AppState>>,
+    req_headers: HeaderMap,
+    Json(body): Json<ForgotPasswordRequest>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // Rate limit: 10 attempts per minute per IP
+    let ip = extract_client_ip(&req_headers);
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 30, std::time::Duration::from_secs(60)).await {
+        return Err(AppError::TooManyRequests);
+    }
+
+    let email = body.email.trim().to_lowercase();
+
+    // Always return success to prevent email enumeration
+    let user: Option<User> = sqlx::query_as("SELECT * FROM users WHERE email = $1")
+        .bind(&email)
+        .fetch_optional(&state.db)
+        .await?;
+
+    if let Some(user) = user {
+        // Generate reset token
+        let reset_id = db::generate_id("rst_", 16);
+        let token = db::generate_id("rpw_", 32);
+        let expires_at = Utc::now() + Duration::hours(1);
+
+        sqlx::query(
+            "INSERT INTO password_resets (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)"
+        )
+        .bind(&reset_id)
+        .bind(&user.id)
+        .bind(&token)
+        .bind(expires_at)
+        .execute(&state.db)
+        .await?;
+
+        // Send email in background
+        let reset_url = format!("{}/reset-password?token={}", state.config.frontend_url, token);
+        let state2 = state.clone();
+        let user2 = user.clone();
+        tokio::spawn(async move {
+            if let Err(e) = crate::email::send_password_reset(&state2, &user2, &reset_url).await {
+                tracing::error!(error = %e, "failed to send password reset email");
+            }
+        });
+
+        tracing::info!(email = %email, "password reset requested");
+    }
+
+    Ok(Json(serde_json::json!({"ok": true, "message": "If that email exists, a reset link has been sent."})))
+}
+
+pub async fn reset_password(
+    State(state): State<Arc<AppState>>,
+    req_headers: HeaderMap,
+    Json(body): Json<ResetPasswordRequest>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // Rate limit
+    let ip = extract_client_ip(&req_headers);
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 30, std::time::Duration::from_secs(60)).await {
+        return Err(AppError::TooManyRequests);
+    }
+
+    if body.password.len() < 10 {
+        return Err(AppError::BadRequest("password must be at least 10 characters"));
+    }
+
+    // Find valid, unused reset token
+    let reset: Option<(String, String)> = sqlx::query_as(
+        "SELECT id, user_id FROM password_resets WHERE token = $1 AND expires_at > now() AND used = false"
+    )
+    .bind(&body.token)
+    .fetch_optional(&state.db)
+    .await?;
+
+    let Some((reset_id, user_id)) = reset else {
+        return Err(AppError::BadRequest("invalid or expired reset token"));
+    };
+
+    // Update password
+    let password_hash = hash_password(&body.password)?;
+    sqlx::query("UPDATE users SET password_hash = $1 WHERE id = $2")
+        .bind(&password_hash)
+        .bind(&user_id)
+        .execute(&state.db)
+        .await?;
+
+    // Mark token as used
+    sqlx::query("UPDATE password_resets SET used = true WHERE id = $1")
+        .bind(&reset_id)
+        .execute(&state.db)
+        .await?;
+
+    // Invalidate all sessions for this user (force re-login)
+    sqlx::query("DELETE FROM sessions WHERE user_id = $1")
+        .bind(&user_id)
+        .execute(&state.db)
+        .await?;
+
+    tracing::info!(user_id = %user_id, "password reset completed");
+
+    Ok(Json(serde_json::json!({"ok": true})))
 }
 
 // --- Helpers ---

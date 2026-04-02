@@ -154,6 +154,28 @@ pub async fn send_payment_confirmed(state: &Arc<AppState>, user: &User) -> Resul
     Ok(())
 }
 
+pub async fn send_password_reset(state: &Arc<AppState>, user: &User, reset_url: &str) -> Result<(), String> {
+    let body_html = format!(
+        r#"<h2 style="margin:0 0 16px 0;font-size:22px;font-weight:600;">Reset your password</h2>
+<p style="margin:0 0 16px 0;line-height:1.6;color:#44423d;">
+  Hi {name}, click the link below to reset your password. This link expires in 1 hour.
+</p>
+<a href="{reset_url}" style="display:inline-block;background-color:#1a1916;color:#ffffff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
+  Reset password
+</a>
+<p style="margin:16px 0 0 0;line-height:1.6;color:#8c8a84;font-size:13px;">
+  If you didn&rsquo;t request this, you can safely ignore this email.
+</p>"#,
+        name = html_escape(&user.name),
+        reset_url = html_escape(reset_url),
+    );
+
+    let html = render_base("Reset your simplehook password", &body_html);
+    let resend_id = send_email(state, &user.email, "Reset your simplehook password", &html).await?;
+    let _ = db::insert_email_log(&state.db, &user.id, "password_reset", &resend_id).await;
+    Ok(())
+}
+
 fn html_escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")

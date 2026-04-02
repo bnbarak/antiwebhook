@@ -57,7 +57,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/me", get(user_auth::me))
         .route("/sign-out", post(user_auth::sign_out))
         .route("/github", get(user_auth::github_auth))
-        .route("/github/callback", get(user_auth::github_callback));
+        .route("/github/callback", get(user_auth::github_callback))
+        .route("/forgot-password", post(user_auth::forgot_password))
+        .route("/reset-password", post(user_auth::reset_password));
 
     Router::new()
         .route("/", get(|| async { axum::Json(serde_json::json!({"name": "simplehook", "version": "0.1.0", "docs": "https://simplehook.dev/docs"})) }))

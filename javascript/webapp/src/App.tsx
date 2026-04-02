@@ -8,6 +8,8 @@ import { HomePage } from "@/pages/HomePage.js";
 import { DocsPage } from "@/pages/DocsPage.js";
 import { LoginPage } from "@/pages/LoginPage.js";
 import { SignupPage } from "@/pages/SignupPage.js";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage.js";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage.js";
 import { EventsPage } from "@/pages/EventsPage.js";
 import { EventDetailPage } from "@/pages/EventDetailPage.js";
 import { RoutesPage } from "@/pages/RoutesPage.js";
@@ -64,6 +66,8 @@ function App() {
             <Route element={<GuestOnly />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
 
             {/* Protected dashboard routes */}

@@ -17,9 +17,9 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const from =
-    (location.state as { from?: { pathname: string } })?.from?.pathname ??
-    "/events";
+  const locationState = location.state as { from?: { pathname: string }; message?: string } | null;
+  const from = locationState?.from?.pathname ?? "/events";
+  const successMessage = locationState?.message ?? null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -51,6 +51,12 @@ export function LoginPage() {
             Enter your email and password to access the dashboard.
           </p>
 
+          {successMessage && (
+            <div className="mb-4 rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+              {successMessage}
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {error}
@@ -73,7 +79,15 @@ export function LoginPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground/80"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
