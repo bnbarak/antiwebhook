@@ -119,7 +119,7 @@ const app = new Hono();
 listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""});
 
 app.post("/stripe/events", (c) => {
-  console.log("Webhook:", c.req.json());
+  console.log("Webhook:", await c.req.json());
   return c.json({ received: true });
 });
 

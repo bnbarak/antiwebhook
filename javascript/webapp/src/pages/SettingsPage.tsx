@@ -164,13 +164,6 @@ export function SettingsPage() {
             )}
           </CardContent>
         </Card>
-                  <Copy className="size-3.5" />
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
       </div>
     </div>
   );

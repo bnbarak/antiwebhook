@@ -28,8 +28,8 @@ export function SignupPage() {
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (password.length < 10) {
+      setError("Password must be at least 10 characters");
       return;
     }
 
@@ -105,11 +105,11 @@ export function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 8 characters"
+                placeholder="At least 10 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={8}
+                minLength={10}
                 autoComplete="new-password"
               />
             </div>

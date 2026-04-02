@@ -46,7 +46,8 @@ app.post("/stripe/events", async (req) => {
   console.log("Webhook:", req.body);
   return { received: true };
 });` },
-  { id: "flask", name: "Flask", file: "app.py", code: `from flask import Flask, request
+  { id: "flask", name: "Flask", file: "app.py", code: `import os
+from flask import Flask, request
 from simplehook_flask import listenToWebhooks
 
 app = Flask(__name__)
@@ -63,7 +64,7 @@ const app = new Hono();
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 
 app.post("/stripe/events", (c) => {
-  console.log("Webhook:", c.req.json());
+  console.log("Webhook:", await c.req.json());
   return c.json({ received: true });
 });` },
   { id: "django", name: "Django", file: "wsgi.py", code: `from django.core.wsgi import get_wsgi_application
@@ -73,7 +74,8 @@ application = get_wsgi_application()
 listenToWebhooks(application, os.environ["SIMPLEHOOK_KEY"])
 
 # Your views handle webhooks as normal Django views` },
-  { id: "fastapi", name: "FastAPI", file: "app.py", code: `from fastapi import FastAPI, Request
+  { id: "fastapi", name: "FastAPI", file: "app.py", code: `import os
+from fastapi import FastAPI, Request
 from simplehook_fastapi import listenToWebhooks
 
 app = FastAPI()
