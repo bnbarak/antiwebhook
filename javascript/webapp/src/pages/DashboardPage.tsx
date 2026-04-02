@@ -596,7 +596,7 @@ function PathBarChart({
             payload?.[0]?.payload?.path ?? _label
           }
         />
-        <Bar dataKey="count" fill="#1a1916" radius={[0, 3, 3, 0]} barSize={18} />
+        <Bar dataKey="count" fill={CHART_COLORS.delivered} radius={[0, 3, 3, 0]} barSize={18} />
       </BarChart>
     </ResponsiveContainer>
   );
