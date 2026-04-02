@@ -98,6 +98,7 @@ pub struct BillingStatusResponse {
     pub has_subscription: bool,
     pub subscription_quantity: i32,
     pub agent_limit: i64,
+    pub route_limit: i64,
 }
 
 pub async fn get_billing_status(
@@ -118,6 +119,7 @@ pub async fn get_billing_status(
     });
 
     let agent_limit = 3 + (project.subscription_quantity as i64 * 3);
+    let route_limit = agent_limit; // same formula
 
     Ok(Json(BillingStatusResponse {
         billing_status: project.billing_status.clone(),
@@ -126,6 +128,7 @@ pub async fn get_billing_status(
         has_subscription: project.stripe_subscription_id.is_some(),
         subscription_quantity: project.subscription_quantity,
         agent_limit,
+        route_limit,
     }))
 }
 

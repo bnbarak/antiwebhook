@@ -171,6 +171,12 @@ pub async fn create_route(
     if body.mode != "passthrough" && body.mode != "queue" {
         return Err(AppError::BadRequest("mode must be 'passthrough' or 'queue'"));
     }
+    // Route limit: 3 free + 3 per subscription unit
+    let existing_routes = db::list_routes(&state.db, &project.id).await?;
+    let route_limit = 3 + (project.subscription_quantity as usize * 3);
+    if existing_routes.len() >= route_limit {
+        return Err(AppError::BadRequest("route limit reached — upgrade for more routes"));
+    }
     let default_timeout = if body.mode == "passthrough" { 30 } else { 5 };
     let timeout = body.timeout_seconds.unwrap_or(default_timeout).clamp(1, 300);
     // Ensure path_prefix starts with /

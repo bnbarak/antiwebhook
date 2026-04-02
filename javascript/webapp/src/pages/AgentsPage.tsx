@@ -192,7 +192,9 @@ export function AgentsPage() {
       )}
 
       {/* Code example */}
-      {!loading && listeners.length > 0 && <AgentCodeExample />}
+      <div className="mb-4">
+        <AgentCodeExample />
+      </div>
 
       {loading ? (
         <Card>

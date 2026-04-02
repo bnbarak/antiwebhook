@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Trash2, GitBranch, ChevronDown, RotateCcw, Pencil } from "lucide-react";
-import { api, type Route, type Listener } from "@/lib/api.js";
+import { api, type Route, type Listener, type BillingStatus } from "@/lib/api.js";
 import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -169,9 +169,11 @@ function RouteCard({
 }
 
 export function RoutesPage() {
+  const navigate = useNavigate();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [deletedRoutes, setDeletedRoutes] = useState<Route[]>([]);
   const [agents, setAgents] = useState<Listener[]>([]);
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -185,16 +187,20 @@ export function RoutesPage() {
   const [selectedAgent, setSelectedAgent] = useState<string>("_none");
   const [saving, setSaving] = useState(false);
 
+  const routeLimit = billing?.route_limit ?? 3;
+
   const fetchData = async () => {
     try {
-      const [active, deleted, ls] = await Promise.all([
+      const [active, deleted, ls, bl] = await Promise.all([
         api.routes.list(),
         api.routes.listDeleted(),
         api.listeners.list(),
+        api.billing.getStatus(),
       ]);
       setRoutes(active);
       setDeletedRoutes(deleted);
       setAgents(ls);
+      setBilling(bl);
     } catch {
       // silent
     } finally {
@@ -296,11 +302,23 @@ export function RoutesPage() {
           </p>
         </div>
 
-        <Button size="sm" className="gap-1.5" onClick={openCreate}>
+        <Button size="sm" className="gap-1.5" onClick={openCreate} disabled={routeLimit > 0 && routes.length >= routeLimit}>
           <Plus className="size-3.5" />
           Add route
         </Button>
       </div>
+
+      {/* Route limit banner */}
+      {routeLimit > 0 && routes.length >= routeLimit && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
+          <p className="text-sm text-status-amber-text">
+            You've used all {routeLimit} route slots.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => navigate("/settings")}>
+            Upgrade plan
+          </Button>
+        </div>
+      )}
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>

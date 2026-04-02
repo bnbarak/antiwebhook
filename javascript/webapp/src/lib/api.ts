@@ -56,6 +56,7 @@ export interface BillingStatus {
   has_subscription: boolean;
   subscription_quantity: number;
   agent_limit: number;
+  route_limit: number;
 }
 
 export interface TimeseriesBucket {
