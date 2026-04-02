@@ -133,7 +133,7 @@ const STEPS = [
     num: "1",
     title: "Set your webhook URL",
     desc: "Point Stripe, GitHub, Twilio — any provider — to your simplehook URL. Set it once, never change it.",
-    code: `# Your stable webhook URL\n\nhttps://hook.simplehook.dev\n  /hooks/<your-project-id>\n  /stripe/events`,
+    code: `# Your stable webhook URL\n\nhttps://hook.simplehook.dev/hooks/<your-project-id>/stripe/events`,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="size-5">
         <path d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-4.828a4.5 4.5 0 0 0-1.242-7.244l4.5-4.5a4.5 4.5 0 1 0 6.364 6.364l-1.757 1.757" strokeLinecap="round" strokeLinejoin="round" />
@@ -546,55 +546,67 @@ export function HomePage() {
             One plan. No surprises.
           </h2>
           <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            24-hour free trial. No credit card required. $5/mo after trial.
+            24-hour free trial. No credit card required.
           </p>
 
-          <div className="flex justify-center">
-            <div className="w-full max-w-[440px] rounded-xl border border-border bg-card px-8 py-9">
-              <div className="mb-1 text-[42px] font-medium leading-none tracking-[-0.02em]">
-                $5
-                <span className="text-[15px] font-normal text-muted-foreground">
-                  /mo
-                </span>
-              </div>
-              <p className="mb-6 text-sm text-muted-foreground">
-                Per project. Everything included.
-              </p>
-
-              <ul className="flex flex-col gap-2">
-                {[
+          <div className="flex justify-center gap-4">
+            {[
+              {
+                name: "Starter",
+                price: "$5",
+                desc: "For solo developers",
+                features: [
+                  "3 routes",
+                  "3 agents",
                   "Unlimited webhook events",
                   "Queue + Passthrough modes",
-                  "Automatic retries with backoff",
-                  "Event replay from dashboard",
-                  "WebSocket real-time delivery",
-                  "Per-route configuration",
+                  "Automatic retries",
+                  "Event replay",
+                ],
+              },
+              {
+                name: "Pro",
+                price: "$8",
+                desc: "For teams",
+                features: [
+                  "6 routes",
+                  "6 agents",
+                  "Everything in Starter",
+                  "Priority delivery",
                   "Full request/response logging",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-baseline gap-2 text-sm text-muted-foreground"
-                  >
-                    <span className="shrink-0 text-[13px] font-semibold text-status-green-text">
-                      &#10003;
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 border-t border-border pt-5">
-                <p className="text-[13px] text-text-tertiary">
-                  24-hour free trial. No credit card required.
-                </p>
+                  "Per-route agent assignment",
+                ],
+              },
+            ].map((plan) => (
+              <div key={plan.name} className="w-full max-w-[320px] rounded-xl border border-border bg-card px-6 py-7">
+                <div className="mb-0.5 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">{plan.name}</div>
+                <div className="mb-1 text-[36px] font-medium leading-none tracking-[-0.02em]">
+                  {plan.price}
+                  <span className="text-[14px] font-normal text-muted-foreground">/mo</span>
+                </div>
+                <p className="mb-5 text-sm text-muted-foreground">{plan.desc}</p>
+                <ul className="flex flex-col gap-1.5">
+                  {plan.features.map((item) => (
+                    <li key={item} className="flex items-baseline gap-2 text-sm text-muted-foreground">
+                      <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
+            ))}
+          </div>
 
-              <Link
-                to="/login"
-                className="mt-6 flex w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
-              >
-                Start free trial
-              </Link>
+          <div className="mt-6 text-center">
+            <p className="mb-4 text-[13px] text-text-tertiary">
+              24-hour free trial with 3 routes &amp; 3 agents. No credit card required.
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
+            >
+              Start free trial
+            </Link>
             </div>
           </div>
         </div>

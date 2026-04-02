@@ -312,9 +312,9 @@ export function RoutesPage() {
       {routeLimit > 0 && routes.length >= routeLimit && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
           <p className="text-sm text-status-amber-text">
-            You've used all {routeLimit} route slots.
+            You've reached the {routeLimit}-route limit on your current plan. Upgrade to get {routeLimit + 3} routes, {routeLimit + 3} agents, and more.
           </p>
-          <Button size="sm" variant="outline" onClick={() => navigate("/settings")}>
+          <Button size="sm" variant="outline" onClick={() => navigate("/settings")} className="shrink-0">
             Upgrade plan
           </Button>
         </div>

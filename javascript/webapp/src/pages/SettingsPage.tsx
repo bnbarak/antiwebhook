@@ -79,7 +79,72 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Billing */}
+        {/* Project — Webhook URL, API Key, Status combined */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Project</CardTitle>
+            <CardDescription>Your webhook URL, API key, and connection status.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingProject ? (
+              <div className="flex flex-col gap-4">
+                <Skeleton className="h-9 w-full" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {/* Webhook URL */}
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">Webhook URL</p>
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value={webhookUrl} className="font-mono text-sm" />
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(webhookUrl, "Webhook URL")} title="Copy">
+                      <Copy className="size-3.5" />
+                    </Button>
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Append your route path (e.g., <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">/stripe/events</code>)
+                  </p>
+                </div>
+
+                {/* API Key */}
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">API Key</p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={showApiKey ? (projectData?.api_key ?? "") : (projectData?.api_key ? projectData.api_key.slice(0, 3) + "\u2022".repeat(20) : "")}
+                      className="font-mono text-sm"
+                    />
+                    <Button variant="outline" size="icon" onClick={() => setShowApiKey(!showApiKey)} title={showApiKey ? "Hide" : "Show"}>
+                      {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(projectData?.api_key ?? "", "API key")} title="Copy">
+                      <Copy className="size-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Connection Status */}
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">Connection</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block size-2.5 rounded-full bg-status-green-dot" />
+                      <span className="text-sm font-medium text-status-green-text">Connected</span>
+                    </div>
+                    <Separator orientation="vertical" className="h-4" />
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {projectData?.name ?? "Loading..."}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Billing — moved to last */}
         <Card>
           <CardHeader>
             <CardTitle>Billing</CardTitle>
@@ -99,105 +164,6 @@ export function SettingsPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Webhook URL */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Webhook URL</CardTitle>
-            <CardDescription>
-              Point your webhook providers to this base URL.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingProject ? (
-              <Skeleton className="h-9 w-full" />
-            ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <Input
-                    readOnly
-                    value={webhookUrl}
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(webhookUrl, "Webhook URL")}
-                    title="Copy webhook URL"
-                  >
-                    <Copy className="size-3.5" />
-                  </Button>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Append your route path (e.g.,{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
-                    /stripe/events
-                  </code>
-                  ) to this base URL.
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Connection Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Connection Status</CardTitle>
-            <CardDescription>
-              Current WebSocket connection state for real-time event delivery.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="inline-block size-2.5 rounded-full bg-status-green-dot" />
-                <span className="text-sm font-medium text-status-green-text">
-                  Connected
-                </span>
-              </div>
-              <Separator orientation="vertical" className="h-4" />
-              <span className="font-mono text-xs text-muted-foreground">
-                Project: {projectData?.name ?? "Loading..."}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* API Key */}
-        <Card>
-          <CardHeader>
-            <CardTitle>API Key</CardTitle>
-            <CardDescription>
-              Use this key in your SDK configuration.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingProject ? (
-              <Skeleton className="h-9 w-full" />
-            ) : (
-              <div className="flex items-center gap-2">
-                <Input
-                  readOnly
-                  value={showApiKey ? (projectData?.api_key ?? "") : (projectData?.api_key ? projectData.api_key.slice(0, 3) + "\u2022".repeat(20) : "")}
-                  className="font-mono text-sm"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  title={showApiKey ? "Hide" : "Show"}
-                >
-                  {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() =>
-                    copyToClipboard(projectData?.api_key ?? "", "API key")
-                  }
-                  title="Copy API key"
-                >
                   <Copy className="size-3.5" />
                 </Button>
               </div>
