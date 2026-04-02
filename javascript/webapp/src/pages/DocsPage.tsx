@@ -579,22 +579,22 @@ export function DocsPage() {
             {/* How it works diagram */}
             <div className="mb-10 rounded-xl border border-border bg-card/50 p-6">
               <h3 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">How it works</h3>
-              <FlowRow className="font-mono text-[11px]">
-                <div className="flex shrink-0 flex-col items-center gap-1">
+              <div className="font-mono text-[11px]">
+                <FlowRow>
                   <FlowNode>Stripe / GitHub</FlowNode>
-                  <span className="text-[9px] text-muted-foreground/60">webhook provider</span>
-                </div>
-                <FlowArrow label="POST" />
-                <div className="flex shrink-0 flex-col items-center gap-1">
+                  <FlowArrow label="POST" />
                   <FlowNode highlight>simplehook</FlowNode>
-                  <span className="text-[9px] text-muted-foreground/60">cloud relay</span>
-                </div>
-                <FlowArrow label="WS" />
-                <div className="flex shrink-0 flex-col items-center gap-1">
+                  <FlowArrow label="WS" />
                   <FlowNode>Your app</FlowNode>
-                  <span className="text-[9px] text-muted-foreground/60">localhost</span>
-                </div>
-              </FlowRow>
+                </FlowRow>
+                <FlowRow className="mt-1">
+                  <span className="shrink-0 px-2.5 text-[9px] text-muted-foreground/60" style={{ width: "calc(var(--node-w, 100px))" }}>webhook provider</span>
+                  <span className="flex-1" />
+                  <span className="shrink-0 px-2.5 text-center text-[9px] text-muted-foreground/60">cloud relay</span>
+                  <span className="flex-1" />
+                  <span className="shrink-0 px-2.5 text-right text-[9px] text-muted-foreground/60">localhost</span>
+                </FlowRow>
+              </div>
             </div>
 
             <div className="flex flex-col gap-6">
