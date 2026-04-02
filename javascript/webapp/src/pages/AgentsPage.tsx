@@ -191,6 +191,9 @@ export function AgentsPage() {
         </div>
       )}
 
+      {/* Code example */}
+      {!loading && listeners.length > 0 && <AgentCodeExample />}
+
       {loading ? (
         <Card>
           <CardContent className="py-8">
@@ -277,9 +280,6 @@ export function AgentsPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Code example */}
-      {listeners.length > 0 && <AgentCodeExample />}
 
       <p className="mt-4 text-xs text-muted-foreground">
         {listeners.length}/{limit} agents.{" "}
