@@ -211,7 +211,7 @@ function BillingCard({
     setActionLoading(true);
     try {
       await api.billing.upgrade();
-      toast.success("Upgraded to 6-agent plan");
+      toast.success("Upgraded to 6-listener plan");
       window.location.reload();
     } catch {
       toast.error("Failed to upgrade");
@@ -224,7 +224,7 @@ function BillingCard({
     setDowngradeOpen(false);
     try {
       await api.billing.downgrade();
-      toast.success("Downgraded to 3-agent plan. Excess agents removed.");
+      toast.success("Downgraded to 3-listener plan. Excess listeners removed.");
       window.location.reload();
     } catch {
       toast.error("Failed to downgrade");
@@ -287,7 +287,7 @@ function BillingCard({
           Active
         </span>
         <span className="text-xs text-muted-foreground">
-          {agentLimit} agents
+          {agentLimit} listeners
         </span>
       </div>
 
@@ -329,9 +329,9 @@ function BillingCard({
           <DialogHeader>
             <DialogTitle>Downgrade to Starter?</DialogTitle>
             <DialogDescription>
-              The Starter plan supports 3 agents. If you currently have more than 3,
-              the extra agents will be permanently deleted. Events already routed to
-              those agents won't be affected.
+              The Starter plan supports 3 listeners. If you currently have more than 3,
+              the extra listeners will be permanently deleted. Events already routed to
+              those listeners won't be affected.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -345,7 +345,7 @@ function BillingCard({
               disabled={actionLoading}
             >
               <ArrowDown className="mr-1.5 size-3.5" />
-              {actionLoading ? "Downgrading..." : "Downgrade & remove extra agents"}
+              {actionLoading ? "Downgrading..." : "Downgrade & remove extra listeners"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -387,7 +387,7 @@ function PlanCard({
       <div className="mb-0.5 text-xl font-semibold">
         {price}<span className="text-sm font-normal text-muted-foreground">/mo</span>
       </div>
-      <div className="mb-3 text-xs text-muted-foreground">{agents} agents</div>
+      <div className="mb-3 text-xs text-muted-foreground">{agents} listeners</div>
       {active ? (
         <span className="text-xs font-medium text-status-green-text">Current plan</span>
       ) : hint ? (

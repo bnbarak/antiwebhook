@@ -298,7 +298,7 @@ export function RoutesPage() {
         <div>
           <h1 className="text-lg font-medium">Routes</h1>
           <p className="text-sm text-muted-foreground">
-            Configure how different webhook paths are handled and which agent receives them.
+            Configure how different webhook paths are handled and which listener receives them.
           </p>
         </div>
 
@@ -312,7 +312,7 @@ export function RoutesPage() {
       {routeLimit > 0 && routes.length >= routeLimit && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
           <p className="text-sm text-status-amber-text">
-            You've reached the {routeLimit}-route limit on your current plan. Upgrade to get {routeLimit + 3} routes, {routeLimit + 3} agents, and more.
+            You've reached the {routeLimit}-route limit on your current plan. Upgrade to get {routeLimit + 3} routes, {routeLimit + 3} listeners, and more.
           </p>
           <Button size="sm" variant="outline" onClick={() => navigate("/settings")} className="shrink-0">
             Upgrade plan
@@ -327,7 +327,7 @@ export function RoutesPage() {
             <DialogTitle>{editingRoute ? "Edit route" : "Add route"}</DialogTitle>
             <DialogDescription>
               {editingRoute
-                ? "Update mode, timeout, or agent assignment."
+                ? "Update mode, timeout, or listener assignment."
                 : "Choose how webhooks matching this path are delivered to your app."}
             </DialogDescription>
           </DialogHeader>
@@ -394,13 +394,13 @@ export function RoutesPage() {
             <ModeExplainer mode={mode} />
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="agent-select">Agent (optional)</Label>
+              <Label htmlFor="agent-select">Listener (optional)</Label>
               <Select value={selectedAgent} onValueChange={setSelectedAgent}>
                 <SelectTrigger id="agent-select" className="w-full">
-                  <SelectValue placeholder="All agents" />
+                  <SelectValue placeholder="All listeners" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_none">All agents</SelectItem>
+                  <SelectItem value="_none">All listeners</SelectItem>
                   {agents.map((a) => (
                     <SelectItem key={a.listener_id} value={a.listener_id}>
                       {a.label ? `${a.label} (${a.listener_id})` : a.listener_id}
@@ -409,9 +409,9 @@ export function RoutesPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Route events to a specific agent, or leave as "All agents" to deliver to any connected SDK.
+                Route events to a specific listener, or leave as "All listeners" to deliver to any connected SDK.
                 {agents.length === 0 && (
-                  <> No agents yet — <Link to="/agents" className="underline hover:text-foreground">create one</Link>.</>
+                  <> No listeners yet — <Link to="/listeners" className="underline hover:text-foreground">create one</Link>.</>
                 )}
               </p>
             </div>

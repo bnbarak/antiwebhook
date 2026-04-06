@@ -320,7 +320,7 @@ function QuickStartGuide({ apiKey, showKey, listeners }: { apiKey: string; showK
                 onChange={(e) => setAgentId(e.target.value)}
                 className="rounded-md border border-border bg-transparent px-2 py-1 font-mono text-[11px] font-medium text-foreground outline-none hover:border-border-strong"
               >
-                <option value="">No agent</option>
+                <option value="">No listener</option>
                 {listeners.map((l) => (
                   <option key={l.listener_id} value={l.listener_id}>
                     {l.listener_id}
@@ -332,7 +332,7 @@ function QuickStartGuide({ apiKey, showKey, listeners }: { apiKey: string; showK
                   <HelpCircle className="size-3.5 text-muted-foreground/50 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[200px] text-xs">
-                  Agents route events to specific SDK instances. Assign agents to routes in the Routes page.
+                  Listeners route events to specific SDK instances. Assign listeners to routes in the Routes page.
                 </TooltipContent>
               </Tooltip>
             </>

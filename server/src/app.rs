@@ -8,13 +8,14 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use crate::{api, billing, config::Config, proxy, rate_limit::RateLimiter, tunnel::TunnelManager, user_auth};
+use crate::{agent, api, billing, config::Config, proxy, rate_limit::RateLimiter, tunnel::TunnelManager, user_auth};
 
 pub struct AppState {
     pub db: PgPool,
     pub tunnels: TunnelManager,
     pub config: Config,
     pub rate_limiter: RateLimiter,
+    pub agent_locks: agent::AgentLocks,
 }
 
 
@@ -43,6 +44,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/listeners", get(api::list_listeners).post(api::create_listener))
         .route("/listeners/{listener_id}", delete(api::delete_listener))
         .route("/stats", get(api::get_stats))
+        // Agent pull
+        .route("/agent/pull", get(agent::pull))
+        .route("/agent/status", get(agent::status))
         // Billing
         .route("/billing/checkout", post(billing::create_checkout))
         .route("/billing/portal", post(billing::create_portal))

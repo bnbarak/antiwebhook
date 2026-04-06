@@ -5,6 +5,7 @@ pub enum AppError {
     NotFound(&'static str),
     Unauthorized,
     BadRequest(&'static str),
+    Conflict(&'static str),
     Internal(&'static str),
     TooManyRequests,
     Db(sqlx::Error),
@@ -19,6 +20,7 @@ impl IntoResponse for AppError {
             AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "unauthorized"),
             AppError::TooManyRequests => (StatusCode::TOO_MANY_REQUESTS, "too many requests"),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, *msg),
+            AppError::Conflict(msg) => (StatusCode::CONFLICT, *msg),
             AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, *msg),
             AppError::Db(e) => {
                 tracing::error!(error = %e, "database error");

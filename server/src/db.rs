@@ -786,6 +786,158 @@ pub async fn delete_listener(
     Ok(result.rows_affected() > 0)
 }
 
+// --- Agent cursor queries ---
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct AgentCursor {
+    pub id: Uuid,
+    pub project_id: String,
+    pub listener_id: String,
+    pub last_event_id: Option<String>,
+    pub last_pulled_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}
+
+/// Get or create cursor for a project+listener_id pair.
+pub async fn get_or_create_cursor(
+    pool: &PgPool,
+    project_id: &str,
+    listener_id: &str,
+) -> Result<AgentCursor, sqlx::Error> {
+    // Try insert, on conflict return existing
+    sqlx::query_as(
+        "INSERT INTO agent_cursors (project_id, listener_id)
+         VALUES ($1, $2)
+         ON CONFLICT (project_id, listener_id) DO UPDATE SET project_id = EXCLUDED.project_id
+         RETURNING *",
+    )
+    .bind(project_id)
+    .bind(listener_id)
+    .fetch_one(pool)
+    .await
+}
+
+/// Advance cursor to the given event ID.
+pub async fn advance_cursor(
+    pool: &PgPool,
+    project_id: &str,
+    listener_id: &str,
+    last_event_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE agent_cursors SET last_event_id = $1, last_pulled_at = now()
+         WHERE project_id = $2 AND listener_id = $3",
+    )
+    .bind(last_event_id)
+    .bind(project_id)
+    .bind(listener_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Pull events after cursor position. Returns events ordered ASC (oldest first).
+/// If cursor has no last_event_id (first pull), returns the most recent `limit` events.
+pub async fn pull_events_after_cursor(
+    pool: &PgPool,
+    project_id: &str,
+    last_event_id: Option<&str>,
+    path_glob: Option<&str>,
+    limit: i64,
+) -> Result<Vec<Event>, sqlx::Error> {
+    match (last_event_id, path_glob) {
+        (Some(eid), Some(glob)) => {
+            sqlx::query_as(
+                "SELECT * FROM events
+                 WHERE project_id = $1
+                   AND created_at > (SELECT created_at FROM events WHERE id = $2)
+                   AND path LIKE $3
+                 ORDER BY created_at ASC LIMIT $4",
+            )
+            .bind(project_id)
+            .bind(eid)
+            .bind(glob_to_sql_like(glob))
+            .bind(limit)
+            .fetch_all(pool)
+            .await
+        }
+        (Some(eid), None) => {
+            sqlx::query_as(
+                "SELECT * FROM events
+                 WHERE project_id = $1
+                   AND created_at > (SELECT created_at FROM events WHERE id = $2)
+                 ORDER BY created_at ASC LIMIT $3",
+            )
+            .bind(project_id)
+            .bind(eid)
+            .bind(limit)
+            .fetch_all(pool)
+            .await
+        }
+        (None, Some(glob)) => {
+            // First pull: return most recent events (DESC then reverse)
+            sqlx::query_as(
+                "SELECT * FROM (
+                   SELECT * FROM events
+                   WHERE project_id = $1 AND path LIKE $2
+                   ORDER BY created_at DESC LIMIT $3
+                 ) sub ORDER BY created_at ASC",
+            )
+            .bind(project_id)
+            .bind(glob_to_sql_like(glob))
+            .bind(limit)
+            .fetch_all(pool)
+            .await
+        }
+        (None, None) => {
+            sqlx::query_as(
+                "SELECT * FROM (
+                   SELECT * FROM events
+                   WHERE project_id = $1
+                   ORDER BY created_at DESC LIMIT $2
+                 ) sub ORDER BY created_at ASC",
+            )
+            .bind(project_id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await
+        }
+    }
+}
+
+/// Count events remaining after a cursor position.
+pub async fn count_events_after(
+    pool: &PgPool,
+    project_id: &str,
+    last_event_id: &str,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT COUNT(*) FROM events
+         WHERE project_id = $1
+           AND created_at > (SELECT created_at FROM events WHERE id = $2)",
+    )
+    .bind(project_id)
+    .bind(last_event_id)
+    .fetch_one(pool)
+    .await
+}
+
+/// List all cursors for a project (for status endpoint).
+pub async fn list_cursors(
+    pool: &PgPool,
+    project_id: &str,
+) -> Result<Vec<AgentCursor>, sqlx::Error> {
+    sqlx::query_as("SELECT * FROM agent_cursors WHERE project_id = $1 ORDER BY listener_id")
+        .bind(project_id)
+        .fetch_all(pool)
+        .await
+}
+
+/// Convert a simple glob pattern (e.g. /stripe/*) to SQL LIKE (e.g. /stripe/%).
+pub fn glob_to_sql_like(glob: &str) -> String {
+    glob.replace('*', "%")
+}
+
 // --- Helpers ---
 
 pub fn generate_id(prefix: &str, len: usize) -> String {

@@ -418,7 +418,7 @@ export function HomePage() {
                   ["Response passthrough", "Yes (passthrough mode)", "Yes", "No"],
                   ["Event replay", "One click", "No", "Yes"],
                   ["Public URL needed", "No", "Yes (tunnel)", "No"],
-                  ["Agent routing", "Yes (per-route)", "No", "Connections"],
+                  ["Listener routing", "Yes (per-route)", "No", "Connections"],
                   ["Auth", "API key", "Account + auth token", "Account + API key"],
                   ["Price", "$5/mo flat", "Free tier / $8+/mo", "Free tier / $25+/mo"],
                 ].map(([feature, aw, ngrok, hookdeck]) => (
@@ -473,7 +473,7 @@ export function HomePage() {
               },
               {
                 icon: Radio,
-                title: "Agents",
+                title: "Listeners",
                 desc: "Run multiple SDKs and route events to specific ones. Same webhook URL, different destinations.",
               },
             ].map((feature) => (
@@ -559,7 +559,7 @@ export function HomePage() {
                 desc: "For solo developers",
                 features: [
                   "3 routes",
-                  "3 agents",
+                  "3 listeners",
                   "Unlimited webhook events",
                   "Queue + Passthrough modes",
                   "Automatic retries",
@@ -572,11 +572,11 @@ export function HomePage() {
                 desc: "For teams",
                 features: [
                   "6 routes",
-                  "6 agents",
+                  "6 listeners",
                   "Everything in Starter",
                   "Priority delivery",
                   "Full request/response logging",
-                  "Per-route agent assignment",
+                  "Per-route listener assignment",
                 ],
               },
             ].map((plan) => (
@@ -601,7 +601,7 @@ export function HomePage() {
 
           <div className="mt-6 text-center">
             <p className="mb-4 text-[13px] text-text-tertiary">
-              24-hour free trial with 3 routes &amp; 3 agents. No credit card required.
+              24-hour free trial with 3 routes &amp; 3 listeners. No credit card required.
             </p>
             <Link
               to="/login"

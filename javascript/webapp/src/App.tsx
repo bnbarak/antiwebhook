@@ -17,6 +17,7 @@ import { SettingsPage } from "@/pages/SettingsPage.js";
 import { DashboardPage } from "@/pages/DashboardPage.js";
 import { AgentsPage } from "@/pages/AgentsPage.js";
 import { PrivacyPage } from "@/pages/PrivacyPage.js";
+import { TermsPage } from "@/pages/TermsPage.js";
 import { Webhook } from "lucide-react";
 
 function ProtectedRoute() {
@@ -60,6 +61,7 @@ function App() {
               <Route index element={<HomePage />} />
               <Route path="/docs" element={<DocsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
             </Route>
 
             {/* Auth — redirect to dashboard if already logged in */}
@@ -76,7 +78,7 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/events/:id" element={<EventDetailPage />} />
-                <Route path="/agents" element={<AgentsPage />} />
+                <Route path="/listeners" element={<AgentsPage />} />
                 <Route path="/routes" element={<RoutesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

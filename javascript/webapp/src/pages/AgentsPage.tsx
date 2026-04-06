@@ -73,17 +73,17 @@ export function AgentsPage() {
         listener_id: newId.trim(),
         label: newLabel.trim() || undefined,
       });
-      toast.success(`Agent "${newId.trim()}" created`);
+      toast.success(`Listener "${newId.trim()}" created`);
       setNewId("");
       setNewLabel("");
       setDialogOpen(false);
       await loadData();
     } catch (err: any) {
-      const msg = err?.message ?? "Failed to create agent";
+      const msg = err?.message ?? "Failed to create listener";
       if (msg.includes("listener limit")) {
-        toast.error("Agent limit reached — upgrade for more agents");
+        toast.error("Listener limit reached — upgrade for more listeners");
       } else if (msg.includes("already exists")) {
-        toast.error("An agent with this ID already exists");
+        toast.error("A listener with this ID already exists");
       } else {
         toast.error(msg);
       }
@@ -95,10 +95,10 @@ export function AgentsPage() {
   const handleDelete = async (listenerId: string) => {
     try {
       await api.listeners.delete(listenerId);
-      toast.success(`Agent "${listenerId}" deleted`);
+      toast.success(`Listener "${listenerId}" deleted`);
       await loadData();
     } catch {
-      toast.error("Failed to delete agent");
+      toast.error("Failed to delete listener");
     }
   };
 
@@ -111,36 +111,36 @@ export function AgentsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-medium">Agents</h1>
+          <h1 className="text-lg font-medium">Listeners</h1>
           <p className="text-sm text-muted-foreground">
-            Each agent is an SDK instance. Assign agents to routes to control
+            Each listener is an SDK instance. Assign listeners to routes to control
             which SDK receives which webhooks.
           </p>
         </div>
         {atLimit ? (
           <Button size="sm" onClick={goToSettings}>
-            Upgrade for more agents
+            Upgrade for more listeners
           </Button>
         ) : (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" disabled={atLimit}>
                 <Plus className="mr-1.5 size-3.5" />
-                New agent
+                New listener
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create agent</DialogTitle>
+                <DialogTitle>Create listener</DialogTitle>
                 <DialogDescription>
-                  Give this agent a short ID (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>,{" "}
+                  Give this listener a short ID (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>,{" "}
                   <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">dev</code>).
                   Lowercase letters, numbers, hyphens, underscores. Max 12 chars.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-4 py-2">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="agent-id">Agent ID</Label>
+                  <Label htmlFor="agent-id">Listener ID</Label>
                   <Input
                     id="agent-id"
                     placeholder="staging"
@@ -171,7 +171,7 @@ export function AgentsPage() {
                   disabled={!isIdValid || creating}
                   size="sm"
                 >
-                  {creating ? "Creating..." : "Create agent"}
+                  {creating ? "Creating..." : "Create listener"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -183,7 +183,7 @@ export function AgentsPage() {
       {atLimit && !loading && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-status-amber-border bg-status-amber-bg px-4 py-3">
           <p className="text-sm text-status-amber-text">
-            You've used all {limit} agent slots.
+            You've used all {limit} listener slots.
           </p>
           <Button size="sm" variant="outline" onClick={goToSettings}>
             {isPaid ? "Upgrade plan" : "Upgrade — $5/mo"}
@@ -210,12 +210,12 @@ export function AgentsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Radio className="mx-auto mb-3 size-8 text-muted-foreground/40" />
-            <p className="text-sm font-medium">No agents yet</p>
+            <p className="text-sm font-medium">No listeners yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Create an agent, then assign it to a route to control event delivery.
+              Create a listener, then assign it to a route to control event delivery.
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
-              Without agents, all webhooks go to every connected SDK.
+              Without listeners, all webhooks go to every connected SDK.
             </p>
           </CardContent>
         </Card>
@@ -223,11 +223,11 @@ export function AgentsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {listeners.length}/{limit} agent{listeners.length !== 1 ? "s" : ""}
+              {listeners.length}/{limit} listener{listeners.length !== 1 ? "s" : ""}
             </CardTitle>
             <CardDescription>
-              Assign agents to routes to control which SDK receives which events.
-              Use the agent ID in your SDK:{" "}
+              Assign listeners to routes to control which SDK receives which events.
+              Use the listener ID in your SDK:{" "}
               <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
                 listenToWebhooks(app, "ak_...", "agent-id")
               </code>
@@ -284,10 +284,10 @@ export function AgentsPage() {
       )}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        {listeners.length}/{limit} agents.{" "}
+        {listeners.length}/{limit} listeners.{" "}
         {isPaid
           ? "Increase subscription quantity in Stripe for more."
-          : "Subscribe ($5/mo) for 3 more agent slots."}
+          : "Subscribe ($5/mo) for 3 more listener slots."}
       </p>
     </div>
   );

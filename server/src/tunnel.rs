@@ -77,6 +77,16 @@ impl TunnelManager {
         conns.iter().any(|((pid, _), tx)| pid == project_id && !tx.is_closed())
     }
 
+    /// Get list of connected listener IDs for a project.
+    pub async fn connected_listener_ids(&self, project_id: &str) -> Vec<Option<String>> {
+        let conns = self.connections.read().await;
+        conns
+            .iter()
+            .filter(|((pid, _), tx)| pid == project_id && !tx.is_closed())
+            .map(|((_, lid), _)| lid.clone())
+            .collect()
+    }
+
     pub async fn send_request(
         &self,
         project_id: &str,

@@ -1,3 +1,4 @@
+mod agent;
 mod api;
 mod app;
 mod auth;
@@ -49,6 +50,7 @@ async fn main() {
         tunnels: tunnel::TunnelManager::new(),
         config,
         rate_limiter: rate_limit::RateLimiter::new(),
+        agent_locks: agent::AgentLocks::new(),
     });
 
     // Spawn background workers
