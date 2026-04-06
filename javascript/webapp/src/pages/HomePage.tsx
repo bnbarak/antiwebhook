@@ -437,60 +437,161 @@ export function HomePage() {
 
       <SectionDivider />
 
-      {/* ── FEATURES ── */}
+      {/* ── FOR HUMANS ── */}
       <section className="px-6 py-20">
         <div className="mx-auto max-w-[960px]">
-          <Kicker>Built for developers</Kicker>
+          <Kicker>For humans</Kicker>
 
           <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            Everything you need. Nothing you don't.
+            SDK integration — one line of code
           </h2>
           <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            Minimal surface area. Maximum usefulness.
+            Add one SDK call. Your app connects to simplehook via WebSocket.
+            Webhooks flow to your routes like normal HTTP requests.
           </p>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {[
-              {
-                icon: Zap,
-                title: "WebSocket delivery",
-                desc: "Events flow over a persistent WebSocket. No polling, no public endpoints.",
-              },
-              {
-                icon: RotateCcw,
-                title: "Automatic retries",
-                desc: "Failed deliveries retry with exponential backoff. Events never get lost.",
-              },
-              {
-                icon: Terminal,
-                title: "Event replay",
-                desc: "Replay any event from the dashboard. Debug webhooks without retriggering.",
-              },
-              {
-                icon: Shield,
-                title: "Per-route configuration",
-                desc: "Set queue or passthrough mode per path prefix. Different providers, different rules.",
-              },
-              {
-                icon: Radio,
-                title: "Listeners",
-                desc: "Run multiple SDKs and route events to specific ones. Same webhook URL, different destinations.",
-              },
-              {
-                icon: Clock,
-                title: "AI Agent API",
-                desc: "Pull webhooks via HTTP — instant, long-poll, or SSE stream. Built for AI agents that can't hold WebSockets.",
-              },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-              >
-                <feature.icon className="mb-2.5 size-5 text-muted-foreground" />
-                <h3 className="mb-1.5 text-sm font-medium">{feature.title}</h3>
-                <p className="text-[13px] text-muted-foreground">{feature.desc}</p>
+          <div className="grid items-start gap-8 md:grid-cols-2">
+            {/* Code example */}
+            <div className="overflow-hidden rounded-xl shadow-lg">
+              <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+                <span className="font-mono text-[12px] text-[#9a91b0]">app.ts</span>
               </div>
-            ))}
+              <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                <code>{`import express from "express";
+import { listenToWebhooks } from "simplehook";
+
+const app = express();
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
+
+app.post("/stripe/events", (req, res) => {
+  console.log("Payment:", req.body.type);
+  res.json({ received: true });
+});`}</code>
+              </pre>
+            </div>
+
+            {/* Feature cards */}
+            <div className="flex flex-col gap-3">
+              {[
+                {
+                  icon: Zap,
+                  title: "WebSocket delivery",
+                  desc: "Events flow over a persistent WebSocket. No polling, no public endpoints.",
+                },
+                {
+                  icon: RotateCcw,
+                  title: "Automatic retries",
+                  desc: "Failed deliveries retry with exponential backoff. Events never get lost.",
+                },
+                {
+                  icon: Terminal,
+                  title: "Event replay",
+                  desc: "Replay any event from the dashboard. Debug webhooks without retriggering.",
+                },
+                {
+                  icon: Shield,
+                  title: "Per-route configuration",
+                  desc: "Set queue or passthrough mode per path prefix. Different providers, different rules.",
+                },
+                {
+                  icon: Radio,
+                  title: "Listeners",
+                  desc: "Run multiple SDKs and route events to specific ones.",
+                },
+              ].map((feature) => (
+                <div
+                  key={feature.title}
+                  className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
+                >
+                  <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <h3 className="text-sm font-medium">{feature.title}</h3>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      {/* ── FOR AI AGENTS ── */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-[960px]">
+          <Kicker>For AI agents</Kicker>
+
+          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+            AI Agent API — pull webhooks via HTTP
+          </h2>
+          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+            AI agents can't hold WebSockets. The pull API lets them consume webhook
+            events on demand — instant, long-poll, or SSE stream. One HTTP call.
+          </p>
+
+          <div className="grid items-start gap-8 md:grid-cols-2">
+            {/* Code example */}
+            <div className="overflow-hidden rounded-xl shadow-lg">
+              <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+                <span className="font-mono text-[12px] text-[#9a91b0]">three modes</span>
+              </div>
+              <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                <code>{`# Pull next event (instant)
+curl -H "Authorization: Bearer ak_..." \\
+  "/api/agent/pull"
+
+# Wait for a Stripe event (long-poll)
+curl -H "Authorization: Bearer ak_..." \\
+  "/api/agent/pull?wait=true&path=/stripe/*"
+
+# Stream events as they arrive (SSE)
+curl -N -H "Authorization: Bearer ak_..." \\
+  "/api/agent/pull?stream=true"`}</code>
+              </pre>
+            </div>
+
+            {/* Feature cards */}
+            <div className="flex flex-col gap-3">
+              {[
+                {
+                  icon: Clock,
+                  title: "Three pull modes",
+                  desc: "Instant return, long-poll until event arrives, or SSE stream for continuous listening.",
+                },
+                {
+                  icon: Radio,
+                  title: "Per-agent cursors",
+                  desc: "Each listener_id tracks its own position. Multiple agents consume the same project independently.",
+                },
+                {
+                  icon: Shield,
+                  title: "Path filtering",
+                  desc: "Pull only /stripe/* events, or /github/* — filter with glob patterns.",
+                },
+                {
+                  icon: Terminal,
+                  title: "Queue status",
+                  desc: "GET /api/agent/status — pending counts, cursor positions, connected listeners, per-route breakdown.",
+                },
+                {
+                  icon: Lock,
+                  title: "Same auth, same data",
+                  desc: "Uses your existing API key. Same events, same routes — just a different access pattern.",
+                },
+              ].map((feature) => (
+                <div
+                  key={feature.title}
+                  className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
+                >
+                  <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <h3 className="text-sm font-medium">{feature.title}</h3>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
