@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { Copy, Check, KeyRound } from "lucide-react";
 import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
 import { useAuth } from "@/hooks/use-auth.js";
@@ -159,7 +160,7 @@ type DocsGroup = "shared" | "developers" | "agents";
 
 const SECTIONS = [
   // Shared
-  { id: "quick-start", label: "Quick Start", group: "shared" as DocsGroup },
+  { id: "quick-start", label: "Quick Start", group: "developers" as DocsGroup },
   { id: "privacy", label: "Privacy & Security", group: "shared" as DocsGroup },
   { id: "api-reference", label: "API Reference", group: "shared" as DocsGroup },
   // Developers
@@ -478,8 +479,17 @@ export function DocsPage() {
   const [activeLang, setActiveLang] = useState(LANGUAGES[0].id);
   const [activeFw, setActiveFw] = useState(LANGUAGES[0].frameworks[0].id);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const initialView: DocsGroup = modeParam === "agents" ? "agents" : "developers";
+
   const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
-  const [docsView, setDocsView] = useState<DocsGroup>("developers");
+  const [docsView, setDocsView] = useState<DocsGroup>(initialView);
+
+  const handleDocsViewChange = useCallback((v: DocsGroup) => {
+    setDocsView(v);
+    setSearchParams(v === "developers" ? {} : { mode: v }, { replace: true });
+  }, [setSearchParams]);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const lang = LANGUAGES.find((l) => l.id === activeLang) ?? LANGUAGES[0];
@@ -607,10 +617,11 @@ export function DocsPage() {
 
       {/* Sidebar + content layout */}
       <div className="mx-auto flex max-w-[1200px] gap-10 px-6">
-        <DocsSidebar activeId={activeSection} docsView={docsView} onDocsViewChange={setDocsView} />
+        <DocsSidebar activeId={activeSection} docsView={docsView} onDocsViewChange={handleDocsViewChange} />
 
         <div className="min-w-0 flex-1 max-w-[960px]">
-          {/* ── Quick Start ─────────────────────────────────────────────── */}
+          {/* ── Quick Start (developers only) ─────────────────────────── */}
+          <div className={docsView === "developers" ? "" : "invisible h-0 overflow-hidden"}>
           <section
             id="quick-start"
             ref={(el) => setSectionRef("quick-start", el)}
@@ -744,6 +755,7 @@ export function DocsPage() {
               </div>
             </div>
           </section>
+          </div>{/* END Quick Start developers wrapper */}
 
           <SectionDivider />
 

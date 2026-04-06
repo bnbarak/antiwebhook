@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   Zap,
@@ -24,6 +24,8 @@ function Kicker({ children }: { children: React.ReactNode }) {
 function SectionDivider() {
   return <div className="border-t border-border" />;
 }
+
+// ── Hero code blocks ─────────────────────────────────────────────────
 
 const HERO_SDKS = [
   { id: "express", name: "Express", file: "app.ts", code: `import express from "express";
@@ -57,23 +59,6 @@ listenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"])
 def stripe():
     print("Webhook:", request.json)
     return {"received": True}` },
-  { id: "hono", name: "Hono", file: "app.ts", code: `import { Hono } from "hono";
-import { listenToWebhooks } from "simplehook-hono";
-
-const app = new Hono();
-listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
-
-app.post("/stripe/events", (c) => {
-  console.log("Webhook:", await c.req.json());
-  return c.json({ received: true });
-});` },
-  { id: "django", name: "Django", file: "wsgi.py", code: `from django.core.wsgi import get_wsgi_application
-from simplehook_django import listenToWebhooks
-
-application = get_wsgi_application()
-listenToWebhooks(application, os.environ["SIMPLEHOOK_KEY"])
-
-# Your views handle webhooks as normal Django views` },
   { id: "fastapi", name: "FastAPI", file: "app.py", code: `import os
 from fastapi import FastAPI, Request
 from simplehook_fastapi import listenToWebhooks
@@ -93,7 +78,6 @@ function HeroCodeBlock() {
 
   return (
     <div className="max-w-[860px] overflow-hidden rounded-xl shadow-lg">
-      {/* Terminal title bar */}
       <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
@@ -103,7 +87,6 @@ function HeroCodeBlock() {
         <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">Terminal</span>
         <div className="w-[52px]" />
       </div>
-      {/* SDK tabs */}
       <div className="flex border-b border-white/[0.06] bg-[#2d2640]">
         {HERO_SDKS.map((s, i) => (
           <button
@@ -119,7 +102,6 @@ function HeroCodeBlock() {
           </button>
         ))}
       </div>
-      {/* Code */}
       <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#2d2640] px-4 py-1.5">
         <span className="font-mono text-[10px] text-[#7a7190]">{sdk.file}</span>
       </div>
@@ -130,41 +112,85 @@ function HeroCodeBlock() {
   );
 }
 
-const STEPS = [
+function AgentHeroCodeBlock() {
+  return (
+    <div className="max-w-[860px] overflow-hidden rounded-xl shadow-lg">
+      <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+          <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+          <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+        </div>
+        <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">Terminal</span>
+        <div className="w-[52px]" />
+      </div>
+      <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-1.5">
+        <span className="font-mono text-[10px] text-[#7a7190]">agent.sh</span>
+      </div>
+      <pre className="min-h-[200px] overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+        <code>{`# Pull the next webhook event
+curl -H "Authorization: Bearer ak_..." \\
+  "https://hook.simplehook.dev/api/agent/pull"
+
+# Wait for a Stripe event (blocks until it arrives)
+curl -H "Authorization: Bearer ak_..." \\
+  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"
+
+# Stream events as they arrive (SSE)
+curl -N -H "Authorization: Bearer ak_..." \\
+  "https://hook.simplehook.dev/api/agent/pull?stream=true"`}</code>
+      </pre>
+    </div>
+  );
+}
+
+// ── How it works steps ───────────────────────────────────────────────
+
+const DEV_STEPS = [
   {
     num: "1",
     title: "Set your webhook URL",
     desc: "Point Stripe, GitHub, Twilio — any provider — to your simplehook URL. Set it once, never change it.",
     code: `# Your stable webhook URL\n\nhttps://hook.simplehook.dev/hooks/<your-project-id>/stripe/events`,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="size-5">
-        <path d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-4.828a4.5 4.5 0 0 0-1.242-7.244l4.5-4.5a4.5 4.5 0 1 0 6.364 6.364l-1.757 1.757" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
   },
   {
     num: "2",
     title: "Add one line of code",
     desc: "Import the SDK and call listenToWebhooks(). Works with Express, Fastify, Hono, Flask, and more.",
     code: `import { listenToWebhooks } from 'simplehook'\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY)\n\n// That's it. Your routes work as normal.`,
-    icon: (
-      <svg viewBox="0 0 256 292" className="size-5" fill="currentColor">
-        <path d="M116.504 3.58c6.962-3.985 16.03-4.003 22.986 0 34.995 19.774 70.001 39.517 104.99 59.303 6.581 3.707 10.983 11.031 10.916 18.614v118.968c.049 7.897-4.788 15.396-11.731 19.019-34.88 19.665-69.742 39.354-104.616 59.019-7.106 4.063-16.356 3.75-23.24-.646-10.457-6.062-20.932-12.094-31.39-18.15-2.137-1.274-4.546-2.288-6.055-4.36 1.334-1.798 3.719-2.022 5.657-2.807 4.428-1.621 8.532-3.908 12.6-6.234.643-.32 1.46-.163 2.07.235 8.964 5.282 17.946 10.537 26.908 15.822 1.378.703 2.622-.358 3.783-1.054 34.007-19.166 68.03-38.3 102.038-57.469 1.097-.587 1.567-1.874 1.48-3.086V82.305c.133-1.338-.517-2.686-1.727-3.347-34.87-19.698-69.726-39.425-104.6-59.115-.781-.442-1.804-.443-2.59.009-34.875 19.69-69.739 39.398-104.617 59.106-1.218.65-1.876 2.014-1.735 3.347v119.417c.086 1.18.556 2.432 1.612 3.042 9.498 5.408 19.014 10.784 28.52 16.18.606.279 1.298.551 1.98.467 4.407-.572 9.157-.849 13.053-3.2 2.572-1.464 3.774-4.455 3.664-7.37V82.652c-.06-1.27 1.042-2.36 2.296-2.298h10.015c1.217-.048 2.293.975 2.253 2.195v120.58c0 7.693-3.643 16.11-10.727 19.872-8.23 4.527-18.222 4.578-27.199 2.885-7.988-1.43-15.725-4.89-22.176-9.57-1.061-.722-2.064-1.537-3.166-2.178-5.702-3.347-10.04-9.31-10.09-16.043V81.49c-.052-7.604 4.352-14.946 10.963-18.643C46.503 43.089 81.49 23.394 116.504 3.58z" />
-      </svg>
-    ),
   },
   {
     num: "3",
     title: "Run your app",
     desc: "Webhooks flow through a WebSocket to your local server. If you go offline, events queue and replay when you reconnect.",
     code: `$ npm run dev\n\n[simplehook] connected ✓\n[simplehook] POST /stripe/events → 200\n[simplehook] POST /github/push  → 200`,
-    icon: <Terminal className="size-5" />,
+  },
+];
+
+const AGENT_STEPS = [
+  {
+    num: "1",
+    title: "Get your API key",
+    desc: "Sign up, get your project's API key from the dashboard. Same key works for SDKs and the pull API.",
+    code: `# Your API key (from dashboard)\n\nAuthorization: Bearer ak_w4MF...`,
+  },
+  {
+    num: "2",
+    title: "Pull events via HTTP",
+    desc: "Call the pull endpoint. Get the next event instantly, or long-poll until one arrives.",
+    code: `curl -H "Authorization: Bearer ak_..." \\\n  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"\n\n# Returns: { "events": [...], "cursor": "evt_043", "remaining": 7 }`,
+  },
+  {
+    num: "3",
+    title: "Process and repeat",
+    desc: "The server tracks your cursor. Each pull returns only new events. Loop until you're done.",
+    code: `# Your agent loop\nwhile true:\n  events = pull(wait=true, path="/stripe/*")\n  for event in events:\n    process(event)\n  # cursor auto-advances — next pull returns new events only`,
   },
 ];
 
 const STEP_DURATION = 5000;
 
-function HowItWorksSteps() {
+function SteppedWalkthrough({ steps }: { steps: typeof DEV_STEPS }) {
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -177,22 +203,21 @@ function HowItWorksSteps() {
     const interval = setInterval(() => {
       setProgress((p) => {
         if (p >= 100) {
-          setActive((a) => (a + 1) % STEPS.length);
+          setActive((a) => (a + 1) % steps.length);
           return 0;
         }
         return p + 100 / (STEP_DURATION / 50);
       });
     }, 50);
     return () => clearInterval(interval);
-  }, []);
+  }, [steps.length]);
 
-  const step = STEPS[active];
+  const step = steps[active];
 
   return (
     <div className="grid items-start gap-8 md:grid-cols-[280px_1fr]">
-      {/* Step tabs (left) */}
       <div className="flex flex-col gap-1">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <button
             key={s.num}
             onClick={() => goTo(i)}
@@ -217,7 +242,6 @@ function HowItWorksSteps() {
                 {s.desc}
               </div>
             </div>
-            {/* Progress bar */}
             {i === active && (
               <div className="absolute bottom-0 left-4 right-4 h-[2px] overflow-hidden rounded-full bg-border">
                 <div
@@ -230,7 +254,6 @@ function HowItWorksSteps() {
         ))}
       </div>
 
-      {/* Code panel (right) */}
       <div className="overflow-hidden rounded-xl shadow-lg transition-all">
         <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-5 py-3.5">
           <div className="flex items-center gap-2">
@@ -251,27 +274,78 @@ function HowItWorksSteps() {
   );
 }
 
+// ── Audience toggle pill ─────────────────────────────────────────────
+
 type Audience = "developers" | "agents";
 
+function AudienceToggle({ value, onChange }: { value: Audience; onChange: (v: Audience) => void }) {
+  return (
+    <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1 w-fit">
+      <button
+        onClick={() => onChange("developers")}
+        className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+          value === "developers"
+            ? "bg-card border border-border-strong shadow-sm text-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        For developers
+      </button>
+      <button
+        onClick={() => onChange("agents")}
+        className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+          value === "agents"
+            ? "bg-card border border-border-strong shadow-sm text-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        For AI agents
+      </button>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────
+
 export function HomePage() {
-  const [audience, setAudience] = useState<Audience>("developers");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const initialAudience: Audience = modeParam === "agents" ? "agents" : "developers";
+  const [audience, setAudience] = useState<Audience>(initialAudience);
+
+  const handleAudienceChange = useCallback((v: Audience) => {
+    setAudience(v);
+    setSearchParams(v === "developers" ? {} : { mode: v }, { replace: true });
+  }, [setSearchParams]);
 
   return (
     <div>
       {/* ── HERO ── */}
       <section className="px-6 pb-20 pt-24">
         <div className="mx-auto max-w-[960px]">
-          <Kicker>Developer tools</Kicker>
+          <Kicker>Webhooks for everyone</Kicker>
 
-          <h1 className="mb-6 max-w-[680px] text-[clamp(36px,5.5vw,60px)] font-normal leading-[1.08] tracking-[-0.015em]">
-            One line of code.{" "}
-            <span className="text-muted-foreground">Webhooks just work.</span>
-          </h1>
+          <div className="mb-6 flex flex-wrap items-center gap-4">
+            <h1 className="max-w-[680px] text-[clamp(36px,5.5vw,60px)] font-normal leading-[1.08] tracking-[-0.015em]">
+              Stable webhook URLs.{" "}
+              <span className="text-muted-foreground">Zero infrastructure.</span>
+            </h1>
+            <AudienceToggle value={audience} onChange={handleAudienceChange} />
+          </div>
 
-          <p className="mb-10 max-w-[480px] text-lg font-light leading-relaxed text-muted-foreground">
-            Stop tunneling. Stop polling. Stop using ngrok. One line of code to solve webhooks.
-            Add one SDK call and your local app receives real webhooks.
-          </p>
+          {/* Audience-specific subtitle (both in DOM) */}
+          <div className={audience === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+            <p className="mb-10 max-w-[480px] text-lg font-light leading-relaxed text-muted-foreground">
+              Stop using ngrok. Add one SDK call and your local app receives real
+              webhooks over WebSocket.
+            </p>
+          </div>
+          <div className={audience === "agents" ? "" : "invisible h-0 overflow-hidden"}>
+            <p className="mb-10 max-w-[480px] text-lg font-light leading-relaxed text-muted-foreground">
+              Pull webhook events via HTTP. Instant, long-poll, or SSE stream. Built
+              for AI agents that operate in request/response cycles.
+            </p>
+          </div>
 
           <div className="mb-16 flex flex-wrap gap-2.5">
             <Link
@@ -289,431 +363,315 @@ export function HomePage() {
             </a>
           </div>
 
-          {/* Code with SDK tabs — terminal theme */}
-          <HeroCodeBlock />
-
-          <p className="mt-3.5 font-mono text-[11px] text-text-tertiary">
-            Works with Stripe, GitHub, Twilio, Shopify, and every webhook provider.
-          </p>
+          {/* Hero code blocks (both in DOM) */}
+          <div className={audience === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+            <HeroCodeBlock />
+            <p className="mt-3.5 font-mono text-[11px] text-text-tertiary">
+              Works with Stripe, GitHub, Twilio, Shopify, and every webhook provider.
+            </p>
+          </div>
+          <div className={audience === "agents" ? "" : "invisible h-0 overflow-hidden"}>
+            <AgentHeroCodeBlock />
+            <p className="mt-3.5 font-mono text-[11px] text-text-tertiary">
+              Same webhook URL. Same events. Just a different access pattern.
+            </p>
+          </div>
         </div>
       </section>
 
       <SectionDivider />
 
-      {/* ── HOW IT WORKS ── */}
+      {/* ── HOW IT WORKS (audience-specific) ── */}
       <section id="how-it-works" className="px-6 py-20">
         <div className="mx-auto max-w-[960px]">
-          <Kicker>How it works</Kicker>
-
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            Three steps. Zero infrastructure.
-          </h2>
-          <p className="mb-10 max-w-[560px] text-[15px] text-muted-foreground">
-            No tunnels, no public servers, no webhook infrastructure to manage.
-            Just your code and a WebSocket.
-          </p>
-
-          <HowItWorksSteps />
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      {/* ── TWO MODES ── */}
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-[960px]">
-          <Kicker>Delivery modes</Kicker>
-
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            Queue mode or Passthrough mode
-          </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            Choose per-route. Mix and match based on what each provider needs.
-          </p>
-
-          <div className="grid gap-5 md:grid-cols-2">
-            {/* Queue mode */}
-            <div className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-border-strong">
-              <div className="mb-3 flex items-center gap-2">
-                <Clock className="size-4 text-status-blue-text" />
-                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-blue-text">
-                  Queue mode
-                </span>
-              </div>
-              <h3 className="mb-2 text-sm font-medium">Instant 200, guaranteed delivery</h3>
-              <p className="mb-4 text-[13px] text-muted-foreground">
-                Returns 200 to the provider immediately. Events queue and forward
-                to your app with automatic retries. Your app can be offline -- events
-                wait.
-              </p>
-              <div className="flex flex-col gap-2">
-                {["Instant 200 response to provider", "Automatic retry with backoff", "Events persist while app is offline", "Best for: Stripe, Shopify, most providers"].map((item) => (
-                  <div key={item} className="flex items-baseline gap-2 text-[13px] text-muted-foreground">
-                    <Check className="mt-0.5 size-3 shrink-0 text-status-green-text" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Passthrough mode */}
-            <div className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-border-strong">
-              <div className="mb-3 flex items-center gap-2">
-                <Zap className="size-4 text-status-amber-text" />
-                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-amber-text">
-                  Passthrough mode
-                </span>
-              </div>
-              <h3 className="mb-2 text-sm font-medium">Your real response, forwarded back</h3>
-              <p className="mb-4 text-[13px] text-muted-foreground">
-                Proxies the webhook to your app and returns your actual response
-                to the provider. Real end-to-end, like a tunnel but without the tunnel.
-              </p>
-              <div className="flex flex-col gap-2">
-                {["Real response forwarded to provider", "True end-to-end webhook flow", "No queue delay", "Best for: GitHub webhooks, custom integrations"].map((item) => (
-                  <div key={item} className="flex items-baseline gap-2 text-[13px] text-muted-foreground">
-                    <Check className="mt-0.5 size-3 shrink-0 text-status-green-text" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      {/* ── WHY NOT ── */}
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-[960px]">
-          <Kicker>Comparison</Kicker>
-
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            Why not ngrok or Hookdeck?
-          </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            Different tools for different problems. Here is where simplehook fits.
-          </p>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
-                    Feature
-                  </th>
-                  <th className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-green-text">
-                    simplehook
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
-                    ngrok
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
-                    Hookdeck
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ["Setup", "1 line of code", "CLI + config", "Dashboard + SDK"],
-                  ["Runs as", "SDK in your app", "Separate process", "Cloud platform"],
-                  ["Offline events", "Queued + replayed", "Lost", "Queued"],
-                  ["Response passthrough", "Yes (passthrough mode)", "Yes", "No"],
-                  ["Event replay", "One click", "No", "Yes"],
-                  ["Public URL needed", "No", "Yes (tunnel)", "No"],
-                  ["Listener routing", "Yes (per-route)", "No", "Connections"],
-                  ["Auth", "API key", "Account + auth token", "Account + API key"],
-                  ["Price", "$5/mo flat", "Free tier / $8+/mo", "Free tier / $25+/mo"],
-                ].map(([feature, aw, ngrok, hookdeck]) => (
-                  <tr key={feature} className="border-b last:border-0">
-                    <td className="px-3 py-2.5 font-medium text-foreground">{feature}</td>
-                    <td className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 font-medium text-status-green-text">{aw}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{ngrok}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{hookdeck}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      {/* ── FOR DEVELOPERS / FOR AI AGENTS (toggle) ── */}
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-[960px]">
-          {/* Toggle buttons */}
-          <div className="mb-10 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1 w-fit">
-            <button
-              onClick={() => setAudience("developers")}
-              className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
-                audience === "developers"
-                  ? "bg-card border border-border-strong shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              For developers
-            </button>
-            <button
-              onClick={() => setAudience("agents")}
-              className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
-                audience === "agents"
-                  ? "bg-card border border-border-strong shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              For AI agents
-            </button>
-          </div>
-
-          {/* ── Developers panel (always in DOM) ── */}
+          {/* Developers */}
           <div className={audience === "developers" ? "" : "invisible h-0 overflow-hidden"}>
-            <Kicker>SDK integration</Kicker>
-
+            <Kicker>How it works</Kicker>
             <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-              One line of code. Webhooks just work.
+              Three steps. Zero infrastructure.
             </h2>
-            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-              Add one SDK call. Your app connects to simplehook via WebSocket.
-              Webhooks flow to your routes like normal HTTP requests.
+            <p className="mb-10 max-w-[560px] text-[15px] text-muted-foreground">
+              No tunnels, no public servers, no webhook infrastructure to manage.
+              Just your code and a WebSocket.
             </p>
-
-            <div className="grid items-start gap-8 md:grid-cols-2">
-              <div className="overflow-hidden rounded-xl shadow-lg">
-                <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
-                  <span className="font-mono text-[12px] text-[#9a91b0]">app.ts</span>
-                </div>
-                <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-                  <code>{`import express from "express";
-import { listenToWebhooks } from "simplehook";
-
-const app = express();
-listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
-
-app.post("/stripe/events", (req, res) => {
-  console.log("Payment:", req.body.type);
-  res.json({ received: true });
-});`}</code>
-                </pre>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                {[
-                  {
-                    icon: Zap,
-                    title: "WebSocket delivery",
-                    desc: "Events flow over a persistent WebSocket. No polling, no public endpoints.",
-                  },
-                  {
-                    icon: RotateCcw,
-                    title: "Automatic retries",
-                    desc: "Failed deliveries retry with exponential backoff. Events never get lost.",
-                  },
-                  {
-                    icon: Terminal,
-                    title: "Event replay",
-                    desc: "Replay any event from the dashboard. Debug webhooks without retriggering.",
-                  },
-                  {
-                    icon: Shield,
-                    title: "Per-route configuration",
-                    desc: "Set queue or passthrough mode per path prefix. Different providers, different rules.",
-                  },
-                  {
-                    icon: Radio,
-                    title: "Listeners",
-                    desc: "Run multiple SDKs and route events to specific ones.",
-                  },
-                ].map((feature) => (
-                  <div
-                    key={feature.title}
-                    className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
-                  >
-                    <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                    <div>
-                      <h3 className="text-sm font-medium">{feature.title}</h3>
-                      <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SteppedWalkthrough steps={DEV_STEPS} />
           </div>
 
-          {/* ── AI Agents panel (always in DOM) ── */}
+          {/* Agents */}
           <div className={audience === "agents" ? "" : "invisible h-0 overflow-hidden"}>
-            <Kicker>AI Agent API</Kicker>
-
+            <Kicker>How it works</Kicker>
             <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-              Pull webhooks via HTTP
+              Three steps. One HTTP call.
             </h2>
-            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-              AI agents can't hold WebSockets. The pull API lets them consume webhook
-              events on demand — instant, long-poll, or SSE stream. One HTTP call.
+            <p className="mb-10 max-w-[560px] text-[15px] text-muted-foreground">
+              No WebSocket, no SDK, no persistent connection. Just pull events
+              when your agent is ready.
             </p>
-
-            <div className="grid items-start gap-8 md:grid-cols-2">
-              <div className="overflow-hidden rounded-xl shadow-lg">
-                <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
-                  <span className="font-mono text-[12px] text-[#9a91b0]">three modes</span>
-                </div>
-                <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-                  <code>{`# Pull next event (instant)
-curl -H "Authorization: Bearer ak_..." \\
-  "/api/agent/pull"
-
-# Wait for a Stripe event (long-poll)
-curl -H "Authorization: Bearer ak_..." \\
-  "/api/agent/pull?wait=true&path=/stripe/*"
-
-# Stream events as they arrive (SSE)
-curl -N -H "Authorization: Bearer ak_..." \\
-  "/api/agent/pull?stream=true"`}</code>
-                </pre>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                {[
-                  {
-                    icon: Clock,
-                    title: "Three pull modes",
-                    desc: "Instant return, long-poll until event arrives, or SSE stream for continuous listening.",
-                  },
-                  {
-                    icon: Radio,
-                    title: "Per-agent cursors",
-                    desc: "Each listener_id tracks its own position. Multiple agents consume the same project independently.",
-                  },
-                  {
-                    icon: Shield,
-                    title: "Path filtering",
-                    desc: "Pull only /stripe/* events, or /github/* — filter with glob patterns.",
-                  },
-                  {
-                    icon: Terminal,
-                    title: "Queue status",
-                    desc: "GET /api/agent/status — pending counts, cursor positions, connected listeners, per-route breakdown.",
-                  },
-                  {
-                    icon: Lock,
-                    title: "Same auth, same data",
-                    desc: "Uses your existing API key. Same events, same routes — just a different access pattern.",
-                  },
-                ].map((feature) => (
-                  <div
-                    key={feature.title}
-                    className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
-                  >
-                    <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                    <div>
-                      <h3 className="text-sm font-medium">{feature.title}</h3>
-                      <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SteppedWalkthrough steps={AGENT_STEPS} />
           </div>
         </div>
       </section>
 
       <SectionDivider />
 
-      {/* ── PRIVACY ── */}
+      {/* ── DEVELOPER-ONLY: Delivery modes + Why not ngrok ── */}
+      <div className={audience === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+        {/* Two modes */}
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-[960px]">
+            <Kicker>Delivery modes</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Queue mode or Passthrough mode
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Choose per-route. Mix and match based on what each provider needs.
+            </p>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-border-strong">
+                <div className="mb-3 flex items-center gap-2">
+                  <Clock className="size-4 text-status-blue-text" />
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-blue-text">Queue mode</span>
+                </div>
+                <h3 className="mb-2 text-sm font-medium">Instant 200, guaranteed delivery</h3>
+                <p className="mb-4 text-[13px] text-muted-foreground">
+                  Returns 200 to the provider immediately. Events queue and forward to your app with automatic retries.
+                </p>
+                <div className="flex flex-col gap-2">
+                  {["Instant 200 response to provider", "Automatic retry with backoff", "Events persist while app is offline", "Best for: Stripe, Shopify, most providers"].map((item) => (
+                    <div key={item} className="flex items-baseline gap-2 text-[13px] text-muted-foreground">
+                      <Check className="mt-0.5 size-3 shrink-0 text-status-green-text" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-border-strong">
+                <div className="mb-3 flex items-center gap-2">
+                  <Zap className="size-4 text-status-amber-text" />
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-amber-text">Passthrough mode</span>
+                </div>
+                <h3 className="mb-2 text-sm font-medium">Your real response, forwarded back</h3>
+                <p className="mb-4 text-[13px] text-muted-foreground">
+                  Proxies the webhook to your app and returns your actual response to the provider.
+                </p>
+                <div className="flex flex-col gap-2">
+                  {["Real response forwarded to provider", "True end-to-end webhook flow", "No queue delay", "Best for: Twilio TwiML, GitHub, custom integrations"].map((item) => (
+                    <div key={item} className="flex items-baseline gap-2 text-[13px] text-muted-foreground">
+                      <Check className="mt-0.5 size-3 shrink-0 text-status-green-text" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <SectionDivider />
+
+        {/* Why not ngrok */}
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-[960px]">
+            <Kicker>Comparison</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Why not ngrok or Hookdeck?
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Different tools for different problems. Here is where simplehook fits.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">Feature</th>
+                    <th className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-green-text">simplehook</th>
+                    <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">ngrok</th>
+                    <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">Hookdeck</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Setup", "1 line of code", "CLI + config", "Dashboard + SDK"],
+                    ["Runs as", "SDK in your app", "Separate process", "Cloud platform"],
+                    ["Offline events", "Queued + replayed", "Lost", "Queued"],
+                    ["Response passthrough", "Yes (passthrough mode)", "Yes", "No"],
+                    ["Event replay", "One click", "No", "Yes"],
+                    ["AI Agent API", "Yes (pull/stream)", "No", "No"],
+                    ["Price", "$5/mo flat", "Free tier / $8+/mo", "Free tier / $25+/mo"],
+                  ].map(([feature, aw, ngrok, hookdeck]) => (
+                    <tr key={feature} className="border-b last:border-0">
+                      <td className="px-3 py-2.5 font-medium text-foreground">{feature}</td>
+                      <td className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 font-medium text-status-green-text">{aw}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{ngrok}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{hookdeck}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <SectionDivider />
+
+        {/* Developer features */}
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-[960px]">
+            <Kicker>Features</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Everything you need. Nothing you don't.
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Minimal surface area. Maximum usefulness.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { icon: Zap, title: "WebSocket delivery", desc: "Events flow over a persistent WebSocket. No polling, no public endpoints." },
+                { icon: RotateCcw, title: "Automatic retries", desc: "Failed deliveries retry with exponential backoff. Events never get lost." },
+                { icon: Terminal, title: "Event replay", desc: "Replay any event from the dashboard. Debug webhooks without retriggering." },
+                { icon: Shield, title: "Per-route configuration", desc: "Set queue or passthrough mode per path prefix. Different providers, different rules." },
+                { icon: Radio, title: "Listeners", desc: "Run multiple SDKs and route events to specific ones. Same webhook URL, different destinations." },
+                { icon: Clock, title: "AI Agent API", desc: "Pull webhooks via HTTP too — instant, long-poll, or SSE stream. Same project, same events." },
+              ].map((f) => (
+                <div key={f.title} className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                  <f.icon className="mb-2.5 size-5 text-muted-foreground" />
+                  <h3 className="mb-1.5 text-sm font-medium">{f.title}</h3>
+                  <p className="text-[13px] text-muted-foreground">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ── AGENT-ONLY: Pull modes + features ── */}
+      <div className={audience === "agents" ? "" : "invisible h-0 overflow-hidden"}>
+        {/* Three pull modes */}
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-[960px]">
+            <Kicker>Pull modes</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Instant, long-poll, or stream
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              One endpoint, three behaviors. Choose how patient your agent is.
+            </p>
+            <div className="grid gap-5 md:grid-cols-3">
+              {[
+                {
+                  mode: "Instant",
+                  color: "text-status-green-text",
+                  desc: "Return immediately with whatever events are available. Empty array if nothing new.",
+                  code: "GET /api/agent/pull",
+                },
+                {
+                  mode: "Long-poll",
+                  color: "text-status-blue-text",
+                  desc: "Hold the connection until an event arrives or timeout expires. Synchronous from the agent's perspective.",
+                  code: "GET /api/agent/pull?wait=true",
+                },
+                {
+                  mode: "SSE stream",
+                  color: "text-status-amber-text",
+                  desc: "Keep the connection open. Events push as they arrive. For agents that can hold a connection.",
+                  code: "GET /api/agent/pull?stream=true",
+                },
+              ].map((m) => (
+                <div key={m.mode} className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-border-strong">
+                  <span className={`font-mono text-[10px] font-medium uppercase tracking-[0.08em] ${m.color}`}>{m.mode}</span>
+                  <p className="mt-2 mb-3 text-[13px] text-muted-foreground">{m.desc}</p>
+                  <code className="block rounded bg-muted px-2 py-1 font-mono text-[11px] text-foreground/80">{m.code}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <SectionDivider />
+
+        {/* Agent features */}
+        <section className="px-6 py-20">
+          <div className="mx-auto max-w-[960px]">
+            <Kicker>Features</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Built for agents. No WebSocket required.
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Everything an AI agent needs to consume webhooks reliably.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { icon: Radio, title: "Per-agent cursors", desc: "Each listener_id tracks its own position. Multiple agents consume the same project independently." },
+                { icon: Shield, title: "Path filtering", desc: "Pull only /stripe/* events, or /github/* — filter with glob patterns." },
+                { icon: Terminal, title: "Queue status", desc: "GET /api/agent/status — pending counts, cursor positions, connected listeners, per-route breakdown." },
+                { icon: Lock, title: "Same auth, same data", desc: "Uses your existing API key. Same events, same routes — just a different access pattern." },
+                { icon: Clock, title: "Conflict detection", desc: "One consumer per listener_id for long-poll/stream. Prevents duplicate processing. 409 if already consumed." },
+                { icon: Zap, title: "SDK + API together", desc: "Developers use the SDK, agents use the pull API. Same project, same webhook URL, different access patterns." },
+              ].map((f) => (
+                <div key={f.title} className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                  <f.icon className="mb-2.5 size-5 text-muted-foreground" />
+                  <h3 className="mb-1.5 text-sm font-medium">{f.title}</h3>
+                  <p className="text-[13px] text-muted-foreground">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <SectionDivider />
+
+      {/* ── SHARED: Privacy ── */}
       <section className="px-6 py-20">
         <div className="mx-auto max-w-[960px]">
           <Kicker>Privacy</Kicker>
-
           <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
             Your webhook data stays yours
           </h2>
           <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
             Security built in, not bolted on.
           </p>
-
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Lock className="mb-2.5 size-5 text-muted-foreground" />
               <h3 className="mb-1.5 text-sm font-medium">Encrypted in transit</h3>
-              <p className="text-[13px] text-muted-foreground">
-                All connections use TLS and secure WebSockets (WSS). Data is encrypted from provider to your app.
-              </p>
+              <p className="text-[13px] text-muted-foreground">All connections use TLS and secure WebSockets (WSS). Data is encrypted from provider to your app.</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Shield className="mb-2.5 size-5 text-muted-foreground" />
               <h3 className="mb-1.5 text-sm font-medium">Passthrough = zero storage</h3>
-              <p className="text-[13px] text-muted-foreground">
-                In passthrough mode, the request body flows through memory only and is never persisted to disk or database.
-              </p>
+              <p className="text-[13px] text-muted-foreground">In passthrough mode, the request body flows through memory only and is never persisted.</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Shield className="mb-2.5 size-5 text-muted-foreground" />
               <h3 className="mb-1.5 text-sm font-medium">Queue = encrypted & auto-deleted</h3>
-              <p className="text-[13px] text-muted-foreground">
-                Queued bodies are encrypted at rest and deleted after successful delivery. Events auto-expire after 30 days.
-              </p>
+              <p className="text-[13px] text-muted-foreground">Queued bodies are encrypted at rest and deleted after successful delivery. Events auto-expire after 30 days.</p>
             </div>
           </div>
-
           <p className="mt-6 text-center text-[13px] text-text-tertiary">
             No third-party analytics. No tracking. We never sell or share your data.{" "}
-            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">
-              Full privacy details
-            </Link>
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">Full privacy details</Link>
           </p>
         </div>
       </section>
 
       <SectionDivider />
 
-      {/* ── PRICING ── */}
+      {/* ── SHARED: Pricing ── */}
       <section id="pricing" className="px-6 py-20">
         <div className="mx-auto max-w-[960px]">
           <Kicker>Pricing</Kicker>
-
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            One plan. No surprises.
-          </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            24-hour free trial. No credit card required.
-          </p>
-
+          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">One plan. No surprises.</h2>
+          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">24-hour free trial. No credit card required.</p>
           <div className="flex justify-center gap-4">
             {[
-              {
-                name: "Starter",
-                price: "$5",
-                desc: "For solo developers",
-                features: [
-                  "3 routes",
-                  "3 listeners",
-                  "Unlimited webhook events",
-                  "Queue + Passthrough modes",
-                  "Automatic retries",
-                  "Event replay",
-                ],
-              },
-              {
-                name: "Pro",
-                price: "$8",
-                desc: "For teams",
-                features: [
-                  "6 routes",
-                  "6 listeners",
-                  "Everything in Starter",
-                  "Priority delivery",
-                  "Full request/response logging",
-                  "Per-route listener assignment",
-                ],
-              },
+              { name: "Starter", price: "$5", desc: "For solo developers", features: ["3 routes", "3 listeners", "Unlimited webhook events", "Queue + Passthrough modes", "Automatic retries", "AI Agent Pull API"] },
+              { name: "Pro", price: "$8", desc: "For teams", features: ["6 routes", "6 listeners", "Everything in Starter", "Priority delivery", "Full request/response logging", "Per-route listener assignment"] },
             ].map((plan) => (
               <div key={plan.name} className="w-full max-w-[320px] rounded-xl border border-border bg-card px-6 py-7">
                 <div className="mb-0.5 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">{plan.name}</div>
                 <div className="mb-1 text-[36px] font-medium leading-none tracking-[-0.02em]">
-                  {plan.price}
-                  <span className="text-[14px] font-normal text-muted-foreground">/mo</span>
+                  {plan.price}<span className="text-[14px] font-normal text-muted-foreground">/mo</span>
                 </div>
                 <p className="mb-5 text-sm text-muted-foreground">{plan.desc}</p>
                 <ul className="flex flex-col gap-1.5">
@@ -727,15 +685,9 @@ curl -N -H "Authorization: Bearer ak_..." \\
               </div>
             ))}
           </div>
-
           <div className="mt-6 text-center">
-            <p className="mb-4 text-[13px] text-text-tertiary">
-              24-hour free trial with 3 routes &amp; 3 listeners. No credit card required.
-            </p>
-            <Link
-              to="/login"
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
-            >
+            <p className="mb-4 text-[13px] text-text-tertiary">24-hour free trial with 3 routes &amp; 3 listeners. No credit card required.</p>
+            <Link to="/login" className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85">
               Start free trial
             </Link>
           </div>
@@ -744,7 +696,7 @@ curl -N -H "Authorization: Bearer ak_..." \\
 
       <SectionDivider />
 
-      {/* ── BOTTOM CTA ── */}
+      {/* ── SHARED: Bottom CTA ── */}
       <section className="px-6 py-20 text-center">
         <div className="mx-auto max-w-[960px]">
           <h2 className="mb-5 text-[22px] font-medium tracking-[-0.015em]">
@@ -753,54 +705,13 @@ curl -N -H "Authorization: Bearer ak_..." \\
           <p className="mx-auto mb-6 max-w-[480px] text-[15px] text-muted-foreground">
             One install. One line of code. Every webhook provider works.
           </p>
-
-          <div className="mx-auto mb-6 overflow-hidden rounded-xl text-left shadow-lg" style={{maxWidth: 480}}>
-            <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#27c93f]" />
-              </div>
-              <span className="mx-auto font-mono text-[11px] text-[#9a91b0]">Terminal</span>
-              <div className="w-[44px]" />
-            </div>
-            <pre className="bg-[#1e1834] px-5 py-4 font-mono text-[12px] leading-[2.2] text-[#e0dce8]">
-              <code>
-                <span className="text-[#7a7190]"># Express</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> npm install simplehook{"\n"}
-                <span className="text-[#7a7190]"># Fastify</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> npm install simplehook-fastify{"\n"}
-                <span className="text-[#7a7190]"># Hono</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> npm install simplehook-hono{"\n"}
-                <span className="text-[#7a7190]"># Flask</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> pip install simplehook-flask{"\n"}
-                <span className="text-[#7a7190]"># Django</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> pip install simplehook-django{"\n"}
-                <span className="text-[#7a7190]"># FastAPI</span>{"\n"}
-                <span className="text-[#27c93f]">$</span> pip install simplehook-fastapi
-              </code>
-            </pre>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2.5">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
-            >
-              Get started
-              <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              to="/docs"
-              className="inline-flex items-center rounded-lg border border-border-strong px-6 py-3 text-[15px] text-muted-foreground transition-colors hover:border-text-tertiary hover:text-foreground"
-            >
-              Read the docs
-            </Link>
-          </div>
-
-          <p className="mt-6 font-mono text-xs text-text-tertiary">
-            Express &middot; Fastify &middot; Hono &middot; Flask &middot; Django &middot; FastAPI &middot; one line &middot; done
-          </p>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
+          >
+            Get started
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
       </section>
     </div>
