@@ -251,7 +251,11 @@ function HowItWorksSteps() {
   );
 }
 
+type Audience = "developers" | "agents";
+
 export function HomePage() {
+  const [audience, setAudience] = useState<Audience>("developers");
+
   return (
     <div>
       {/* ── HERO ── */}
@@ -437,27 +441,52 @@ export function HomePage() {
 
       <SectionDivider />
 
-      {/* ── FOR HUMANS ── */}
+      {/* ── FOR DEVELOPERS / FOR AI AGENTS (toggle) ── */}
       <section className="px-6 py-20">
         <div className="mx-auto max-w-[960px]">
-          <Kicker>For humans</Kicker>
+          {/* Toggle buttons */}
+          <div className="mb-10 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1 w-fit">
+            <button
+              onClick={() => setAudience("developers")}
+              className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
+                audience === "developers"
+                  ? "bg-card border border-border-strong shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              For developers
+            </button>
+            <button
+              onClick={() => setAudience("agents")}
+              className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
+                audience === "agents"
+                  ? "bg-card border border-border-strong shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              For AI agents
+            </button>
+          </div>
 
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            SDK integration — one line of code
-          </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            Add one SDK call. Your app connects to simplehook via WebSocket.
-            Webhooks flow to your routes like normal HTTP requests.
-          </p>
+          {/* ── Developers panel (always in DOM) ── */}
+          <div className={audience === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+            <Kicker>SDK integration</Kicker>
 
-          <div className="grid items-start gap-8 md:grid-cols-2">
-            {/* Code example */}
-            <div className="overflow-hidden rounded-xl shadow-lg">
-              <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
-                <span className="font-mono text-[12px] text-[#9a91b0]">app.ts</span>
-              </div>
-              <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-                <code>{`import express from "express";
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              One line of code. Webhooks just work.
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Add one SDK call. Your app connects to simplehook via WebSocket.
+              Webhooks flow to your routes like normal HTTP requests.
+            </p>
+
+            <div className="grid items-start gap-8 md:grid-cols-2">
+              <div className="overflow-hidden rounded-xl shadow-lg">
+                <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+                  <span className="font-mono text-[12px] text-[#9a91b0]">app.ts</span>
+                </div>
+                <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                  <code>{`import express from "express";
 import { listenToWebhooks } from "simplehook";
 
 const app = express();
@@ -467,77 +496,71 @@ app.post("/stripe/events", (req, res) => {
   console.log("Payment:", req.body.type);
   res.json({ received: true });
 });`}</code>
-              </pre>
-            </div>
+                </pre>
+              </div>
 
-            {/* Feature cards */}
-            <div className="flex flex-col gap-3">
-              {[
-                {
-                  icon: Zap,
-                  title: "WebSocket delivery",
-                  desc: "Events flow over a persistent WebSocket. No polling, no public endpoints.",
-                },
-                {
-                  icon: RotateCcw,
-                  title: "Automatic retries",
-                  desc: "Failed deliveries retry with exponential backoff. Events never get lost.",
-                },
-                {
-                  icon: Terminal,
-                  title: "Event replay",
-                  desc: "Replay any event from the dashboard. Debug webhooks without retriggering.",
-                },
-                {
-                  icon: Shield,
-                  title: "Per-route configuration",
-                  desc: "Set queue or passthrough mode per path prefix. Different providers, different rules.",
-                },
-                {
-                  icon: Radio,
-                  title: "Listeners",
-                  desc: "Run multiple SDKs and route events to specific ones.",
-                },
-              ].map((feature) => (
-                <div
-                  key={feature.title}
-                  className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
-                >
-                  <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <div>
-                    <h3 className="text-sm font-medium">{feature.title}</h3>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
+              <div className="flex flex-col gap-3">
+                {[
+                  {
+                    icon: Zap,
+                    title: "WebSocket delivery",
+                    desc: "Events flow over a persistent WebSocket. No polling, no public endpoints.",
+                  },
+                  {
+                    icon: RotateCcw,
+                    title: "Automatic retries",
+                    desc: "Failed deliveries retry with exponential backoff. Events never get lost.",
+                  },
+                  {
+                    icon: Terminal,
+                    title: "Event replay",
+                    desc: "Replay any event from the dashboard. Debug webhooks without retriggering.",
+                  },
+                  {
+                    icon: Shield,
+                    title: "Per-route configuration",
+                    desc: "Set queue or passthrough mode per path prefix. Different providers, different rules.",
+                  },
+                  {
+                    icon: Radio,
+                    title: "Listeners",
+                    desc: "Run multiple SDKs and route events to specific ones.",
+                  },
+                ].map((feature) => (
+                  <div
+                    key={feature.title}
+                    className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
+                  >
+                    <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <h3 className="text-sm font-medium">{feature.title}</h3>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <SectionDivider />
+          {/* ── AI Agents panel (always in DOM) ── */}
+          <div className={audience === "agents" ? "" : "invisible h-0 overflow-hidden"}>
+            <Kicker>AI Agent API</Kicker>
 
-      {/* ── FOR AI AGENTS ── */}
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-[960px]">
-          <Kicker>For AI agents</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Pull webhooks via HTTP
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              AI agents can't hold WebSockets. The pull API lets them consume webhook
+              events on demand — instant, long-poll, or SSE stream. One HTTP call.
+            </p>
 
-          <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-            AI Agent API — pull webhooks via HTTP
-          </h2>
-          <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-            AI agents can't hold WebSockets. The pull API lets them consume webhook
-            events on demand — instant, long-poll, or SSE stream. One HTTP call.
-          </p>
-
-          <div className="grid items-start gap-8 md:grid-cols-2">
-            {/* Code example */}
-            <div className="overflow-hidden rounded-xl shadow-lg">
-              <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
-                <span className="font-mono text-[12px] text-[#9a91b0]">three modes</span>
-              </div>
-              <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-                <code>{`# Pull next event (instant)
+            <div className="grid items-start gap-8 md:grid-cols-2">
+              <div className="overflow-hidden rounded-xl shadow-lg">
+                <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
+                  <span className="font-mono text-[12px] text-[#9a91b0]">three modes</span>
+                </div>
+                <pre className="bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+                  <code>{`# Pull next event (instant)
 curl -H "Authorization: Bearer ak_..." \\
   "/api/agent/pull"
 
@@ -548,49 +571,49 @@ curl -H "Authorization: Bearer ak_..." \\
 # Stream events as they arrive (SSE)
 curl -N -H "Authorization: Bearer ak_..." \\
   "/api/agent/pull?stream=true"`}</code>
-              </pre>
-            </div>
+                </pre>
+              </div>
 
-            {/* Feature cards */}
-            <div className="flex flex-col gap-3">
-              {[
-                {
-                  icon: Clock,
-                  title: "Three pull modes",
-                  desc: "Instant return, long-poll until event arrives, or SSE stream for continuous listening.",
-                },
-                {
-                  icon: Radio,
-                  title: "Per-agent cursors",
-                  desc: "Each listener_id tracks its own position. Multiple agents consume the same project independently.",
-                },
-                {
-                  icon: Shield,
-                  title: "Path filtering",
-                  desc: "Pull only /stripe/* events, or /github/* — filter with glob patterns.",
-                },
-                {
-                  icon: Terminal,
-                  title: "Queue status",
-                  desc: "GET /api/agent/status — pending counts, cursor positions, connected listeners, per-route breakdown.",
-                },
-                {
-                  icon: Lock,
-                  title: "Same auth, same data",
-                  desc: "Uses your existing API key. Same events, same routes — just a different access pattern.",
-                },
-              ].map((feature) => (
-                <div
-                  key={feature.title}
-                  className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
-                >
-                  <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <div>
-                    <h3 className="text-sm font-medium">{feature.title}</h3>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
+              <div className="flex flex-col gap-3">
+                {[
+                  {
+                    icon: Clock,
+                    title: "Three pull modes",
+                    desc: "Instant return, long-poll until event arrives, or SSE stream for continuous listening.",
+                  },
+                  {
+                    icon: Radio,
+                    title: "Per-agent cursors",
+                    desc: "Each listener_id tracks its own position. Multiple agents consume the same project independently.",
+                  },
+                  {
+                    icon: Shield,
+                    title: "Path filtering",
+                    desc: "Pull only /stripe/* events, or /github/* — filter with glob patterns.",
+                  },
+                  {
+                    icon: Terminal,
+                    title: "Queue status",
+                    desc: "GET /api/agent/status — pending counts, cursor positions, connected listeners, per-route breakdown.",
+                  },
+                  {
+                    icon: Lock,
+                    title: "Same auth, same data",
+                    desc: "Uses your existing API key. Same events, same routes — just a different access pattern.",
+                  },
+                ].map((feature) => (
+                  <div
+                    key={feature.title}
+                    className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5 transition-all hover:border-border-strong"
+                  >
+                    <feature.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <h3 className="text-sm font-medium">{feature.title}</h3>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">{feature.desc}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
