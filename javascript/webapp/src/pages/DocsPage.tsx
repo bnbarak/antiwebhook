@@ -155,16 +155,27 @@ async def stripe_webhook(request: Request):
 
 // ── Sidebar sections ─────────────────────────────────────────────────
 
+type DocsGroup = "shared" | "developers" | "agents";
+
 const SECTIONS = [
-  { id: "quick-start", label: "Quick Start" },
-  { id: "configuration", label: "Configuration" },
-  { id: "agents", label: "Listeners" },
-  { id: "ai-agent-api", label: "AI Agent API" },
-  { id: "privacy", label: "Privacy & Security" },
-  { id: "route-configuration", label: "Route Configuration" },
-  { id: "websocket-protocol", label: "WebSocket Protocol" },
-  { id: "api-reference", label: "API Reference" },
+  // Shared
+  { id: "quick-start", label: "Quick Start", group: "shared" as DocsGroup },
+  { id: "privacy", label: "Privacy & Security", group: "shared" as DocsGroup },
+  { id: "api-reference", label: "API Reference", group: "shared" as DocsGroup },
+  // Developers
+  { id: "configuration", label: "Configuration", group: "developers" as DocsGroup },
+  { id: "agents", label: "Listeners", group: "developers" as DocsGroup },
+  { id: "route-configuration", label: "Route Configuration", group: "developers" as DocsGroup },
+  { id: "websocket-protocol", label: "WebSocket Protocol", group: "developers" as DocsGroup },
+  // AI Agents
+  { id: "ai-agent-api", label: "Pull API", group: "agents" as DocsGroup },
 ] as const;
+
+const GROUP_LABELS: Record<DocsGroup, string> = {
+  shared: "Shared",
+  developers: "Developers",
+  agents: "AI Agents (API/Skills)",
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -315,18 +326,54 @@ function BaseUrlCard({ projectId }: { projectId?: string }) {
 
 // ── Sidebar navigation ───────────────────────────────────────────────
 
-function DocsSidebar({ activeId }: { activeId: string }) {
+function DocsSidebar({
+  activeId,
+  docsView,
+  onDocsViewChange,
+}: {
+  activeId: string;
+  docsView: DocsGroup;
+  onDocsViewChange: (v: DocsGroup) => void;
+}) {
+  // Show: shared sections always, plus the active view's sections
+  const visibleSections = SECTIONS.filter(
+    (s) => s.group === "shared" || s.group === docsView,
+  );
+
   return (
     <nav className="hidden lg:block w-[200px] shrink-0">
       <div className="sticky top-[80px] pt-16">
-        <span className="mb-2 block px-2.5 font-mono text-[11px] font-medium uppercase tracking-widest text-muted-foreground/60">
-          On this page
-        </span>
+        {/* View toggle */}
+        <div className="mb-4 flex flex-col gap-0.5 rounded-lg border border-border bg-muted/50 p-1">
+          {(["developers", "agents"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => onDocsViewChange(v)}
+              className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                docsView === v
+                  ? "bg-card border border-border-strong shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {GROUP_LABELS[v]}
+            </button>
+          ))}
+        </div>
+
         <ul className="flex flex-col gap-0.5">
-          {SECTIONS.map(({ id, label }) => {
+          {visibleSections.map(({ id, label, group }, i) => {
             const isActive = activeId === id;
+            // Show group header when group changes
+            const prevGroup = i > 0 ? visibleSections[i - 1].group : null;
+            const showGroupHeader = group !== prevGroup;
+
             return (
               <li key={id}>
+                {showGroupHeader && (
+                  <span className="mt-3 mb-1 block px-2.5 font-mono text-[9px] font-medium uppercase tracking-widest text-muted-foreground/50">
+                    {GROUP_LABELS[group]}
+                  </span>
+                )}
                 <a
                   href={`#${id}`}
                   onClick={(e) => {
@@ -432,6 +479,7 @@ export function DocsPage() {
   const [activeFw, setActiveFw] = useState(LANGUAGES[0].frameworks[0].id);
 
   const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
+  const [docsView, setDocsView] = useState<DocsGroup>("developers");
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const lang = LANGUAGES.find((l) => l.id === activeLang) ?? LANGUAGES[0];
@@ -559,7 +607,7 @@ export function DocsPage() {
 
       {/* Sidebar + content layout */}
       <div className="mx-auto flex max-w-[1200px] gap-10 px-6">
-        <DocsSidebar activeId={activeSection} />
+        <DocsSidebar activeId={activeSection} docsView={docsView} onDocsViewChange={setDocsView} />
 
         <div className="min-w-0 flex-1 max-w-[960px]">
           {/* ── Quick Start ─────────────────────────────────────────────── */}
@@ -698,6 +746,9 @@ export function DocsPage() {
           </section>
 
           <SectionDivider />
+
+          {/* ── DEVELOPERS GROUP (visibility toggle) ── */}
+          <div className={docsView === "developers" ? "" : "invisible h-0 overflow-hidden"}>
 
           {/* ── Configuration ───────────────────────────────────────────── */}
           <section
@@ -919,7 +970,12 @@ listenToWebhooks(app)`}
             </div>
           </section>
 
+          </div>{/* END DEVELOPERS GROUP (before AI agent) */}
+
           <SectionDivider />
+
+          {/* ── AGENTS GROUP (visibility toggle) ── */}
+          <div className={docsView === "agents" ? "" : "invisible h-0 overflow-hidden"}>
 
           {/* ── AI Agent API ─────────────────────────────────────── */}
           <section
@@ -1071,6 +1127,8 @@ console.log(events[0]?.body);`}
             </div>
           </section>
 
+          </div>{/* END AGENTS GROUP */}
+
           <SectionDivider />
 
           {/* ── Privacy & Security ─────────────────────────────────────── */}
@@ -1137,6 +1195,9 @@ console.log(events[0]?.body);`}
           </section>
 
           <SectionDivider />
+
+          {/* ── DEVELOPERS GROUP continued (route-config + websocket) ── */}
+          <div className={docsView === "developers" ? "" : "invisible h-0 overflow-hidden"}>
 
           {/* ── Route Configuration ─────────────────────────────────────── */}
           <section
@@ -1337,6 +1398,8 @@ console.log(events[0]?.body);`}
               </div>
             </div>
           </section>
+
+          </div>{/* END DEVELOPERS GROUP continued */}
 
           <SectionDivider />
 
