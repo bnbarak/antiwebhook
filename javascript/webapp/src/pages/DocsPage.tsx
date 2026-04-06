@@ -159,6 +159,7 @@ const SECTIONS = [
   { id: "quick-start", label: "Quick Start" },
   { id: "configuration", label: "Configuration" },
   { id: "agents", label: "Listeners" },
+  { id: "ai-agent-api", label: "AI Agent API" },
   { id: "privacy", label: "Privacy & Security" },
   { id: "route-configuration", label: "Route Configuration" },
   { id: "websocket-protocol", label: "WebSocket Protocol" },
@@ -914,6 +915,158 @@ listenToWebhooks(app)`}
               <p className="text-sm text-muted-foreground">
                 Your webhook URL stays the same — <strong>event routing is configured in the
                 dashboard</strong>, not the URL. Routes without a listener deliver to any connected SDK.
+              </p>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── AI Agent API ─────────────────────────────────────── */}
+          <section
+            id="ai-agent-api"
+            ref={(el) => setSectionRef("ai-agent-api", el)}
+            className="py-16"
+          >
+            <Kicker>AI Agent API</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Pull webhooks via HTTP
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              AI agents and scripts can consume webhooks without holding a WebSocket open.
+              Pull events on demand, long-poll for the next one, or stream via SSE.
+            </p>
+
+            <div className="mb-8">
+              <h3 className="mb-3 text-sm font-medium">Authentication</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                All requests require your API key as a Bearer token:
+              </p>
+              <CopyableCode
+                code={`curl -H "Authorization: Bearer ${project?.api_key ?? PLACEHOLDER_KEY}" \\
+  ${project ? window.location.origin.replace('simplehook.dev', 'hook.simplehook.dev') : 'https://hook.simplehook.dev'}/api/agent/pull`}
+                title="auth"
+              />
+            </div>
+
+            <div className="mb-8">
+              <h3 className="mb-3 text-sm font-medium">Pull events</h3>
+              <p className="mb-3 text-sm text-muted-foreground">
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">GET /api/agent/pull</code> — returns the next events you haven't seen. The server tracks your cursor automatically.
+              </p>
+              <div className="mb-3 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="py-2 pr-4 text-left font-medium">Param</th>
+                      <th className="py-2 pr-4 text-left font-medium">Default</th>
+                      <th className="py-2 text-left font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">n</td>
+                      <td className="py-2 pr-4">1</td>
+                      <td className="py-2">Number of events to return (1-100)</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">path</td>
+                      <td className="py-2 pr-4">—</td>
+                      <td className="py-2">Filter by path glob (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">/stripe/*</code>)</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">listener_id</td>
+                      <td className="py-2 pr-4">default</td>
+                      <td className="py-2">Consumer identity — each has its own cursor</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">wait</td>
+                      <td className="py-2 pr-4">false</td>
+                      <td className="py-2">Long-poll: hold until an event arrives</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">stream</td>
+                      <td className="py-2 pr-4">false</td>
+                      <td className="py-2">SSE: keep connection open, push events</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">timeout</td>
+                      <td className="py-2 pr-4">30</td>
+                      <td className="py-2">Seconds to wait (for wait/stream modes)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <h3 className="mb-3 text-sm font-medium">Three modes</h3>
+              <div className="flex flex-col gap-4">
+                <CopyableCode
+                  code={`# Instant — get what's there now
+curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
+  "https://hook.simplehook.dev/api/agent/pull?n=5"
+
+# Long-poll — block until a Stripe event arrives
+curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
+  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*&timeout=60"
+
+# SSE stream — print events as they arrive
+curl -N -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
+  "https://hook.simplehook.dev/api/agent/pull?stream=true&timeout=300"`}
+                  title="curl"
+                />
+                <CopyableCode
+                  code={`import requests
+
+# Pull next 5 events
+resp = requests.get(
+    "https://hook.simplehook.dev/api/agent/pull",
+    headers={"Authorization": f"Bearer {SIMPLEHOOK_KEY}"},
+    params={"n": 5, "path": "/stripe/*"}
+)
+events = resp.json()["events"]
+for event in events:
+    print(f"{event['method']} {event['path']}: {event['body']}")`}
+                  title="python"
+                />
+                <CopyableCode
+                  code={`// Node.js — wait for next Stripe event
+const res = await fetch(
+  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*",
+  { headers: { Authorization: \`Bearer \${process.env.SIMPLEHOOK_KEY}\` } }
+);
+const { events, remaining } = await res.json();
+console.log(events[0]?.body);`}
+                  title="node.js"
+                />
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <h3 className="mb-3 text-sm font-medium">Queue status</h3>
+              <p className="mb-3 text-sm text-muted-foreground">
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">GET /api/agent/status</code> — queue health, connected listeners, cursor positions, and per-route breakdown.
+              </p>
+              <CopyableCode
+                code={`curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
+  "https://hook.simplehook.dev/api/agent/status"
+
+# Response:
+# {
+#   "queue": { "pending": 12, "failed": 3, "delivered_last_hour": 847 },
+#   "listeners": { "connected": ["default"], "disconnected": ["ci-agent"] },
+#   "cursors": { "default": { "last_event": "evt_043", "behind": 7 } },
+#   "routes": [{ "path": "/stripe/", "mode": "queue", "pending": 8 }]
+# }`}
+                title="status"
+              />
+            </div>
+
+            <div className="rounded-lg border border-border bg-card/50 p-4">
+              <p className="text-sm text-muted-foreground">
+                <strong>One consumer per listener_id.</strong> Only one process can long-poll or stream
+                a given listener_id at a time (instant pulls are always allowed). A second concurrent
+                consumer gets a <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">409 Conflict</code>.
               </p>
             </div>
           </section>

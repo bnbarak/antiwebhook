@@ -476,6 +476,11 @@ export function HomePage() {
                 title: "Listeners",
                 desc: "Run multiple SDKs and route events to specific ones. Same webhook URL, different destinations.",
               },
+              {
+                icon: Clock,
+                title: "AI Agent API",
+                desc: "Pull webhooks via HTTP — instant, long-poll, or SSE stream. Built for AI agents that can't hold WebSockets.",
+              },
             ].map((feature) => (
               <div
                 key={feature.title}

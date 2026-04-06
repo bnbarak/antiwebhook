@@ -145,6 +145,103 @@ Everything else is identical. Your routes, middleware, `req`, `res` — all work
 
 ---
 
+## AI Agent API — Pull webhooks via HTTP
+
+AI agents and scripts can consume webhooks without an SDK or WebSocket. Use the pull API to fetch events on demand.
+
+### curl — pull latest events
+
+```bash
+# Pull next 5 events
+curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \
+  "https://hook.simplehook.dev/api/agent/pull?n=5"
+
+# Wait for next Stripe event (long-poll, blocks up to 60s)
+curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \
+  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*&timeout=60"
+
+# Stream events via SSE
+curl -N -H "Authorization: Bearer $SIMPLEHOOK_KEY" \
+  "https://hook.simplehook.dev/api/agent/pull?stream=true&timeout=300"
+
+# Check queue status
+curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \
+  "https://hook.simplehook.dev/api/agent/status"
+```
+
+### Python — process Stripe events
+
+```python
+import requests
+import os
+
+KEY = os.environ["SIMPLEHOOK_KEY"]
+BASE = "https://hook.simplehook.dev"
+
+# Pull and process events in a loop
+while True:
+    resp = requests.get(
+        f"{BASE}/api/agent/pull",
+        headers={"Authorization": f"Bearer {KEY}"},
+        params={"wait": "true", "path": "/stripe/*", "timeout": 30}
+    )
+    data = resp.json()
+
+    for event in data["events"]:
+        body = json.loads(event["body"])
+        print(f"Stripe event: {body['type']}")
+        handle_stripe_event(body)
+
+    if not data["events"]:
+        print("No events, polling again...")
+```
+
+### Node.js — reactive agent
+
+```javascript
+const SIMPLEHOOK_KEY = process.env.SIMPLEHOOK_KEY;
+
+// Wait for a specific webhook, then act on it
+async function waitForPayment() {
+  const res = await fetch(
+    "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*&timeout=60",
+    { headers: { Authorization: `Bearer ${SIMPLEHOOK_KEY}` } }
+  );
+  const { events } = await res.json();
+
+  if (events.length > 0) {
+    const body = JSON.parse(events[0].body);
+    console.log(`Got ${body.type} — processing...`);
+    return body;
+  }
+  return null;
+}
+```
+
+### Response format
+
+```json
+{
+  "events": [
+    {
+      "id": "evt_abc123",
+      "path": "/stripe/webhook",
+      "method": "POST",
+      "headers": { "stripe-signature": "t=1712..." },
+      "body": "{ \"type\": \"checkout.session.completed\" }",
+      "status": "delivered",
+      "received_at": "2026-04-06T14:02:31Z"
+    }
+  ],
+  "cursor": "evt_abc123",
+  "remaining": 7
+}
+```
+
+Each pull advances your cursor. Use `?listener_id=my-agent` to track separate cursors for different consumers.
+
+---
+
 ## Environment-aware (production vs development)
 
 In production, webhooks hit your server directly. In development, they go through simplehook. One pattern:

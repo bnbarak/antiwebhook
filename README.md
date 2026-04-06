@@ -194,5 +194,27 @@ simplehook/
 | `DELETE` | `/api/routes/:id` | Delete route |
 | `POST` | `/api/billing/checkout` | Create Stripe checkout |
 | `POST` | `/api/billing/portal` | Create Stripe billing portal |
+| `GET` | `/api/listeners` | List listeners |
+| `POST` | `/api/listeners` | Create listener |
+| `DELETE` | `/api/listeners/:id` | Delete listener |
+| `GET` | `/api/agent/pull` | Pull events (instant, `?wait=true`, `?stream=true`) |
+| `GET` | `/api/agent/status` | Queue health, cursors, connected listeners |
 | `POST` | `/hooks/:project_id/*` | Webhook receiver (3rd parties POST here) |
 | `GET` | `/tunnel?key=ak_...` | WebSocket tunnel (SDKs connect here) |
+
+### AI Agent API
+
+AI agents and scripts can consume webhooks via HTTP without holding a WebSocket open.
+
+```bash
+# Pull next event
+curl -H "Authorization: Bearer ak_..." "https://hook.simplehook.dev/api/agent/pull"
+
+# Long-poll — block until a Stripe event arrives
+curl -H "Authorization: Bearer ak_..." "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"
+
+# Check queue status
+curl -H "Authorization: Bearer ak_..." "https://hook.simplehook.dev/api/agent/status"
+```
+
+Three modes: instant (`pull`), long-poll (`pull?wait=true`), SSE stream (`pull?stream=true`). See [docs](https://www.simplehook.dev/docs) for full reference.
