@@ -178,4 +178,46 @@ Use port 8406+. Follow the harness pattern in existing test files (spawn server,
 
 ## Deployment
 
-Server deploys to Fly.io (`fly.toml` + `Dockerfile.fly`). Webapp is static (Vite build → any CDN).
+### Server (Rust → Fly.io)
+
+```bash
+# Deploy from repo root
+flyctl deploy -a simplehook-server
+```
+
+Uses `Dockerfile.fly` (multi-stage: rust:slim builder → debian:bookworm-slim runtime). Config in `fly.toml`. App runs at `hook.simplehook.dev`.
+
+**After deploy, verify:**
+```bash
+curl https://hook.simplehook.dev/health  # should return "ok"
+```
+
+**Known warning:** "The app is not listening on the expected address" — this is a false positive from Fly.io's detection. The app works correctly on port 8400.
+
+**CI/CD:** GitHub Actions (`.github/workflows/ci.yml`) runs on push to main:
+- Rust build + unit tests
+- SDK tests (Express, Fastify, Hono, Flask, Django, FastAPI)
+- Webapp typecheck + build
+- Integration tests (e2e + agent pull)
+
+Fly.io deploys are triggered separately via webhook. If a deploy fails, check the Fly.io Activity tab or run `flyctl logs -a simplehook-server`.
+
+### Webapp (React → static)
+
+```bash
+cd javascript/webapp && npm run build
+```
+
+Output in `dist/`. Deploy to any CDN/static host.
+
+### Production E2E Test
+
+After deploying, run the production test suite:
+
+```bash
+cd tests
+source .env.local  # contains SIMPLEHOOK_KEY, SIMPLEHOOK_PROJECT_ID, SIMPLEHOOK_BASE_URL
+SIMPLEHOOK_KEY=$SIMPLEHOOK_KEY SIMPLEHOOK_PROJECT_ID=$SIMPLEHOOK_PROJECT_ID SIMPLEHOOK_BASE_URL=$SIMPLEHOOK_BASE_URL node --test agent-prod.test.js
+```
+
+11 tests against live production: webhook ingestion, pull, cursor, path filter, wait, timeout, SSE stream, auth, conflict, status.

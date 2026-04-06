@@ -213,6 +213,9 @@ jobs:
       - name: E2E webhook tests
         run: node --test e2e.test.js
         working-directory: tests
+      - name: Agent pull API tests
+        run: node --test agent.test.js
+        working-directory: tests
       # Stress tests disabled — SDK reconnect loops prevent Node from exiting.
       # Run locally: cd tests && node --test stress.test.js
       # Abuse protection tests disabled in CI — sends 100+ requests that
