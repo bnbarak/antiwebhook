@@ -1137,6 +1137,30 @@ console.log(events[0]?.body);`}
                 consumer gets a <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">409 Conflict</code>.
               </p>
             </div>
+
+            <div className="mt-8 rounded-lg border border-border bg-card p-5">
+              <h3 className="mb-2 text-sm font-medium">Claude Code Skill</h3>
+              <p className="mb-3 text-[13px] text-muted-foreground">
+                Install our skill to teach Claude Code the full simplehook API — pull modes,
+                params, response formats, and examples. Your AI agent gets the context it needs
+                without reading docs.
+              </p>
+              <CopyableCode
+                code="claude skills add bnbarak/simplewehbook-skills"
+                title="install"
+              />
+              <p className="mt-3 text-xs text-muted-foreground">
+                Source:{" "}
+                <a
+                  href="https://github.com/bnbarak/simplewehbook-skills"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground transition-colors"
+                >
+                  github.com/bnbarak/simplewehbook-skills
+                </a>
+              </p>
+            </div>
           </section>
 
           </div>{/* END AGENTS GROUP */}

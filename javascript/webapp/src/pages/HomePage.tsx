@@ -607,6 +607,7 @@ export function HomePage() {
                 { icon: Lock, title: "Same auth, same data", desc: "Uses your existing API key. Same events, same routes — just a different access pattern." },
                 { icon: Clock, title: "Conflict detection", desc: "One consumer per listener_id for long-poll/stream. Prevents duplicate processing. 409 if already consumed." },
                 { icon: Zap, title: "SDK + API together", desc: "Developers use the SDK, agents use the pull API. Same project, same webhook URL, different access patterns." },
+                { icon: Terminal, title: "Claude Code Skill", desc: "Install our skill for Claude Code — teaches your AI agent the full pull API. github.com/bnbarak/simplewehbook-skills" },
               ].map((f) => (
                 <div key={f.title} className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
                   <f.icon className="mb-2.5 size-5 text-muted-foreground" />

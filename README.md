@@ -217,4 +217,14 @@ curl -H "Authorization: Bearer ak_..." "https://hook.simplehook.dev/api/agent/pu
 curl -H "Authorization: Bearer ak_..." "https://hook.simplehook.dev/api/agent/status"
 ```
 
-Three modes: instant (`pull`), long-poll (`pull?wait=true`), SSE stream (`pull?stream=true`). See [docs](https://www.simplehook.dev/docs) for full reference.
+Three modes: instant (`pull`), long-poll (`pull?wait=true`), SSE stream (`pull?stream=true`). See [docs](https://www.simplehook.dev/docs?mode=agents) for full reference.
+
+### Claude Code Skill
+
+Teach your AI agent the full simplehook API:
+
+```bash
+claude skills add bnbarak/simplewehbook-skills
+```
+
+Source: [github.com/bnbarak/simplewehbook-skills](https://github.com/bnbarak/simplewehbook-skills)

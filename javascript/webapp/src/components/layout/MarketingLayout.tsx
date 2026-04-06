@@ -1,20 +1,14 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
 import { Webhook } from "lucide-react";
-
-function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
-  return (
-    <a
-      href={to}
-      className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md"
-    >
-      {children}
-    </a>
-  );
-}
 
 export function MarketingLayout() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const isHome = location.pathname === "/";
+  const mode = searchParams.get("mode");
+
+  // Carry ?mode= across nav links
+  const modeQuery = mode ? `?mode=${mode}` : "";
 
   return (
     <div className="min-h-svh bg-background">
@@ -22,7 +16,7 @@ export function MarketingLayout() {
       <nav className="sticky top-0 z-50 border-b border-border bg-card/90 supports-backdrop-filter:backdrop-blur-[20px]">
         <div className="mx-auto flex h-14 max-w-[960px] items-center justify-between px-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to={`/${modeQuery}`} className="flex items-center gap-2.5">
             <img src="/logos/simplehook-mark-dark.svg" alt="simplehook" className="size-7 rounded-md" />
             <span className="font-mono text-sm font-medium tracking-[0.04em]">
               simplehook
@@ -32,11 +26,17 @@ export function MarketingLayout() {
           {/* Nav links */}
           <div className="flex items-center gap-1">
             {!isHome && (
-              <NavLink to="/">Home</NavLink>
+              <a href={`/${modeQuery}#`} className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
+                Home
+              </a>
             )}
-            <NavLink to="/#how-it-works">How it works</NavLink>
-            <NavLink to="/#pricing">Pricing</NavLink>
-            <Link to="/docs" className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
+            <a href={`/${modeQuery}#how-it-works`} className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
+              How it works
+            </a>
+            <a href={`/${modeQuery}#pricing`} className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
+              Pricing
+            </a>
+            <Link to={`/docs${modeQuery}`} className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
               Docs
             </Link>
             <Link
@@ -56,7 +56,7 @@ export function MarketingLayout() {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-[960px] flex-wrap items-center justify-between gap-4 px-6 py-8">
           <div className="flex flex-wrap items-center gap-5">
-            <Link to="/docs" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+            <Link to={`/docs${modeQuery}`} className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Docs
             </Link>
             <Link to="/privacy" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
