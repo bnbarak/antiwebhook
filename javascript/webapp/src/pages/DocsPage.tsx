@@ -519,6 +519,8 @@ export function DocsPage() {
   const handleDocsViewChange = useCallback((v: DocsView) => {
     setDocsView(v);
     setSearchParams(v === "integrations" ? {} : { mode: v }, { replace: true });
+    // Scroll to top of content when switching tabs
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [setSearchParams]);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
