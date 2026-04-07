@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/hooks/use-auth.js";
@@ -51,6 +52,7 @@ function GuestOnly() {
 
 function App() {
   return (
+    <HelmetProvider>
     <TooltipProvider>
       <Toaster position="bottom-right" richColors />
       <BrowserRouter>
@@ -88,6 +90,7 @@ function App() {
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </HelmetProvider>
   );
 }
 

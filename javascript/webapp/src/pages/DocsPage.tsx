@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Copy, Check, KeyRound } from "lucide-react";
 import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
 import { useAuth } from "@/hooks/use-auth.js";
@@ -571,6 +572,14 @@ export function DocsPage() {
 
   return (
     <div>
+      <Helmet>
+        <title>Documentation — simplehook</title>
+        <meta name="description" content="Learn how to receive webhooks locally with one line of code. SDK guides for Express, Fastify, Hono, Flask, FastAPI. AI agent HTTP pull API reference." />
+        <link rel="canonical" href="https://simplehook.dev/docs" />
+        <meta property="og:title" content="Documentation — simplehook" />
+        <meta property="og:description" content="SDK guides for Express, Fastify, Flask, FastAPI. AI agent HTTP pull API reference. Receive webhooks locally with one line of code." />
+        <meta property="og:url" content="https://simplehook.dev/docs" />
+      </Helmet>
       {/* Hero */}
       <section className="px-6 pb-16 pt-20">
         <div className="mx-auto max-w-[960px]">

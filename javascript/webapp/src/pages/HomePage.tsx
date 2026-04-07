@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   ArrowRight,
   Zap,
@@ -320,6 +321,14 @@ export function HomePage() {
 
   return (
     <div>
+      <Helmet>
+        <title>simplehook — Webhooks that just work</title>
+        <meta name="description" content="Stable webhook URLs for localhost. One line of code to receive Stripe, GitHub, Twilio webhooks locally. No ngrok, no CLI, no tunnels. SDKs for Express, Fastify, Flask, FastAPI." />
+        <link rel="canonical" href="https://simplehook.dev/" />
+        <meta property="og:title" content="simplehook — Webhooks that just work" />
+        <meta property="og:description" content="Stable webhook URLs for localhost. One line of code to receive webhooks locally. No ngrok, no CLI, no tunnels." />
+        <meta property="og:url" content="https://simplehook.dev/" />
+      </Helmet>
       {/* ── HERO ── */}
       <section className="px-6 pb-20 pt-24">
         <div className="mx-auto max-w-[960px]">
