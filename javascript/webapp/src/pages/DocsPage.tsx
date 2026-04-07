@@ -157,30 +157,55 @@ async def stripe_webhook(request: Request):
 
 // ── Sidebar sections ─────────────────────────────────────────────────
 
-type DocsGroup = "shared" | "developers" | "agents";
+type DocsView = "integrations" | "agents" | "sdk" | "cli";
 
-const SECTIONS = [
-  // Shared
-  { id: "quick-start", label: "Quick Start", group: "developers" as DocsGroup },
-  { id: "privacy", label: "Privacy & Security", group: "shared" as DocsGroup },
-  { id: "api-reference", label: "API Reference", group: "shared" as DocsGroup },
-  // Developers
-  { id: "configuration", label: "Configuration", group: "developers" as DocsGroup },
-  { id: "agents", label: "Listeners", group: "developers" as DocsGroup },
-  { id: "route-configuration", label: "Route Configuration", group: "developers" as DocsGroup },
-  { id: "websocket-protocol", label: "WebSocket Protocol", group: "developers" as DocsGroup },
-  // AI Agents
-  { id: "ai-agent-api", label: "Pull API", group: "agents" as DocsGroup },
-  { id: "sdk-reference", label: "SDK Reference", group: "agents" as DocsGroup },
-  { id: "cli", label: "CLI", group: "agents" as DocsGroup },
-  { id: "mastra", label: "Mastra", group: "agents" as DocsGroup },
-] as const;
-
-const GROUP_LABELS: Record<DocsGroup, string> = {
-  shared: "Shared",
-  developers: "Developers",
-  agents: "AI Agents (API/Skills)",
+const SECTIONS: Record<DocsView, Array<{ id: string; label: string }>> = {
+  integrations: [
+    { id: "quick-start", label: "Quick Start" },
+    { id: "configuration", label: "Configuration" },
+    { id: "agents", label: "Listeners" },
+    { id: "route-configuration", label: "Route Configuration" },
+    { id: "websocket-protocol", label: "WebSocket Protocol" },
+  ],
+  agents: [
+    { id: "ai-agent-api", label: "Pull API" },
+    { id: "mastra", label: "Mastra" },
+  ],
+  sdk: [
+    { id: "sdk-install", label: "Install" },
+    { id: "sdk-agent", label: "SimplehookAgent" },
+    { id: "sdk-pull", label: "pull()" },
+    { id: "sdk-status", label: "status()" },
+    { id: "sdk-stream", label: "stream()" },
+  ],
+  cli: [
+    { id: "cli-install", label: "Install" },
+    { id: "cli-pull", label: "simplehook pull" },
+    { id: "cli-status", label: "simplehook status" },
+    { id: "cli-env", label: "Environment Variables" },
+  ],
 };
+
+const BOTTOM_SECTIONS = [
+  { id: "privacy", label: "Privacy & Security" },
+  { id: "api-reference", label: "API Reference" },
+];
+
+const VIEW_LABELS: Record<DocsView, string> = {
+  integrations: "Server Integrations",
+  agents: "AI Agents (API/Skills)",
+  sdk: "SDK",
+  cli: "CLI",
+};
+
+// All section IDs for intersection observer
+const ALL_SECTION_IDS = [
+  ...SECTIONS.integrations,
+  ...SECTIONS.agents,
+  ...SECTIONS.sdk,
+  ...SECTIONS.cli,
+  ...BOTTOM_SECTIONS,
+].map((s) => s.id);
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -331,74 +356,74 @@ function BaseUrlCard({ projectId }: { projectId?: string }) {
 
 // ── Sidebar navigation ───────────────────────────────────────────────
 
+function SidebarLink({ id, label, isActive }: { id: string; label: string; isActive: boolean }) {
+  return (
+    <li>
+      <a
+        href={`#${id}`}
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+        }}
+        className={`relative block rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+          isActive
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        }`}
+      >
+        {isActive && (
+          <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r-full bg-primary" />
+        )}
+        {label}
+      </a>
+    </li>
+  );
+}
+
 function DocsSidebar({
   activeId,
   docsView,
   onDocsViewChange,
 }: {
   activeId: string;
-  docsView: DocsGroup;
-  onDocsViewChange: (v: DocsGroup) => void;
+  docsView: DocsView;
+  onDocsViewChange: (v: DocsView) => void;
 }) {
-  // Show: shared sections always, plus the active view's sections
-  const visibleSections = SECTIONS.filter(
-    (s) => s.group === "shared" || s.group === docsView,
-  );
+  const viewSections = SECTIONS[docsView];
 
   return (
     <nav className="hidden lg:block w-[200px] shrink-0">
       <div className="sticky top-[80px] pt-16">
-        {/* View toggle */}
+        {/* 4-tab toggle */}
         <div className="mb-4 flex flex-col gap-0.5 rounded-lg border border-border bg-muted/50 p-1">
-          {(["developers", "agents"] as const).map((v) => (
+          {(["integrations", "agents", "sdk", "cli"] as const).map((v) => (
             <button
               key={v}
               onClick={() => onDocsViewChange(v)}
-              className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+              className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors text-left ${
                 docsView === v
                   ? "bg-card border border-border-strong shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {GROUP_LABELS[v]}
+              {VIEW_LABELS[v]}
             </button>
           ))}
         </div>
 
+        {/* Sub-items for active view */}
         <ul className="flex flex-col gap-0.5">
-          {visibleSections.map(({ id, label, group }, i) => {
-            const isActive = activeId === id;
-            // Show group header when group changes
-            const prevGroup = i > 0 ? visibleSections[i - 1].group : null;
-            const showGroupHeader = group !== prevGroup;
+          {viewSections.map(({ id, label }) => (
+            <SidebarLink key={id} id={id} label={label} isActive={activeId === id} />
+          ))}
 
-            return (
-              <li key={id}>
-                {showGroupHeader && (
-                  <span className="mt-3 mb-1 block px-2.5 font-mono text-[9px] font-medium uppercase tracking-widest text-muted-foreground/50">
-                    {GROUP_LABELS[group]}
-                  </span>
-                )}
-                <a
-                  href={`#${id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className={`relative block rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r-full bg-primary" />
-                  )}
-                  {label}
-                </a>
-              </li>
-            );
-          })}
+          {/* Separator */}
+          <li className="my-2 border-t border-border" />
+
+          {/* Bottom sections (always visible) */}
+          {BOTTOM_SECTIONS.map(({ id, label }) => (
+            <SidebarLink key={id} id={id} label={label} isActive={activeId === id} />
+          ))}
         </ul>
       </div>
     </nav>
@@ -485,14 +510,15 @@ export function DocsPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const modeParam = searchParams.get("mode");
-  const initialView: DocsGroup = modeParam === "agents" ? "agents" : "developers";
+  const validModes: DocsView[] = ["integrations", "agents", "sdk", "cli"];
+  const initialView: DocsView = validModes.includes(modeParam as DocsView) ? (modeParam as DocsView) : "integrations";
 
-  const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
-  const [docsView, setDocsView] = useState<DocsGroup>(initialView);
+  const [activeSection, setActiveSection] = useState<string>(SECTIONS.integrations[0].id);
+  const [docsView, setDocsView] = useState<DocsView>(initialView);
 
-  const handleDocsViewChange = useCallback((v: DocsGroup) => {
+  const handleDocsViewChange = useCallback((v: DocsView) => {
     setDocsView(v);
-    setSearchParams(v === "developers" ? {} : { mode: v }, { replace: true });
+    setSearchParams(v === "integrations" ? {} : { mode: v }, { replace: true });
   }, [setSearchParams]);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -521,7 +547,7 @@ export function DocsPage() {
     const observers: IntersectionObserver[] = [];
     const visibleSections = new Map<string, number>();
 
-    for (const { id } of SECTIONS) {
+    for (const id of ALL_SECTION_IDS) {
       const el = sectionRefs.current.get(id);
       if (!el) continue;
 
@@ -535,7 +561,7 @@ export function DocsPage() {
             }
           }
           // Pick the first visible section in document order
-          for (const { id: sectionId } of SECTIONS) {
+          for (const sectionId of ALL_SECTION_IDS) {
             if (visibleSections.has(sectionId)) {
               setActiveSection(sectionId);
               break;
@@ -633,7 +659,7 @@ export function DocsPage() {
 
         <div className="min-w-0 flex-1 max-w-[960px]">
           {/* ── Quick Start (developers only) ─────────────────────────── */}
-          <div className={docsView === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+          <div className={docsView === "integrations" ? "" : "invisible h-0 overflow-hidden"}>
           <section
             id="quick-start"
             ref={(el) => setSectionRef("quick-start", el)}
@@ -772,7 +798,7 @@ export function DocsPage() {
           <SectionDivider />
 
           {/* ── DEVELOPERS GROUP (visibility toggle) ── */}
-          <div className={docsView === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+          <div className={docsView === "integrations" ? "" : "invisible h-0 overflow-hidden"}>
 
           {/* ── Configuration ───────────────────────────────────────────── */}
           <section
@@ -1175,41 +1201,57 @@ console.log(events[0]?.body);`}
             </div>
           </section>
 
+          </div>{/* END AGENTS GROUP (Pull API + skills link) */}
+
           <SectionDivider />
 
-          {/* ── SDK Reference ─────────────────────────────────────── */}
-          <section
-            id="sdk-reference"
-            ref={(el) => setSectionRef("sdk-reference", el)}
-            className="py-16"
-          >
-            <Kicker>SDK Reference</Kicker>
-            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-              SimplehookAgent — JavaScript SDK
-            </h2>
-            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-              A lightweight client for pulling webhook events via HTTP. Works in Node.js, Deno, Bun — anywhere with <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">fetch</code>.
+          {/* ── SDK GROUP (visibility toggle) ── */}
+          <div className={docsView === "sdk" ? "" : "invisible h-0 overflow-hidden"}>
+
+          {/* ── SDK: Install ── */}
+          <section id="sdk-install" ref={(el) => setSectionRef("sdk-install", el)} className="py-16">
+            <Kicker>SDK</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">Install</h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              A lightweight client for pulling webhook events via HTTP. Works in Node.js, Deno, Bun.
             </p>
+            <CopyableCode code="npm install simplehook-core" title="terminal" />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Or use the Express SDK — it re-exports <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">SimplehookAgent</code>: <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">npm install simplehook</code>
+            </p>
+          </section>
 
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium">Install</h3>
-              <CopyableCode code="npm install simplehook-core" title="terminal" />
-              <p className="mt-2 text-xs text-muted-foreground">
-                Or use the Express SDK — it re-exports <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">SimplehookAgent</code>: <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">npm install simplehook</code>
-              </p>
-            </div>
+          <SectionDivider />
 
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium">Usage</h3>
-              <CopyableCode
-                code={`import { SimplehookAgent } from "simplehook-core";
+          {/* ── SDK: SimplehookAgent ── */}
+          <section id="sdk-agent" ref={(el) => setSectionRef("sdk-agent", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">SimplehookAgent</h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              The main class. Create one instance per project/listener.
+            </p>
+            <CopyableCode
+              code={`import { SimplehookAgent } from "simplehook-core";
 
 const agent = new SimplehookAgent("ak_your_key", {
   serverUrl: "https://hook.simplehook.dev",  // default
   listenerId: "my-agent",                     // cursor ID
-});
+});`}
+              title="agent.ts"
+            />
+          </section>
 
-// Pull next 5 events (instant)
+          <SectionDivider />
+
+          {/* ── SDK: pull() ── */}
+          <section id="sdk-pull" ref={(el) => setSectionRef("sdk-pull", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              <code className="font-mono">pull(opts?)</code>
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              Pull events. Returns immediately by default, or long-polls with <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">wait: true</code>.
+            </p>
+            <CopyableCode
+              code={`// Pull next 5 events (instant)
 const result = await agent.pull({ n: 5 });
 console.log(result.events, result.remaining);
 
@@ -1218,120 +1260,166 @@ const stripe = await agent.pull({
   path: "/stripe/*",
   wait: true,
   timeout: 60,
-});
-
-// Check queue health
-const status = await agent.status();
-console.log(status.queue.pending, "pending");
-
-// Stream events (SSE)
-await agent.stream((event) => {
-  console.log(event.method, event.path, event.body);
-}, { path: "/stripe/*", timeout: 300 });`}
-                title="agent.ts"
-              />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium">API</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="py-2 pr-4 text-left font-medium">Method</th>
-                      <th className="py-2 text-left font-medium">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-muted-foreground">
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 pr-4 font-mono text-[11px]">agent.pull(opts?)</td>
-                      <td className="py-2">Pull events. Options: n, path, wait, timeout, after</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 pr-4 font-mono text-[11px]">agent.status()</td>
-                      <td className="py-2">Queue health, cursors, connected listeners</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 pr-4 font-mono text-[11px]">agent.stream(handler, opts?)</td>
-                      <td className="py-2">SSE stream — calls handler for each event</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+});`}
+              title="pull"
+            />
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-border">
+                  <th className="py-2 pr-4 text-left font-medium">Option</th>
+                  <th className="py-2 pr-4 text-left font-medium">Type</th>
+                  <th className="py-2 text-left font-medium">Description</th>
+                </tr></thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">n</td><td className="py-2 pr-4">number</td><td className="py-2">Events to return (1-100, default: 1)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">path</td><td className="py-2 pr-4">string</td><td className="py-2">Path glob filter (e.g. /stripe/*)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">wait</td><td className="py-2 pr-4">boolean</td><td className="py-2">Long-poll until event arrives</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">timeout</td><td className="py-2 pr-4">number</td><td className="py-2">Seconds for wait mode (1-300)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">after</td><td className="py-2 pr-4">string</td><td className="py-2">Read from event ID without advancing cursor</td></tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
           <SectionDivider />
 
-          {/* ── CLI ─────────────────────────────────────── */}
-          <section
-            id="cli"
-            ref={(el) => setSectionRef("cli", el)}
-            className="py-16"
-          >
-            <Kicker>CLI</Kicker>
+          {/* ── SDK: status() ── */}
+          <section id="sdk-status" ref={(el) => setSectionRef("sdk-status", el)} className="py-16">
             <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
-              simplehook CLI
+              <code className="font-mono">status()</code>
             </h2>
-            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              Queue health — pending counts, cursor positions, connected listeners.
+            </p>
+            <CopyableCode
+              code={`const status = await agent.status();
+console.log(status.queue.pending, "pending");
+console.log(status.listeners.connected);
+console.log(status.cursors);`}
+              title="status"
+            />
+          </section>
+
+          <SectionDivider />
+
+          {/* ── SDK: stream() ── */}
+          <section id="sdk-stream" ref={(el) => setSectionRef("sdk-stream", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              <code className="font-mono">stream(handler, opts?)</code>
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              SSE stream — calls your handler for each event as it arrives.
+            </p>
+            <CopyableCode
+              code={`await agent.stream((event) => {
+  console.log(event.method, event.path, event.body);
+}, { path: "/stripe/*", timeout: 300 });`}
+              title="stream"
+            />
+          </section>
+
+          </div>{/* END SDK GROUP */}
+
+          <SectionDivider />
+
+          {/* ── CLI GROUP (visibility toggle) ── */}
+          <div className={docsView === "cli" ? "" : "invisible h-0 overflow-hidden"}>
+
+          {/* ── CLI: Install ── */}
+          <section id="cli-install" ref={(el) => setSectionRef("cli-install", el)} className="py-16">
+            <Kicker>CLI</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">Install</h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
               Pull events and check status from the terminal. Pipe JSON output to other tools.
             </p>
+            <CopyableCode code="npm install -g simplehook-cli" title="terminal" />
+          </section>
 
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium">Install</h3>
-              <CopyableCode code="npm install -g simplehook-cli" title="terminal" />
-            </div>
+          <SectionDivider />
 
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium">Commands</h3>
-              <CopyableCode
-                code={`# Pull next event (instant)
+          {/* ── CLI: simplehook pull ── */}
+          <section id="cli-pull" ref={(el) => setSectionRef("cli-pull", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              <code className="font-mono">simplehook pull</code>
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              Pull webhook events from the queue. Supports instant, long-poll, and SSE stream modes.
+            </p>
+            <CopyableCode
+              code={`# Pull next event (instant)
 simplehook pull
 
 # Pull 5 Stripe events, wait until they arrive
 simplehook pull -n 5 --path /stripe/* --wait --timeout 60
 
 # Stream events as they arrive
-simplehook pull --stream --path /github/*
-
-# Check queue status
-simplehook status
-
-# Raw JSON output
-simplehook status --json`}
-                title="terminal"
-              />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium">Environment variables</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="py-2 pr-4 text-left font-medium">Variable</th>
-                      <th className="py-2 pr-4 text-left font-medium">Flag</th>
-                      <th className="py-2 text-left font-medium">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-muted-foreground">
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 pr-4 font-mono text-[11px]">SIMPLEHOOK_KEY</td>
-                      <td className="py-2 pr-4 font-mono text-[11px]">--key</td>
-                      <td className="py-2">API key (required)</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-2 pr-4 font-mono text-[11px]">SIMPLEHOOK_SERVER</td>
-                      <td className="py-2 pr-4 font-mono text-[11px]">--server</td>
-                      <td className="py-2">Server URL (default: https://hook.simplehook.dev)</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+simplehook pull --stream --path /github/*`}
+              title="terminal"
+            />
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-border">
+                  <th className="py-2 pr-4 text-left font-medium">Flag</th>
+                  <th className="py-2 text-left font-medium">Description</th>
+                </tr></thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">-n, --n</td><td className="py-2">Number of events (1-100)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">-p, --path</td><td className="py-2">Path glob filter (e.g. /stripe/*)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">-w, --wait</td><td className="py-2">Long-poll until event arrives</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">-s, --stream</td><td className="py-2">SSE stream mode</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">-t, --timeout</td><td className="py-2">Timeout in seconds (default: 30)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">-l, --listener-id</td><td className="py-2">Listener ID for cursor tracking</td></tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
           <SectionDivider />
+
+          {/* ── CLI: simplehook status ── */}
+          <section id="cli-status" ref={(el) => setSectionRef("cli-status", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              <code className="font-mono">simplehook status</code>
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              Show queue health, cursors, and connected listeners.
+            </p>
+            <CopyableCode
+              code={`# Pretty-printed status
+simplehook status
+
+# Raw JSON output (for piping)
+simplehook status --json`}
+              title="terminal"
+            />
+          </section>
+
+          <SectionDivider />
+
+          {/* ── CLI: Environment Variables ── */}
+          <section id="cli-env" ref={(el) => setSectionRef("cli-env", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">Environment Variables</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-border">
+                  <th className="py-2 pr-4 text-left font-medium">Variable</th>
+                  <th className="py-2 pr-4 text-left font-medium">Flag</th>
+                  <th className="py-2 text-left font-medium">Description</th>
+                </tr></thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">SIMPLEHOOK_KEY</td><td className="py-2 pr-4 font-mono text-[11px]">--key</td><td className="py-2">API key (required)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">SIMPLEHOOK_SERVER</td><td className="py-2 pr-4 font-mono text-[11px]">--server</td><td className="py-2">Server URL (default: https://hook.simplehook.dev)</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          </div>{/* END CLI GROUP */}
+
+          <SectionDivider />
+
+          {/* ── AGENTS GROUP continued (Mastra) ── */}
+          <div className={docsView === "agents" ? "" : "invisible h-0 overflow-hidden"}>
 
           {/* ── Mastra ─────────────────────────────────────── */}
           <section
@@ -1482,7 +1570,7 @@ console.log(response.text);`}
           <SectionDivider />
 
           {/* ── DEVELOPERS GROUP continued (route-config + websocket) ── */}
-          <div className={docsView === "developers" ? "" : "invisible h-0 overflow-hidden"}>
+          <div className={docsView === "integrations" ? "" : "invisible h-0 overflow-hidden"}>
 
           {/* ── Route Configuration ─────────────────────────────────────── */}
           <section
