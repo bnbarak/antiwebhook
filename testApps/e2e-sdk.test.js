@@ -385,6 +385,189 @@ describe("e2e-sdk: all SDKs", () => {
     });
   });
 
+  // ── Agent Pull (testApps/agent-pull) ──
+
+  describe("Agent Pull API (testApps/agent-pull)", () => {
+    let agentApp;
+    let projectId;
+    let apiKey;
+
+    before(async () => {
+      const proj = await registerProject("agent-pull-e2e");
+      projectId = proj.project_id;
+      apiKey = proj.api_key;
+
+      agentApp = await startTestApp(
+        "node",
+        [path.join(__dirname, "agent-pull/index.js")],
+        {
+          SIMPLEHOOK_KEY: proj.api_key,
+          SIMPLEHOOK_SERVER: `http://localhost:${SERVER_PORT}`,
+          LISTENER_ID: "agent-e2e",
+        },
+        "[agent] connected",
+      );
+    });
+
+    after(() => {
+      agentApp?.process.kill("SIGTERM");
+    });
+
+    test("agent receives webhook via pull", async () => {
+      await sendWebhook(projectId, "/stripe/events", { type: "charge.succeeded", id: "ch_agent1" });
+      await agentApp.waitForLog("charge.succeeded", 12000);
+      assert.ok(true);
+    });
+
+    test("agent receives github webhook via pull", async () => {
+      await sendWebhook(projectId, "/github/push", { ref: "refs/heads/main" });
+      await agentApp.waitForLog("/github/push", 12000);
+      assert.ok(true);
+    });
+
+    test("status endpoint returns data for this project", async () => {
+      const res = await httpReq(SERVER_PORT, "GET", "/api/agent/status", null);
+      // Need auth header — use raw http
+      const statusRes = await new Promise((resolve, reject) => {
+        const req = http.get(
+          {
+            hostname: "127.0.0.1",
+            port: SERVER_PORT,
+            path: "/api/agent/status",
+            headers: { authorization: `Bearer ${apiKey}` },
+          },
+          (res) => {
+            let d = "";
+            res.on("data", (c) => (d += c));
+            res.on("end", () => resolve({ status: res.statusCode, json: () => JSON.parse(d) }));
+          },
+        );
+        req.on("error", reject);
+        req.end();
+      });
+      assert.strictEqual(statusRes.status, 200);
+      const data = statusRes.json();
+      assert.strictEqual(data.project_id, projectId);
+      assert.ok("pending" in data.queue);
+      assert.ok("cursors" in data);
+    });
+
+    test("instant pull returns events", async () => {
+      // Send a fresh webhook
+      await sendWebhook(projectId, "/test/instant", { mode: "instant" });
+      await sleep(500);
+
+      // Direct pull (not through the testApp loop)
+      const pullRes = await new Promise((resolve, reject) => {
+        const req = http.get(
+          {
+            hostname: "127.0.0.1",
+            port: SERVER_PORT,
+            path: "/api/agent/pull?n=10&listener_id=instant-test",
+            headers: { authorization: `Bearer ${apiKey}` },
+          },
+          (res) => {
+            let d = "";
+            res.on("data", (c) => (d += c));
+            res.on("end", () => resolve({ status: res.statusCode, json: () => JSON.parse(d) }));
+          },
+        );
+        req.on("error", reject);
+        req.end();
+      });
+      assert.strictEqual(pullRes.status, 200);
+      const data = pullRes.json();
+      assert.ok(data.events.length >= 1, "expected at least 1 event");
+      assert.ok(data.cursor, "expected cursor");
+      assert.ok(typeof data.remaining === "number");
+    });
+
+    test("path filter returns only matching events", async () => {
+      // Send to two paths
+      await sendWebhook(projectId, "/stripe/filter-test", { type: "stripe.test" });
+      await sendWebhook(projectId, "/github/filter-test", { type: "github.test" });
+      await sleep(500);
+
+      const pullRes = await new Promise((resolve, reject) => {
+        const req = http.get(
+          {
+            hostname: "127.0.0.1",
+            port: SERVER_PORT,
+            path: `/api/agent/pull?n=10&listener_id=filter-test&path=/stripe/*`,
+            headers: { authorization: `Bearer ${apiKey}` },
+          },
+          (res) => {
+            let d = "";
+            res.on("data", (c) => (d += c));
+            res.on("end", () => resolve({ status: res.statusCode, json: () => JSON.parse(d) }));
+          },
+        );
+        req.on("error", reject);
+        req.end();
+      });
+      const data = pullRes.json();
+      assert.ok(data.events.length >= 1);
+      assert.ok(data.events.every((e) => e.path.startsWith("/stripe/")));
+    });
+  });
+
+  // ── SDK + Agent on same project ──
+
+  describe("SDK + Agent coexistence", () => {
+    let sdkApp;
+    let projectId;
+    let apiKey;
+
+    before(async () => {
+      const proj = await registerProject("combo-e2e");
+      projectId = proj.project_id;
+      apiKey = proj.api_key;
+
+      // Start Express SDK app
+      sdkApp = await startTestApp("node", [path.join(__dirname, "express/index.js")], {
+        SIMPLEHOOK_KEY: proj.api_key,
+        SIMPLEHOOK_URL: `ws://localhost:${SERVER_PORT}`,
+        PORT: "3091",
+      });
+    });
+
+    after(() => {
+      sdkApp?.process.kill("SIGTERM");
+    });
+
+    test("SDK receives webhook AND agent can pull same events", async () => {
+      // Send webhook — SDK will receive it via WebSocket
+      await sendWebhook(projectId, "/stripe/events", { type: "combo.test", id: "ch_combo" });
+
+      // SDK should get it
+      await sdkApp.waitForLog("[stripe] combo.test");
+
+      // Agent should also be able to pull it (different cursor)
+      await sleep(500);
+      const pullRes = await new Promise((resolve, reject) => {
+        const req = http.get(
+          {
+            hostname: "127.0.0.1",
+            port: SERVER_PORT,
+            path: "/api/agent/pull?n=10&listener_id=combo-agent",
+            headers: { authorization: `Bearer ${apiKey}` },
+          },
+          (res) => {
+            let d = "";
+            res.on("data", (c) => (d += c));
+            res.on("end", () => resolve({ status: res.statusCode, json: () => JSON.parse(d) }));
+          },
+        );
+        req.on("error", reject);
+        req.end();
+      });
+      assert.strictEqual(pullRes.status, 200);
+      const data = pullRes.json();
+      assert.ok(data.events.length >= 1, "agent should see the same event");
+      assert.ok(data.events.some((e) => e.body && e.body.includes("combo.test")));
+    });
+  });
+
   // ── Go SDK ──
 
   describe("Go SDK (testApps/go)", () => {
