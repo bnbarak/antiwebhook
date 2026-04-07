@@ -13,6 +13,8 @@ import { isExplicitlyDisabled, isProduction } from "simplehook-core";
 
 export type { Connection, ListenOptions, RequestFrame, ResponseFrame };
 export type { App } from "./types.js";
+export { SimplehookAgent } from "simplehook-core";
+export type { WebhookEvent, PullResult, PullOptions, StatusResult, AgentOptions } from "simplehook-core";
 
 import type { App } from "./types.js";
 

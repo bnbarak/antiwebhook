@@ -171,6 +171,9 @@ const SECTIONS = [
   { id: "websocket-protocol", label: "WebSocket Protocol", group: "developers" as DocsGroup },
   // AI Agents
   { id: "ai-agent-api", label: "Pull API", group: "agents" as DocsGroup },
+  { id: "sdk-reference", label: "SDK Reference", group: "agents" as DocsGroup },
+  { id: "cli", label: "CLI", group: "agents" as DocsGroup },
+  { id: "mastra", label: "Mastra", group: "agents" as DocsGroup },
 ] as const;
 
 const GROUP_LABELS: Record<DocsGroup, string> = {
@@ -1167,6 +1170,243 @@ console.log(events[0]?.body);`}
                   className="underline underline-offset-2 hover:text-foreground transition-colors"
                 >
                   github.com/bnbarak/simplewehbook-skills
+                </a>
+              </p>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── SDK Reference ─────────────────────────────────────── */}
+          <section
+            id="sdk-reference"
+            ref={(el) => setSectionRef("sdk-reference", el)}
+            className="py-16"
+          >
+            <Kicker>SDK Reference</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              SimplehookAgent — JavaScript SDK
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              A lightweight client for pulling webhook events via HTTP. Works in Node.js, Deno, Bun — anywhere with <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">fetch</code>.
+            </p>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Install</h3>
+              <CopyableCode code="npm install simplehook-core" title="terminal" />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Or use the Express SDK — it re-exports <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">SimplehookAgent</code>: <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">npm install simplehook</code>
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Usage</h3>
+              <CopyableCode
+                code={`import { SimplehookAgent } from "simplehook-core";
+
+const agent = new SimplehookAgent("ak_your_key", {
+  serverUrl: "https://hook.simplehook.dev",  // default
+  listenerId: "my-agent",                     // cursor ID
+});
+
+// Pull next 5 events (instant)
+const result = await agent.pull({ n: 5 });
+console.log(result.events, result.remaining);
+
+// Wait for next Stripe event (long-poll)
+const stripe = await agent.pull({
+  path: "/stripe/*",
+  wait: true,
+  timeout: 60,
+});
+
+// Check queue health
+const status = await agent.status();
+console.log(status.queue.pending, "pending");
+
+// Stream events (SSE)
+await agent.stream((event) => {
+  console.log(event.method, event.path, event.body);
+}, { path: "/stripe/*", timeout: 300 });`}
+                title="agent.ts"
+              />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">API</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="py-2 pr-4 text-left font-medium">Method</th>
+                      <th className="py-2 text-left font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">agent.pull(opts?)</td>
+                      <td className="py-2">Pull events. Options: n, path, wait, timeout, after</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">agent.status()</td>
+                      <td className="py-2">Queue health, cursors, connected listeners</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">agent.stream(handler, opts?)</td>
+                      <td className="py-2">SSE stream — calls handler for each event</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── CLI ─────────────────────────────────────── */}
+          <section
+            id="cli"
+            ref={(el) => setSectionRef("cli", el)}
+            className="py-16"
+          >
+            <Kicker>CLI</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              simplehook CLI
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Pull events and check status from the terminal. Pipe JSON output to other tools.
+            </p>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Install</h3>
+              <CopyableCode code="npm install -g simplehook-cli" title="terminal" />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Commands</h3>
+              <CopyableCode
+                code={`# Pull next event (instant)
+simplehook pull
+
+# Pull 5 Stripe events, wait until they arrive
+simplehook pull -n 5 --path /stripe/* --wait --timeout 60
+
+# Stream events as they arrive
+simplehook pull --stream --path /github/*
+
+# Check queue status
+simplehook status
+
+# Raw JSON output
+simplehook status --json`}
+                title="terminal"
+              />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Environment variables</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="py-2 pr-4 text-left font-medium">Variable</th>
+                      <th className="py-2 pr-4 text-left font-medium">Flag</th>
+                      <th className="py-2 text-left font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">SIMPLEHOOK_KEY</td>
+                      <td className="py-2 pr-4 font-mono text-[11px]">--key</td>
+                      <td className="py-2">API key (required)</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">SIMPLEHOOK_SERVER</td>
+                      <td className="py-2 pr-4 font-mono text-[11px]">--server</td>
+                      <td className="py-2">Server URL (default: https://hook.simplehook.dev)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── Mastra ─────────────────────────────────────── */}
+          <section
+            id="mastra"
+            ref={(el) => setSectionRef("mastra", el)}
+            className="py-16"
+          >
+            <Kicker>Mastra</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Mastra integration
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Give your Mastra AI agent the ability to pull webhook events.
+              Two tools: <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">simplehook_pull</code> and <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">simplehook_status</code>.
+            </p>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Install</h3>
+              <CopyableCode code="npm install simplehook-mastra @mastra/core zod" title="terminal" />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Quick start</h3>
+              <CopyableCode
+                code={`import { Agent } from "@mastra/core/agent";
+import { createSimplehookTools } from "simplehook-mastra";
+
+const tools = createSimplehookTools({
+  apiKey: process.env.SIMPLEHOOK_KEY,
+});
+
+const agent = new Agent({
+  name: "webhook-processor",
+  instructions: "Pull Stripe events and summarize what happened.",
+  model: { provider: "OPEN_AI", name: "gpt-4o" },
+  tools,
+});
+
+const response = await agent.generate(
+  "Check for new Stripe events on /stripe/* path"
+);
+console.log(response.text);`}
+                title="agent.ts"
+              />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Tools</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="py-2 pr-4 text-left font-medium">Tool</th>
+                      <th className="py-2 text-left font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">simplehook_pull</td>
+                      <td className="py-2">Pull webhook events — supports n, path, wait, timeout params</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-mono text-[11px]">simplehook_status</td>
+                      <td className="py-2">Queue health, cursor positions, connected listeners</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card/50 p-4">
+              <p className="text-sm text-muted-foreground">
+                Full step-by-step guide:{" "}
+                <a href="/examples/mastra" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                  Build a Stripe webhook agent with Mastra
                 </a>
               </p>
             </div>
