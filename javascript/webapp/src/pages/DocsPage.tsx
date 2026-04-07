@@ -586,6 +586,10 @@ export function DocsPage() {
           for (const sectionId of ALL_SECTION_IDS) {
             if (visibleSections.has(sectionId)) {
               setActiveSection(sectionId);
+              // Update URL hash as user scrolls
+              if (window.location.hash !== `#${sectionId}`) {
+                history.replaceState(null, "", `#${sectionId}`);
+              }
               break;
             }
           }
