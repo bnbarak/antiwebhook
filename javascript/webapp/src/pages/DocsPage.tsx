@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Copy, Check, KeyRound } from "lucide-react";
 import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
@@ -363,7 +363,13 @@ function SidebarLink({ id, label, isActive }: { id: string; label: string; isAct
         href={`#${id}`}
         onClick={(e) => {
           e.preventDefault();
-          document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+          const el = document.getElementById(id);
+          if (el) {
+            const top = el.getBoundingClientRect().top + window.scrollY - 80; // 80px for sticky nav
+            window.scrollTo({ top, behavior: "smooth" });
+          }
+          // Update URL hash for refresh
+          history.replaceState(null, "", `#${id}`);
         }}
         className={`relative block rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
           isActive
@@ -543,6 +549,20 @@ export function DocsPage() {
         .catch(() => {});
     }
   }, [session]);
+
+  // On mount: scroll to hash if present (with nav offset)
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setTimeout(() => {
+        const el = document.getElementById(hash);
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      }, 100); // small delay for DOM to render
+    }
+  }, []);
 
   // IntersectionObserver for active section tracking
   useEffect(() => {
