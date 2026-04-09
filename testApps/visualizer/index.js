@@ -115,7 +115,17 @@ function center(str, len) {
   return " ".repeat(Math.max(0, left)) + str + " ".repeat(Math.max(0, right));
 }
 
-function render() {
+// Debounced render — batch rapid updates into a single frame
+let renderTimer = null;
+function scheduleRender() {
+  if (renderTimer) return; // already scheduled
+  renderTimer = setTimeout(() => {
+    renderTimer = null;
+    renderNow();
+  }, 50); // 20fps max
+}
+
+function renderNow() {
   const rows = process.stdout.rows || 40;
   const cols = process.stdout.columns || 100;
   const bar = chalk.dim("━".repeat(Math.min(cols - 4, 96)));
@@ -192,7 +202,7 @@ function addEvent(provider, req, status = 200) {
     bodyPreview: formatBody(provider, req.url, req.body),
   });
 
-  render();
+  scheduleRender();
 }
 
 // ── Routes ───────────────────────────────────────────────────────────
@@ -245,7 +255,7 @@ const connection = listenToWebhooks(app, key, listenerId, {
 
 const port = process.env.PORT || 3099;
 app.listen(port, () => {
-  render(); // Initial render with empty table
+  renderNow(); // Initial render with empty table
 });
 
 process.on("SIGINT", () => {

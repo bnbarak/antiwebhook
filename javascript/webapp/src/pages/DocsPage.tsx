@@ -1074,8 +1074,11 @@ listenToWebhooks(app)`}
                 All requests require your API key as a Bearer token:
               </p>
               <CopyableCode
-                code={`curl -H "Authorization: Bearer ${project?.api_key ?? PLACEHOLDER_KEY}" \\
-  ${project ? window.location.origin.replace('simplehook.dev', 'hook.simplehook.dev') : 'https://hook.simplehook.dev'}/api/agent/pull`}
+                code={`# Set your API key (from dashboard)
+export SIMPLEHOOK_KEY=${project?.api_key ?? PLACEHOLDER_KEY}
+
+# Pull the next event
+npx @simplehook/cli pull`}
                 title="auth"
               />
             </div>
@@ -1135,17 +1138,14 @@ listenToWebhooks(app)`}
               <div className="flex flex-col gap-4">
                 <CopyableCode
                   code={`# Instant — get what's there now
-curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
-  "https://hook.simplehook.dev/api/agent/pull?n=5"
+npx @simplehook/cli pull -n 5
 
 # Long-poll — block until a Stripe event arrives
-curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
-  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*&timeout=60"
+npx @simplehook/cli pull --wait --path "/stripe/*" --timeout 60
 
 # SSE stream — print events as they arrive
-curl -N -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
-  "https://hook.simplehook.dev/api/agent/pull?stream=true&timeout=300"`}
-                  title="curl"
+npx @simplehook/cli pull --stream --timeout 300`}
+                  title="CLI"
                 />
                 <CopyableCode
                   code={`import requests
@@ -1180,8 +1180,10 @@ console.log(events[0]?.body);`}
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">GET /api/agent/status</code> — queue health, connected listeners, cursor positions, and per-route breakdown.
               </p>
               <CopyableCode
-                code={`curl -H "Authorization: Bearer $SIMPLEHOOK_KEY" \\
-  "https://hook.simplehook.dev/api/agent/status"
+                code={`npx @simplehook/cli status
+
+# Or as JSON:
+npx @simplehook/cli status --json
 
 # Response:
 # {
@@ -1931,8 +1933,12 @@ console.log(response.text);`}
             <div className="mt-6">
               <h3 className="mb-3 text-sm font-medium">Authentication</h3>
               <CopyableCode
-                code={`curl -H "Authorization: Bearer ${displayKey}" \\
-  https://hook.simplehook.dev/api/events`}
+                code={`# Using CLI
+npx @simplehook/cli pull -n 10
+
+# Using curl
+# curl -H "Authorization: Bearer ${displayKey}" \\
+#   https://hook.simplehook.dev/api/events`}
                 title="Example request"
               />
             </div>
