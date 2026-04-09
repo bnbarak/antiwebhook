@@ -1,22 +1,12 @@
-# simplehook / @simplehook/express
+# @simplehook/express
 
-**One line of code. Webhooks just work.**
-
-Stop tunneling. Stop polling. Stop using ngrok. One line of code to solve webhooks. Add one SDK call and your local app receives real webhooks from Stripe, GitHub, Twilio — any provider.
+One line of code to receive webhooks locally in Express. No tunnels, no CLI, no ngrok.
 
 ```typescript
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 ```
 
-Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev). When a webhook arrives at your stable URL, it's forwarded through the connection to your local server. Your response goes back to the caller. No CLI. No tunnel process. No URL that changes every session.
-
-## Why simplehook?
-
-- **No CLI** — just `npm install` and one function call
-- **Permanent URLs** — set once in Stripe/GitHub, never change them
-- **Real responses** — passthrough mode returns your actual response to the caller (TwiML, verification, etc.)
-- **Queue + retry** — if your app is offline, events queue and deliver when you reconnect
-- **Dev mode by default** — only connects in development, never in production
+Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev). When a webhook arrives at your stable URL, it's forwarded to your local Express server. Your response goes back to the caller. Set your webhook URL once in Stripe/GitHub/Twilio and never change it.
 
 ## Install
 
@@ -24,7 +14,7 @@ Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev)
 npm install @simplehook/express
 ```
 
-## Quick start
+## Quick Start
 
 ```typescript
 import express from "express";
@@ -43,41 +33,52 @@ app.post("/stripe/events", (req, res) => {
 app.listen(3000);
 ```
 
-## Options
+## API
+
+### `listenToWebhooks(app, apiKey, options?): Connection`
+
+Connects your Express app to simplehook and returns a `Connection` handle.
 
 ```typescript
-listenToWebhooks(app, apiKey, {
+const conn = listenToWebhooks(app, apiKey, {
   forceEnable: false,     // Connect even in production
   serverUrl: "...",       // Override server URL
   onConnect: () => {},    // Called when connected
   onDisconnect: () => {}, // Called when disconnected
   silent: false,          // Suppress console output
 });
+
+// Later: conn.close();
 ```
 
-## Agents
+### `listenToWebhooks(app, apiKey, listenerId, options?)`
 
-Use agents to run multiple SDK instances and route events to specific ones. Create agents in the dashboard, then assign them to routes.
+Pass a listener ID to route events to a specific SDK instance. Create listeners in the [dashboard](https://simplehook.dev/dashboard).
 
 ```typescript
-// This instance only receives events from routes assigned to "staging"
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "staging");
 ```
 
-Your webhook URL stays the same — event routing is configured in the dashboard, not the URL.
+### `SimplehookAgent`
 
-## Dev mode
+Re-exported from `@simplehook/core` for convenience. Use it to pull webhook events via HTTP in scripts, CLIs, or AI agents.
 
-By default, simplehook only connects in development. Set `SIMPLEHOOK_ENABLED=false` to disable, or `forceEnable: true` to force.
+```typescript
+import { SimplehookAgent } from "@simplehook/express";
 
-Production is detected when `NODE_ENV === "production"`.
+const agent = new SimplehookAgent(process.env.SIMPLEHOOK_KEY);
+const { events } = await agent.pull();
+```
+
+## Dev Mode
+
+By default, simplehook only connects in development (`NODE_ENV !== "production"`). Use `forceEnable: true` to override, or set `SIMPLEHOOK_ENABLED=false` to disable explicitly.
 
 ## Links
 
+- [Documentation](https://simplehook.dev/docs)
+- [Dashboard](https://simplehook.dev/dashboard)
 - [GitHub](https://github.com/bnbarak/antiwebhook)
-
-- [Documentation](https://www.simplehook.dev/docs)
-- [Dashboard](https://www.simplehook.dev/dashboard)
 
 ## License
 
