@@ -11,6 +11,7 @@
 import express from "express";
 import { listenToWebhooks } from "@simplehook/express";
 import chalk from "chalk";
+import logUpdate from "log-update";
 
 const app = express();
 app.use(express.json());
@@ -137,7 +138,7 @@ function renderNow() {
   const elapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
   const rps = elapsed > 0 ? (events.length / elapsed).toFixed(1) : "0.0";
 
-  let output = "\x1b[2J\x1b[H"; // clear screen + move cursor to top
+  let output = "";
 
   // Header
   output += "\n";
@@ -177,7 +178,7 @@ function renderNow() {
   output += `  ${bar}\n`;
   output += `  ${chalk.dim("↑")} ${chalk.bold(String(events.length))} received ${chalk.dim("|")} ${chalk.green("✓")} ${successCount} ok ${chalk.dim("|")} ${chalk.red("✗")} ${failCount} failed ${chalk.dim("|")} ${chalk.yellow(rps)} req/s\n`;
 
-  process.stdout.write(output);
+  logUpdate(output);
 }
 
 // ── Event handler ────────────────────────────────────────────────────
