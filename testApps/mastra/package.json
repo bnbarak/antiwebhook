@@ -5,8 +5,8 @@
   "type": "module",
   "dependencies": {
     "@mastra/core": "^0.10.0",
-    "simplehook-core": "^0.2.0",
-    "simplehook-mastra": "^0.1.0",
+    "@simplehook/core": "^0.2.0",
+    "@simplehook/mastra": "^0.1.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {

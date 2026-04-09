@@ -65,7 +65,7 @@ Single Rust binary that handles everything:
 Tiny library that the developer adds to their app. For Node.js/Express:
 
 ```javascript
-// simplehook npm package — ~100 lines of code
+// @simplehook/express npm package — ~100 lines of code
 const WebSocket = require('ws');
 
 function listenToWebhooks(app, apiKey, opts = {}) {
@@ -220,7 +220,7 @@ Put behind Caddy for TLS. SQLite file on disk. Back up with cron.
 | Deliverable | What |
 |-------------|------|
 | `simplehook-server` | Rust binary — the cloud service |
-| `simplehook` npm package | Node.js SDK (~100 lines) |
+| `@simplehook/express` npm package | Node.js SDK (~100 lines) |
 | Dashboard | Built into the server (maud HTML) |
 | Landing page | Static HTML at simplehook.dev |
 

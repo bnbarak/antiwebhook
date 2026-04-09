@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { listenToWebhooks } from "simplehook-hono";
+import { listenToWebhooks } from "@simplehook/hono";
 
 const app = new Hono();
 

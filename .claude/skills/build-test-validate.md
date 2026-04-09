@@ -135,7 +135,7 @@ server/src/
 
 javascript/webapp/    # React (Vite) dashboard
 tests/                # Integration tests (Node.js)
-javascript/sdk/       # Express SDK
+javascript/sdk/       # @simplehook/* SDKs (core, express, fastify, hono, cli, mastra)
 python/               # Flask/FastAPI/Django SDKs
 go/                   # Go SDK
 ```

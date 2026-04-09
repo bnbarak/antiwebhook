@@ -1,4 +1,4 @@
-# simplehook / simplehook-hono
+# simplehook / @simplehook/hono
 
 **One line of code. Webhooks just work.**
 
@@ -21,14 +21,14 @@ Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev)
 ## Install
 
 ```bash
-npm install simplehook-hono
+npm install @simplehook/hono
 ```
 
 ## Quick start
 
 ```typescript
 import { Hono } from "hono";
-import { listenToWebhooks } from "simplehook-hono";
+import { listenToWebhooks } from "@simplehook/hono";
 
 const app = new Hono();
 

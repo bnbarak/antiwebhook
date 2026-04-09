@@ -35,7 +35,7 @@ AI agents pull webhooks via simple HTTP — instant poll, long-poll, or SSE stre
 
 ## SDKs
 
-- Node.js: `npm install simplehook` (Express), `npm install simplehook-fastify` (Fastify)
+- Node.js: `npm install @simplehook/express` (Express), `npm install @simplehook/fastify` (Fastify)
 - Python: `pip install simplehook-flask` (Flask), `pip install simplehook-fastapi` (FastAPI)
 - Go: `go get github.com/bnbarak/antiwebhook/go`
 
@@ -45,7 +45,7 @@ AI agents pull webhooks via simple HTTP — instant poll, long-poll, or SSE stre
 - Documentation: https://simplehook.dev/docs
 - Agent docs: https://simplehook.dev/docs?mode=agents
 - GitHub: https://github.com/bnbarak/antiwebhook
-- npm: https://www.npmjs.com/package/simplehook
+- npm: https://www.npmjs.com/package/@simplehook/express
 
 ## Pricing
 

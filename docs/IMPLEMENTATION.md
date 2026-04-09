@@ -271,7 +271,7 @@ exports.listenToWebhooks = function listenToWebhooks(app, apiKey) {
 
 ```json
 {
-  "name": "simplehook",
+  "name": "@simplehook/express",
   "version": "0.1.0",
   "description": "Stable webhook URLs for localhost. One line of code.",
   "main": "index.js",

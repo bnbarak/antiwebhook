@@ -4,7 +4,7 @@
 
 ```javascript
 const express = require('express');
-const simplehook = require('simplehook');
+const simplehook = require('@simplehook/express');
 
 const app = express();
 
@@ -47,7 +47,7 @@ This is the killer feature. Twilio needs your XML response back. We make it work
 
 ```javascript
 const express = require('express');
-const simplehook = require('simplehook');
+const simplehook = require('@simplehook/express');
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -101,7 +101,7 @@ Status Callback: https://hooks.simplehook.dev/p_8f3k2n/twilio/status
 
 ```javascript
 const express = require('express');
-const simplehook = require('simplehook');
+const simplehook = require('@simplehook/express');
 
 const app = express();
 app.use(express.json());
@@ -130,7 +130,7 @@ Everything else is identical. Your routes, middleware, `req`, `res` — all work
 
 ```diff
   const express = require('express');
-+ const simplehook = require('simplehook');
++ const simplehook = require('@simplehook/express');
 
   const app = express();
 
@@ -248,7 +248,7 @@ In production, webhooks hit your server directly. In development, they go throug
 
 ```javascript
 if (process.env.NODE_ENV !== 'production') {
-  require('simplehook').listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
+  require('@simplehook/express').listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
 }
 ```
 
@@ -280,7 +280,7 @@ Same concept. Same WebSocket protocol. ~100 lines of Python SDK.
 ## The developer experience
 
 **Day 1 (setup)**:
-1. `npm install simplehook` (10 seconds)
+1. `npm install @simplehook/express` (10 seconds)
 2. Add `simplehook.listenToWebhooks(app, key)` to your app (10 seconds)
 3. Set webhook URLs in Stripe/Twilio/GitHub (2 minutes)
 

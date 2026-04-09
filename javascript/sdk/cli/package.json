@@ -1,5 +1,5 @@
 {
-  "name": "simplehook-cli",
+  "name": "@simplehook/cli",
   "version": "0.1.0",
   "description": "CLI for simplehook — pull webhook events, check queue status.",
   "type": "module",
@@ -12,7 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "simplehook-core": "^0.2.0",
+    "@simplehook/core": "^0.2.0",
     "commander": "^13.0.0"
   },
   "devDependencies": {

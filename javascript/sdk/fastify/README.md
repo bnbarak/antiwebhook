@@ -1,4 +1,4 @@
-# simplehook / simplehook-fastify
+# simplehook / @simplehook/fastify
 
 **One line of code. Webhooks just work.**
 
@@ -21,14 +21,14 @@ Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev)
 ## Install
 
 ```bash
-npm install simplehook-fastify
+npm install @simplehook/fastify
 ```
 
 ## Quick start
 
 ```typescript
 import Fastify from "fastify";
-import { listenToWebhooks } from "simplehook-fastify";
+import { listenToWebhooks } from "@simplehook/fastify";
 
 const app = Fastify();
 

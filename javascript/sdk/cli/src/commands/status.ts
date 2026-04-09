@@ -1,4 +1,4 @@
-import { SimplehookAgent } from "simplehook-core";
+import { SimplehookAgent } from "@simplehook/core";
 
 export interface StatusFlags {
   key: string;

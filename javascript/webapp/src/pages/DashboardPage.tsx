@@ -70,14 +70,14 @@ const LANGUAGES: Language[] = [
     id: "node",
     name: "Node.js",
     icon: "node",
-    install: "npm install simplehook",
+    install: "npm install @simplehook/express",
     frameworks: [
       {
         id: "express",
         name: "Express",
         available: true,
         snippet: (key, agent) => `import express from "express";
-import { listenToWebhooks } from "simplehook";
+import { listenToWebhooks } from "@simplehook/express";
 
 const app = express();
 app.use(express.json());
@@ -96,7 +96,7 @@ app.listen(3000);`,
         name: "Fastify",
         available: true,
         snippet: (key, agent) => `import Fastify from "fastify";
-import { listenToWebhooks } from "simplehook-fastify";
+import { listenToWebhooks } from "@simplehook/fastify";
 
 const app = Fastify();
 listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""});
@@ -113,7 +113,7 @@ app.listen({ port: 3000 });`,
         name: "Hono",
         available: true,
         snippet: (key, agent) => `import { Hono } from "hono";
-import { listenToWebhooks } from "simplehook-hono";
+import { listenToWebhooks } from "@simplehook/hono";
 
 const app = new Hono();
 listenToWebhooks(app, "${key}"${agent ? `, "${agent}"` : ""});

@@ -107,5 +107,5 @@ let _conn = listen_to_webhooks(dispatch, api_key, ListenOptions {
 
 - [simplehook.dev](https://simplehook.dev)
 - [Dashboard](https://simplehook.dev/dashboard)
-- [JavaScript SDK](https://www.npmjs.com/package/simplehook)
+- [JavaScript SDK](https://www.npmjs.com/package/@simplehook/express)
 - [Go SDK](https://github.com/bnbarak/antiwebhook/tree/main/go)

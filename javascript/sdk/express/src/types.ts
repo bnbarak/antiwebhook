@@ -6,7 +6,7 @@ export type {
   ListenOptions,
   Connection,
   DispatchFn,
-} from "simplehook-core";
+} from "@simplehook/core";
 
 export interface App {
   handle(req: unknown, res: unknown): void;

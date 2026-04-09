@@ -2,19 +2,19 @@ import http from "node:http";
 import {
   createClient,
   sanitizeHeaders,
-} from "simplehook-core";
+} from "@simplehook/core";
 import type {
   Connection,
   ListenOptions,
   RequestFrame,
   ResponseFrame,
-} from "simplehook-core";
-import { isExplicitlyDisabled, isProduction } from "simplehook-core";
+} from "@simplehook/core";
+import { isExplicitlyDisabled, isProduction } from "@simplehook/core";
 
 export type { Connection, ListenOptions, RequestFrame, ResponseFrame };
 export type { App } from "./types.js";
-export { SimplehookAgent } from "simplehook-core";
-export type { WebhookEvent, PullResult, PullOptions, StatusResult, AgentOptions } from "simplehook-core";
+export { SimplehookAgent } from "@simplehook/core";
+export type { WebhookEvent, PullResult, PullOptions, StatusResult, AgentOptions } from "@simplehook/core";
 
 import type { App } from "./types.js";
 

@@ -6,7 +6,7 @@
 const app = express();
 
 // This one line replaces ngrok, Hookdeck, and everything else
-require('simplehook').listenToWebhooks(app, 'ak_x7f2k9m3p4...');
+require('@simplehook/express').listenToWebhooks(app, 'ak_x7f2k9m3p4...');
 
 app.post('/stripe/webhook', (req, res) => {
   // This runs on your laptop. Stripe thinks it's talking to a real server.
@@ -39,7 +39,7 @@ Stripe/Twilio/GitHub
 
 Your app opens a WebSocket TO us (outbound — works through NAT, firewalls, corporate VPNs, everything). We forward webhooks through that connection. We return your app's real response back to the caller.
 
-**No CLI. No tunnel process. No port forwarding. Just `npm install simplehook`.**
+**No CLI. No tunnel process. No port forwarding. Just `npm install @simplehook/express`.**
 
 ---
 
@@ -60,11 +60,11 @@ Set these in Stripe/Twilio/GitHub **once**. Never change them.
 ### 3. Add one line to your app
 
 ```bash
-npm install simplehook
+npm install @simplehook/express
 ```
 
 ```javascript
-require('simplehook').listenToWebhooks(app, 'ak_x7f2k9m3p4...');
+require('@simplehook/express').listenToWebhooks(app, 'ak_x7f2k9m3p4...');
 ```
 
 ### 4. Start your app normally

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   ArrowRight,
@@ -30,7 +30,7 @@ function SectionDivider() {
 
 const HERO_SDKS = [
   { id: "express", name: "Express", file: "app.ts", code: `import express from "express";
-import { listenToWebhooks } from "simplehook";
+import { listenToWebhooks } from "@simplehook/express";
 
 const app = express();
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
@@ -40,7 +40,7 @@ app.post("/stripe/events", (req, res) => {
   res.json({ received: true });
 });` },
   { id: "fastify", name: "Fastify", file: "app.ts", code: `import Fastify from "fastify";
-import { listenToWebhooks } from "simplehook-fastify";
+import { listenToWebhooks } from "@simplehook/fastify";
 
 const app = Fastify();
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);
@@ -113,7 +113,42 @@ function HeroCodeBlock() {
   );
 }
 
+const AGENT_CLI_CODE = `# Pull the next webhook event
+curl -H "Authorization: Bearer ak_..." \\
+  "https://hook.simplehook.dev/api/agent/pull"
+
+# Wait for a Stripe event (blocks until it arrives)
+curl -H "Authorization: Bearer ak_..." \\
+  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"
+
+# Stream events as they arrive (SSE)
+curl -N -H "Authorization: Bearer ak_..." \\
+  "https://hook.simplehook.dev/api/agent/pull?stream=true"`;
+
+const AGENT_SDK_CODE = `import { SimplehookAgent } from "@simplehook/core";
+
+const agent = new SimplehookAgent(process.env.SIMPLEHOOK_KEY);
+
+// Pull the next webhook event
+const { events } = await agent.pull();
+console.log(events[0].path, events[0].body);
+
+// Wait for a Stripe event (blocks until it arrives)
+const stripe = await agent.pull({
+  wait: true,
+  path: "/stripe/*",
+});
+
+// Stream events as they arrive
+await agent.stream((event) => {
+  console.log("Event:", event.path, event.body);
+});`;
+
+type AgentTab = "cli" | "sdk";
+
 function AgentHeroCodeBlock() {
+  const [tab, setTab] = useState<AgentTab>("cli");
+
   return (
     <div className="max-w-[860px] overflow-hidden rounded-xl shadow-lg">
       <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-3">
@@ -125,22 +160,42 @@ function AgentHeroCodeBlock() {
         <span className="mx-auto font-mono text-[12px] text-[#9a91b0]">Terminal</span>
         <div className="w-[52px]" />
       </div>
-      <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-1.5">
-        <span className="font-mono text-[10px] text-[#7a7190]">agent.sh</span>
+      <div className="flex border-b border-white/[0.06] bg-[#2d2640]">
+        <button
+          onClick={() => setTab("cli")}
+          className={`px-4 py-2 font-mono text-[11px] transition-colors ${
+            tab === "cli"
+              ? "bg-[#1e1834] text-[#e0dce8]"
+              : "text-[#7a7190] hover:text-[#9a91b0]"
+          }`}
+        >
+          curl
+        </button>
+        <button
+          onClick={() => setTab("sdk")}
+          className={`px-4 py-2 font-mono text-[11px] transition-colors ${
+            tab === "sdk"
+              ? "bg-[#1e1834] text-[#e0dce8]"
+              : "text-[#7a7190] hover:text-[#9a91b0]"
+          }`}
+        >
+          SDK
+        </button>
       </div>
-      <pre className="min-h-[200px] overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
-        <code>{`# Pull the next webhook event
-curl -H "Authorization: Bearer ak_..." \\
-  "https://hook.simplehook.dev/api/agent/pull"
-
-# Wait for a Stripe event (blocks until it arrives)
-curl -H "Authorization: Bearer ak_..." \\
-  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"
-
-# Stream events as they arrive (SSE)
-curl -N -H "Authorization: Bearer ak_..." \\
-  "https://hook.simplehook.dev/api/agent/pull?stream=true"`}</code>
-      </pre>
+      <div className="flex items-center border-b border-white/[0.06] bg-[#2d2640] px-4 py-1.5">
+        <span className="font-mono text-[10px] text-[#7a7190]">{tab === "cli" ? "agent.sh" : "agent.ts"}</span>
+      </div>
+      {/* Both code blocks always in DOM for crawlers — inactive collapses visually but stays in DOM */}
+      <div className={tab === "cli" ? "" : "h-0 overflow-hidden"} aria-hidden={tab !== "cli"}>
+        <pre className="overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+          <code>{AGENT_CLI_CODE}</code>
+        </pre>
+      </div>
+      <div className={tab === "sdk" ? "" : "h-0 overflow-hidden"} aria-hidden={tab !== "sdk"}>
+        <pre className="overflow-x-auto bg-[#1e1834] px-5 py-5 font-mono text-[12.5px] leading-[1.8] text-[#e0dce8]">
+          <code>{AGENT_SDK_CODE}</code>
+        </pre>
+      </div>
     </div>
   );
 }
@@ -158,7 +213,7 @@ const DEV_STEPS = [
     num: "2",
     title: "Add one line of code",
     desc: "Import the SDK and call listenToWebhooks(). Works with Express, Fastify, Hono, Flask, and more.",
-    code: `import { listenToWebhooks } from 'simplehook'\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY)\n\n// That's it. Your routes work as normal.`,
+    code: `import { listenToWebhooks } from '@simplehook/express'\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY)\n\n// That's it. Your routes work as normal.`,
   },
   {
     num: "3",
@@ -357,13 +412,13 @@ export function HomePage() {
           </div>
 
           <div className="mb-16 flex flex-wrap gap-2.5">
-            <Link
-              to="/login"
+            <a
+              href="/login"
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
             >
               Get started
               <ArrowRight className="size-4" />
-            </Link>
+            </a>
             <a
               href="#how-it-works"
               className="inline-flex items-center gap-2 rounded-lg border border-border-strong bg-transparent px-6 py-3 text-[15px] text-muted-foreground transition-colors hover:border-text-tertiary hover:text-foreground"
@@ -660,7 +715,7 @@ export function HomePage() {
           </div>
           <p className="mt-6 text-center text-[13px] text-text-tertiary">
             No third-party analytics. No tracking. We never sell or share your data.{" "}
-            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">Full privacy details</Link>
+            <a href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">Full privacy details</a>
           </p>
         </div>
       </section>
@@ -697,9 +752,9 @@ export function HomePage() {
           </div>
           <div className="mt-6 text-center">
             <p className="mb-4 text-[13px] text-text-tertiary">24-hour free trial with 3 routes &amp; 3 listeners. No credit card required.</p>
-            <Link to="/login" className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85">
+            <a href="/login" className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85">
               Start free trial
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -715,13 +770,13 @@ export function HomePage() {
           <p className="mx-auto mb-6 max-w-[480px] text-[15px] text-muted-foreground">
             One install. One line of code. Every webhook provider works.
           </p>
-          <Link
-            to="/login"
+          <a
+            href="/login"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3 text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-85"
           >
             Get started
             <ArrowRight className="size-4" />
-          </Link>
+          </a>
         </div>
       </section>
     </div>

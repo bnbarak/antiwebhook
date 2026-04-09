@@ -1,5 +1,5 @@
-import { SimplehookAgent } from "simplehook-core";
-import type { AgentOptions } from "simplehook-core";
+import { SimplehookAgent } from "@simplehook/core";
+import type { AgentOptions } from "@simplehook/core";
 import { createPullTool } from "./tools/pull.js";
 import { createStatusTool } from "./tools/status.js";
 
@@ -16,7 +16,7 @@ export interface SimplehookToolsOptions extends AgentOptions {
  * `simplehook_pull` and `simplehook_status` tools ready to pass to a Mastra agent.
  *
  * ```ts
- * import { createSimplehookTools } from "simplehook-mastra";
+ * import { createSimplehookTools } from "@simplehook/mastra";
  *
  * const tools = createSimplehookTools({ apiKey: "ak_..." });
  * const agent = new Agent({ tools });

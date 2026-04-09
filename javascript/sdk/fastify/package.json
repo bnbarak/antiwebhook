@@ -1,5 +1,5 @@
 {
-  "name": "simplehook-fastify",
+  "name": "@simplehook/fastify",
   "version": "0.3.0",
   "description": "Stable webhook URLs for localhost. One line of code. Fastify adapter.",
   "type": "module",
@@ -17,7 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "simplehook-core": "^0.2.0",
+    "@simplehook/core": "^0.2.0",
     "ws": "^8.18.0"
   },
   "peerDependencies": {

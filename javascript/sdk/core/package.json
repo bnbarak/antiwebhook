@@ -1,5 +1,5 @@
 {
-  "name": "simplehook-core",
+  "name": "@simplehook/core",
   "version": "0.2.0",
   "description": "Core WebSocket client for simplehook SDKs.",
   "type": "module",

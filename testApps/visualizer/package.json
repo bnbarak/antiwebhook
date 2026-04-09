@@ -1,0 +1,13 @@
+{
+  "name": "simplehook-visualizer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "@simplehook/express": "^0.3.1",
+    "chalk": "^5.4.1"
+  }
+}

@@ -66,4 +66,4 @@ By default, the SDK is a no-op in production (`GO_ENV=production` or `ENV=produc
 
 - [simplehook.dev](https://simplehook.dev)
 - [Dashboard](https://simplehook.dev/dashboard)
-- [JavaScript SDK](https://www.npmjs.com/package/simplehook)
+- [JavaScript SDK](https://www.npmjs.com/package/@simplehook/express)

@@ -1,4 +1,4 @@
-# simplehook / simplehook-express
+# simplehook / @simplehook/express
 
 **One line of code. Webhooks just work.**
 
@@ -21,14 +21,14 @@ Your app opens an outbound WebSocket to [simplehook.dev](https://simplehook.dev)
 ## Install
 
 ```bash
-npm install simplehook
+npm install @simplehook/express
 ```
 
 ## Quick start
 
 ```typescript
 import express from "express";
-import { listenToWebhooks } from "simplehook";
+import { listenToWebhooks } from "@simplehook/express";
 
 const app = express();
 app.use(express.json());

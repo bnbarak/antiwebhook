@@ -1,5 +1,5 @@
 import Fastify from "fastify";
-import { listenToWebhooks } from "simplehook-fastify";
+import { listenToWebhooks } from "@simplehook/fastify";
 
 const app = Fastify({ logger: true });
 

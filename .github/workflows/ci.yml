@@ -34,7 +34,7 @@ jobs:
         working-directory: javascript/sdk/core
       - run: npm install
         working-directory: javascript/sdk/express
-      - run: rm -rf node_modules/simplehook-core && cp -R ../core node_modules/simplehook-core
+      - run: rm -rf node_modules/@simplehook/core && mkdir -p node_modules/@simplehook && cp -R ../core node_modules/@simplehook/core
         working-directory: javascript/sdk/express
       - run: npx tsc --noEmit
         working-directory: javascript/sdk/express
@@ -54,7 +54,7 @@ jobs:
         working-directory: javascript/sdk/core
       - run: npm install
         working-directory: javascript/sdk/fastify
-      - run: rm -rf node_modules/simplehook-core && cp -R ../core node_modules/simplehook-core
+      - run: rm -rf node_modules/@simplehook/core && mkdir -p node_modules/@simplehook && cp -R ../core node_modules/@simplehook/core
         working-directory: javascript/sdk/fastify
       - run: npx tsc --noEmit
         working-directory: javascript/sdk/fastify
@@ -74,7 +74,7 @@ jobs:
         working-directory: javascript/sdk/core
       - run: npm install
         working-directory: javascript/sdk/hono
-      - run: rm -rf node_modules/simplehook-core && cp -R ../core node_modules/simplehook-core
+      - run: rm -rf node_modules/@simplehook/core && mkdir -p node_modules/@simplehook && cp -R ../core node_modules/@simplehook/core
         working-directory: javascript/sdk/hono
       - run: npx tsc --noEmit
         working-directory: javascript/sdk/hono
@@ -178,13 +178,13 @@ jobs:
         run: npm install && npx tsc
         working-directory: javascript/sdk/core
       - name: Build Express SDK
-        run: npm install && rm -rf node_modules/simplehook-core && cp -R ../core node_modules/simplehook-core && npx tsc
+        run: npm install && rm -rf node_modules/@simplehook/core && mkdir -p node_modules/@simplehook && cp -R ../core node_modules/@simplehook/core && npx tsc
         working-directory: javascript/sdk/express
       - name: Build Fastify SDK
-        run: npm install && rm -rf node_modules/simplehook-core && cp -R ../core node_modules/simplehook-core && npx tsc
+        run: npm install && rm -rf node_modules/@simplehook/core && mkdir -p node_modules/@simplehook && cp -R ../core node_modules/@simplehook/core && npx tsc
         working-directory: javascript/sdk/fastify
       - name: Build Hono SDK
-        run: npm install && rm -rf node_modules/simplehook-core && cp -R ../core node_modules/simplehook-core && npx tsc
+        run: npm install && rm -rf node_modules/@simplehook/core && mkdir -p node_modules/@simplehook && cp -R ../core node_modules/@simplehook/core && npx tsc
         working-directory: javascript/sdk/hono
       - name: Install test deps
         run: npm install

@@ -1,7 +1,7 @@
 {
-  "name": "simplehook",
+  "name": "@simplehook/express",
   "version": "0.3.1",
-  "description": "Stable webhook URLs for localhost. One line of code.",
+  "description": "Stable webhook URLs for localhost. One line of code. Express adapter.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,7 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "simplehook-core": "^0.2.0",
+    "@simplehook/core": "^0.2.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

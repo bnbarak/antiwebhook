@@ -1,4 +1,4 @@
-# simplehook-core
+# @simplehook/core
 
 Internal shared package for simplehook JavaScript SDKs.
 
@@ -8,8 +8,8 @@ Internal shared package for simplehook JavaScript SDKs.
 
 This package contains the WebSocket client, frame serialization, and shared utilities used by the framework-specific SDKs:
 
-- [`simplehook`](https://www.npmjs.com/package/simplehook) -- Express adapter
-- [`simplehook-fastify`](https://www.npmjs.com/package/simplehook-fastify) -- Fastify adapter
+- [`@simplehook/express`](https://www.npmjs.com/package/@simplehook/express) -- Express adapter
+- [`@simplehook/fastify`](https://www.npmjs.com/package/@simplehook/fastify) -- Fastify adapter
 
 You should not need to install this package directly. Use one of the framework SDKs above instead.
 

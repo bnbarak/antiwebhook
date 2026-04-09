@@ -64,7 +64,7 @@ npm install
 
 ```javascript
 const express = require('express');
-const { listenToWebhooks } = require('./index'); // or 'simplehook' when published
+const { listenToWebhooks } = require('./index'); // or '@simplehook/express' when published
 
 const app = express();
 app.use(express.json());
@@ -128,43 +128,47 @@ node --test stress.test.js
 
 8 tests covering: 20 concurrent webhooks, 3 isolated projects, disconnect/reconnect, 50 rapid-fire, HTTP methods, 100KB body, empty body, triple replay.
 
+## SDKs
+
+| Package | Install | Status |
+|---------|---------|--------|
+| **@simplehook/core** | `npm install @simplehook/core` | Published |
+| **@simplehook/express** | `npm install @simplehook/express` | Published |
+| **@simplehook/fastify** | `npm install @simplehook/fastify` | Published |
+| **@simplehook/hono** | `npm install @simplehook/hono` | Published |
+| **@simplehook/cli** | `npm install -g @simplehook/cli` | Published |
+| **@simplehook/mastra** | `npm install @simplehook/mastra` | Published |
+| **simplehook-flask** | `pip install simplehook-flask` | Published |
+| **simplehook-fastapi** | `pip install simplehook-fastapi` | Published |
+| Go SDK | `go get github.com/bnbarak/antiwebhook/go` | Not actively maintained |
+| Rust SDK | `simplehook` crate | Not actively maintained |
+
+> **Note:** Go and Rust SDKs exist but are not actively maintained. Focus is on the JavaScript and Python ecosystems.
+
 ## Project structure
 
 ```
 simplehook/
   server/                    Rust server (axum + sqlx + postgres)
-    src/
-      main.rs                Boot, migrations, serve on :8400
-      tunnel.rs              THE CORE: WebSocket tunnel manager
-      proxy.rs               Webhook receiver (passthrough + queue)
-      queue.rs               Background retry worker
-      api.rs                 REST API for dashboard
-      billing.rs             Stripe checkout + webhooks
-      auth.rs                API key auth extractor
-      db.rs                  Models + queries
-      config.rs              Env vars
-      error.rs               Error handling
-    migrations/
-      001_init.sql           PostgreSQL schema (3 tables)
-
   javascript/
     sdk/
-      express/               Node.js SDK (~100 lines)
-        index.js             WebSocket client + loopback proxy
-        index.d.ts           TypeScript types
-
-  tests/
-    e2e.test.js              Full integration tests
-    stress.test.js           Concurrency + resilience tests
-
-  docs/
-    PRODUCT.md               Product pitch + user-facing README
-    ARCHITECTURE.md          System design
-    IMPLEMENTATION.md        Build plan
-    EXAMPLES.md              Developer examples
-
-  docker-compose.yml         PostgreSQL for local dev
-  .env.example               Environment variables
+      core/                  @simplehook/core — WebSocket client, agent API
+      express/               @simplehook/express — Express adapter
+      fastify/               @simplehook/fastify — Fastify adapter
+      hono/                  @simplehook/hono — Hono adapter
+      cli/                   @simplehook/cli — CLI (pull, status)
+      mastra/                @simplehook/mastra — Mastra AI agent tools
+    webapp/                  React (Vite) marketing site + dashboard
+  python/
+    core/                    simplehook-core
+    flask/                   simplehook-flask
+    fastapi/                 simplehook-fastapi
+    django/                  simplehook-django
+  go/                        Go SDK (not actively maintained)
+  rust-sdk/                  Rust SDK (not actively maintained)
+  tests/                     Integration tests (Node.js)
+  testApps/                  Test apps for each framework
+  docs/                      Architecture, product, examples
 ```
 
 ## Environment variables

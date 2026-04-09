@@ -295,9 +295,9 @@ export function AgentsPage() {
 
 const SNIPPETS: Record<string, Record<string, (id: string) => string>> = {
   "Node.js": {
-    Express: (id) => `import { listenToWebhooks } from "simplehook";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
-    Fastify: (id) => `import { listenToWebhooks } from "simplehook-fastify";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
-    Hono: (id) => `import { listenToWebhooks } from "simplehook-hono";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
+    Express: (id) => `import { listenToWebhooks } from "@simplehook/express";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
+    Fastify: (id) => `import { listenToWebhooks } from "@simplehook/fastify";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
+    Hono: (id) => `import { listenToWebhooks } from "@simplehook/hono";\n\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "${id}");`,
   },
   Python: {
     Flask: (id) => `from simplehook_flask import listenToWebhooks\n\nlistenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"], "${id}")`,

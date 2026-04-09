@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import type { SimplehookAgent } from "simplehook-core";
+import type { SimplehookAgent } from "@simplehook/core";
 
 export function createStatusTool(agent: SimplehookAgent) {
   return createTool({

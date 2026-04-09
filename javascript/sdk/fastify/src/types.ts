@@ -6,4 +6,4 @@ export type {
   ListenOptions,
   Connection,
   DispatchFn,
-} from "simplehook-core";
+} from "@simplehook/core";

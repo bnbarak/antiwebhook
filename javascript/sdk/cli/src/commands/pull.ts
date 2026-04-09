@@ -1,5 +1,5 @@
-import { SimplehookAgent } from "simplehook-core";
-import type { PullOptions, WebhookEvent } from "simplehook-core";
+import { SimplehookAgent } from "@simplehook/core";
+import type { PullOptions, WebhookEvent } from "@simplehook/core";
 
 export interface PullFlags {
   key: string;

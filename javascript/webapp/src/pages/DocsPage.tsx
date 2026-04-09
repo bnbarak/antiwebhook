@@ -42,10 +42,10 @@ const LANGUAGES: Language[] = [
         id: "express",
         name: "Express",
         available: true,
-        installCmd: "npm install simplehook",
+        installCmd: "npm install @simplehook/express",
         filename: "app.ts",
         snippet: (key) => `import express from "express";
-import { listenToWebhooks } from "simplehook";
+import { listenToWebhooks } from "@simplehook/express";
 
 const app = express();
 app.use(express.json());
@@ -63,10 +63,10 @@ app.listen(3000);`,
         id: "fastify",
         name: "Fastify",
         available: true,
-        installCmd: "npm install simplehook-fastify",
+        installCmd: "npm install @simplehook/fastify",
         filename: "app.ts",
         snippet: (key) => `import Fastify from "fastify";
-import { listenToWebhooks } from "simplehook-fastify";
+import { listenToWebhooks } from "@simplehook/fastify";
 
 const app = Fastify();
 listenToWebhooks(app, "${key}");
@@ -82,10 +82,10 @@ app.listen({ port: 3000 });`,
         id: "hono",
         name: "Hono",
         available: true,
-        installCmd: "npm install simplehook-hono",
+        installCmd: "npm install @simplehook/hono",
         filename: "app.ts",
         snippet: (key) => `import { Hono } from "hono";
-import { listenToWebhooks } from "simplehook-hono";
+import { listenToWebhooks } from "@simplehook/hono";
 
 const app = new Hono();
 listenToWebhooks(app, "${key}");
@@ -851,7 +851,7 @@ export function DocsPage() {
                   </InlineCode>
                 </h3>
                 <CopyableCode
-                  code={`import { listenToWebhooks } from "simplehook";
+                  code={`import { listenToWebhooks } from "@simplehook/express";
 
 listenToWebhooks(app, "${displayKey}", {
   // Host to forward webhooks to (default: "localhost")
@@ -1241,9 +1241,9 @@ console.log(events[0]?.body);`}
             <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
               A lightweight client for pulling webhook events via HTTP. Works in Node.js, Deno, Bun.
             </p>
-            <CopyableCode code="npm install simplehook-core" title="terminal" />
+            <CopyableCode code="npm install @simplehook/core" title="terminal" />
             <p className="mt-2 text-xs text-muted-foreground">
-              Or use the Express SDK — it re-exports <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">SimplehookAgent</code>: <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">npm install simplehook</code>
+              Or use the Express SDK — it re-exports <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">SimplehookAgent</code>: <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">npm install @simplehook/express</code>
             </p>
           </section>
 
@@ -1256,7 +1256,7 @@ console.log(events[0]?.body);`}
               The main class. Create one instance per project/listener.
             </p>
             <CopyableCode
-              code={`import { SimplehookAgent } from "simplehook-core";
+              code={`import { SimplehookAgent } from "@simplehook/core";
 
 const agent = new SimplehookAgent("ak_your_key", {
   serverUrl: "https://hook.simplehook.dev",  // default
@@ -1358,7 +1358,7 @@ console.log(status.cursors);`}
             <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
               Pull events and check status from the terminal. Pipe JSON output to other tools.
             </p>
-            <CopyableCode code="npm install -g simplehook-cli" title="terminal" />
+            <CopyableCode code="npm install -g @simplehook/cli" title="terminal" />
           </section>
 
           <SectionDivider />
@@ -1464,14 +1464,14 @@ simplehook status --json`}
 
             <div className="mb-6">
               <h3 className="mb-3 text-sm font-medium">Install</h3>
-              <CopyableCode code="npm install simplehook-mastra @mastra/core zod" title="terminal" />
+              <CopyableCode code="npm install @simplehook/mastra @mastra/core zod" title="terminal" />
             </div>
 
             <div className="mb-6">
               <h3 className="mb-3 text-sm font-medium">Quick start</h3>
               <CopyableCode
                 code={`import { Agent } from "@mastra/core/agent";
-import { createSimplehookTools } from "simplehook-mastra";
+import { createSimplehookTools } from "@simplehook/mastra";
 
 const tools = createSimplehookTools({
   apiKey: process.env.SIMPLEHOOK_KEY,

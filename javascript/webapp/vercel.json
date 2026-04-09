@@ -14,6 +14,7 @@
     { "source": "/api/:path*", "destination": "https://simplehook-server.fly.dev/api/:path*" },
     { "source": "/hooks/:path*", "destination": "https://simplehook-server.fly.dev/hooks/:path*" },
     { "source": "/tunnel", "destination": "https://simplehook-server.fly.dev/tunnel" },
-    { "source": "/:path*", "destination": "/index.html" }
+    { "source": "/docs", "destination": "/docs.html" },
+    { "source": "/:path*", "destination": "/app.html" }
   ]
 }

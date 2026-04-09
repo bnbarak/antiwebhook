@@ -2,13 +2,13 @@ import type { App } from "./types.js";
 import {
   createClient,
   sanitizeHeaders,
-} from "simplehook-core";
+} from "@simplehook/core";
 import type {
   Connection,
   ListenOptions,
   RequestFrame,
   ResponseFrame,
-} from "simplehook-core";
+} from "@simplehook/core";
 
 export type { Connection, ListenOptions, RequestFrame, ResponseFrame };
 

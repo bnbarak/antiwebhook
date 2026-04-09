@@ -122,7 +122,7 @@ export function MastraExamplePage() {
           <CopyableCode
             code={`mkdir stripe-agent && cd stripe-agent
 npm init -y
-npm install simplehook-mastra @mastra/core zod`}
+npm install @simplehook/mastra @mastra/core zod`}
             title="terminal"
           />
         </div>
@@ -163,7 +163,7 @@ npm install simplehook-mastra @mastra/core zod`}
           </div>
           <CopyableCode
             code={`import { Agent } from "@mastra/core/agent";
-import { createSimplehookTools } from "simplehook-mastra";
+import { createSimplehookTools } from "@simplehook/mastra";
 
 // Create simplehook tools — reads SIMPLEHOOK_KEY from env
 const tools = createSimplehookTools();

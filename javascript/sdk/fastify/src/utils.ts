@@ -3,4 +3,4 @@ export {
   parseFrame,
   isProduction,
   isExplicitlyDisabled,
-} from "simplehook-core";
+} from "@simplehook/core";

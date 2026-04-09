@@ -1,5 +1,5 @@
 import express from "express";
-import { listenToWebhooks } from "simplehook";
+import { listenToWebhooks } from "@simplehook/express";
 
 const app = express();
 app.use(express.json());
