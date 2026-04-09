@@ -114,16 +114,16 @@ function HeroCodeBlock() {
 }
 
 const AGENT_CLI_CODE = `# Pull the next webhook event
-curl -H "Authorization: Bearer ak_..." \\
-  "https://hook.simplehook.dev/api/agent/pull"
+npx @simplehook/cli pull
 
 # Wait for a Stripe event (blocks until it arrives)
-curl -H "Authorization: Bearer ak_..." \\
-  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"
+npx @simplehook/cli pull --wait --path "/stripe/*"
 
 # Stream events as they arrive (SSE)
-curl -N -H "Authorization: Bearer ak_..." \\
-  "https://hook.simplehook.dev/api/agent/pull?stream=true"`;
+npx @simplehook/cli pull --stream
+
+# Check queue status
+npx @simplehook/cli status`;
 
 const AGENT_SDK_CODE = `import { SimplehookAgent } from "@simplehook/core";
 
@@ -169,7 +169,7 @@ function AgentHeroCodeBlock() {
               : "text-[#7a7190] hover:text-[#9a91b0]"
           }`}
         >
-          curl
+          CLI
         </button>
         <button
           onClick={() => setTab("sdk")}
@@ -232,9 +232,9 @@ const AGENT_STEPS = [
   },
   {
     num: "2",
-    title: "Pull events via HTTP",
-    desc: "Call the pull endpoint. Get the next event instantly, or long-poll until one arrives.",
-    code: `curl -H "Authorization: Bearer ak_..." \\\n  "https://hook.simplehook.dev/api/agent/pull?wait=true&path=/stripe/*"\n\n# Returns: { "events": [...], "cursor": "evt_043", "remaining": 7 }`,
+    title: "Pull events via CLI or SDK",
+    desc: "Use the CLI or SDK to pull events. Get the next event instantly, or long-poll until one arrives.",
+    code: `# CLI\nnpx @simplehook/cli pull --wait --path "/stripe/*"\n\n# SDK\nconst { events } = await agent.pull({ wait: true, path: "/stripe/*" })`,
   },
   {
     num: "3",

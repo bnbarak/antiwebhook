@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Copy, Check, KeyRound } from "lucide-react";
+import { Copy, Check, KeyRound, Terminal } from "lucide-react";
 import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
 import { useAuth } from "@/hooks/use-auth.js";
 import { api, type Project } from "@/lib/api.js";
@@ -646,6 +646,24 @@ export function DocsPage() {
             Everything you need to receive webhooks locally with one line of
             code. SDKs for Node.js and Python.
           </p>
+
+          {/* Skills repo callout */}
+          <div className="mt-6 flex items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
+            <Terminal className="size-4 shrink-0 text-muted-foreground" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Claude Code Skill</span>
+              <span className="text-xs text-muted-foreground">
+                Teach Claude Code the full simplehook API:{" "}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">claude skills add bnbarak/simplewehbook-skills</code>
+              </span>
+            </div>
+            <a
+              href="https://github.com/bnbarak/simplewehbook-skills"
+              className="ml-auto shrink-0 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+            >
+              View on GitHub
+            </a>
+          </div>
 
           {/* API key injection button */}
           {session && project?.api_key && (
@@ -1466,7 +1484,7 @@ simplehook status --json`}
 
             <div className="mb-6">
               <h3 className="mb-3 text-sm font-medium">Install</h3>
-              <CopyableCode code="npm install @simplehook/mastra @mastra/core zod" title="terminal" />
+              <CopyableCode code="npm install @simplehook/mastra" title="terminal" />
             </div>
 
             <div className="mb-6">
@@ -1520,9 +1538,9 @@ console.log(response.text);`}
 
             <div className="rounded-lg border border-border bg-card/50 p-4">
               <p className="text-sm text-muted-foreground">
-                Full step-by-step guide:{" "}
-                <a href="/examples/mastra" className="underline underline-offset-2 hover:text-foreground transition-colors">
-                  Build a Stripe webhook agent with Mastra
+                Full example:{" "}
+                <a href="https://github.com/bnbarak/antiwebhook/tree/main/testApps/mastra" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                  Stripe webhook agent with Mastra on GitHub
                 </a>
               </p>
             </div>
