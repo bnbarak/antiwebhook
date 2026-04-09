@@ -136,6 +136,35 @@ Tests Express, Fastify, Hono, Flask, FastAPI, Go, Agent Pull, and SDK+Agent coex
 4. `cd testApps/<app> && rm -rf node_modules package-lock.json && npm install`
 5. Run: `cd testApps && ./test-all.sh`
 
+## Production E2E Test (against live server)
+
+```bash
+cd tests
+source .env.local
+SIMPLEHOOK_KEY=$SIMPLEHOOK_KEY \
+SIMPLEHOOK_PROJECT_ID=$SIMPLEHOOK_PROJECT_ID \
+SIMPLEHOOK_BASE_URL=$SIMPLEHOOK_BASE_URL \
+node --test agent-prod.test.js
+```
+
+11 tests against `hook.simplehook.dev`: webhook ingestion, pull, cursor, path filter, wait, timeout, SSE stream, auth rejection, conflict (409), status.
+
+Credentials in `tests/.env.local`:
+- `SIMPLEHOOK_BASE_URL=https://hook.simplehook.dev`
+- `SIMPLEHOOK_KEY=ak_...`
+- `SIMPLEHOOK_PROJECT_ID=p_...`
+
+## Full Release Checklist
+
+1. Bump version in SDK `package.json`
+2. Run local tests: `cd testApps && ./test-all.sh`
+3. Publish: `./scripts/publish.sh <package>` (core first!)
+4. Update testApp deps + reinstall from npm
+5. Re-run: `cd testApps && ./test-all.sh` (verifies real npm packages)
+6. Deploy server: `flyctl deploy -a simplehook-server`
+7. Run prod tests: `cd tests && source .env.local && node --test agent-prod.test.js`
+8. Deploy webapp: push to main (Vercel auto-deploys)
+
 ## Not Actively Maintained
 
 Go SDK (`go/`) and Rust SDK (`rust-sdk/`) exist but are not actively maintained or tested.

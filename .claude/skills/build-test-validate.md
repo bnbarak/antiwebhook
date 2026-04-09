@@ -83,6 +83,16 @@ cd tests && node --test stress.test.js
 cd tests && node --test e2e.test.js agent.test.js stress.test.js
 ```
 
+## Quick E2E (all SDKs + CLI + Agent + boom)
+
+```bash
+cd testApps && ./test-all.sh
+```
+
+16 checks: server, registration, Express/Fastify/Hono webhook delivery, Agent pull/status, CLI pull/status, boom.js 50 webhooks, webapp build + MPA + SEO.
+
+See `.claude/skills/test-and-publish.md` for full release process including publishing and production tests.
+
 ## Full Validation Checklist
 
 Run this before pushing to main:
