@@ -1086,18 +1086,21 @@ listenToWebhooks(app)`}
               Pull events on demand, long-poll for the next one, or stream via SSE.
             </p>
 
-            <div className="mb-8">
-              <h3 className="mb-3 text-sm font-medium">Authentication</h3>
-              <p className="mb-4 text-sm text-muted-foreground">
-                All requests require your API key as a Bearer token:
+            <div className="mb-8 rounded-lg border border-border bg-card p-5">
+              <h3 className="mb-2 text-sm font-medium">Authentication</h3>
+              <p className="mb-1 text-sm text-muted-foreground">
+                Get your API key from the <a href="/dashboard" className="underline underline-offset-2 hover:text-foreground transition-colors">dashboard</a>. All requests use Bearer token auth.
+              </p>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Keys start with <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">ak_</code> — set it once as an env var and the CLI/SDK picks it up automatically.
               </p>
               <CopyableCode
-                code={`# Set your API key (from dashboard)
+                code={`# Set your API key
 export SIMPLEHOOK_KEY=${project?.api_key ?? PLACEHOLDER_KEY}
 
-# Pull the next event
-npx @simplehook/cli pull`}
-                title="auth"
+# Verify it works
+npx @simplehook/cli status`}
+                title="terminal"
               />
             </div>
 
