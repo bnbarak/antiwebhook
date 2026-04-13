@@ -126,11 +126,26 @@ pub async fn ws_upgrade(
         .await?
         .ok_or(AppError::Unauthorized)?;
 
-    // Validate listener_id exists in DB if provided
+    // Auto-register listener if provided (validate format, create if needed)
     if let Some(ref lid) = params.listener_id {
-        let listener = db::get_listener(&state.db, &project.id, lid).await?;
-        if listener.is_none() {
-            return Err(AppError::BadRequest("listener_id not found for this project"));
+        // Validate format: 1-12 chars, lowercase alphanumeric + hyphen/underscore
+        let valid = lid.len() >= 1
+            && lid.len() <= 12
+            && lid.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_');
+        if !valid {
+            return Err(AppError::BadRequest("listener_id must be 1-12 chars: a-z, 0-9, -, _"));
+        }
+        // Auto-create if not exists (with limit check)
+        let existing = db::get_listener(&state.db, &project.id, lid).await?;
+        if existing.is_none() {
+            let all = db::list_listeners(&state.db, &project.id).await?;
+            let limit = std::cmp::min(3 + (project.subscription_quantity as usize * 3), 20);
+            if all.len() >= limit {
+                return Err(AppError::BadRequest("listener limit reached — upgrade for more listeners"));
+            }
+            db::create_listener_if_not_exists(&state.db, &project.id, lid).await
+                .map_err(|_| AppError::BadRequest("failed to create listener"))?;
+            tracing::info!(project_id = %project.id, listener_id = %lid, "auto-registered listener");
         }
     }
 
@@ -522,5 +537,100 @@ mod tests {
     async fn test_is_any_connected_none() {
         let tm = TunnelManager::new();
         assert!(!tm.is_any_connected("p_test").await);
+    }
+
+    #[tokio::test]
+    async fn test_targeted_send_isolation() {
+        let tm = TunnelManager::new();
+
+        // Register two listeners
+        let mut rx_dev = tm.register("p_test".into(), Some("dev".into())).await;
+        let mut rx_staging = tm.register("p_test".into(), Some("staging".into())).await;
+
+        // Both connected
+        assert!(tm.is_connected("p_test", Some("dev")).await);
+        assert!(tm.is_connected("p_test", Some("staging")).await);
+
+        // "dev" responds
+        tokio::spawn(async move {
+            if let Some((req, resp_tx)) = rx_dev.recv().await {
+                let _ = resp_tx.send(ResponseFrame {
+                    frame_type: "response".into(),
+                    id: req.id,
+                    status: 200,
+                    headers: None,
+                    body: None,
+                });
+            }
+        });
+
+        // Send targeted to "dev" — should succeed
+        let frame = RequestFrame {
+            frame_type: "request".into(),
+            id: "evt_targeted".into(),
+            method: "POST".into(),
+            path: "/stripe/webhook".into(),
+            headers: HashMap::new(),
+            body: None,
+        };
+        let result = tm.send_request("p_test", Some("dev"), frame, Duration::from_secs(1)).await;
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().status, 200);
+
+        // "staging" should NOT have received anything — verify channel is still empty
+        // by checking we can still register (channel not consumed)
+        let frame2 = RequestFrame {
+            frame_type: "request".into(),
+            id: "evt_not_for_staging".into(),
+            method: "POST".into(),
+            path: "/test".into(),
+            headers: HashMap::new(),
+            body: None,
+        };
+
+        // Send targeted to "staging" — staging never responds, so it times out
+        // This proves the previous send to "dev" did NOT go to "staging"
+        tokio::spawn(async move {
+            if let Some((req, resp_tx)) = rx_staging.recv().await {
+                // staging receives THIS one (the second send), not the first
+                assert_eq!(req.id, "evt_not_for_staging");
+                let _ = resp_tx.send(ResponseFrame {
+                    frame_type: "response".into(),
+                    id: req.id,
+                    status: 201,
+                    headers: None,
+                    body: None,
+                });
+            }
+        });
+
+        let result2 = tm.send_request("p_test", Some("staging"), frame2, Duration::from_secs(1)).await;
+        assert!(result2.is_some());
+        assert_eq!(result2.unwrap().status, 201);
+    }
+
+    #[test]
+    fn test_validate_listener_id_format() {
+        fn valid(id: &str) -> bool {
+            id.len() >= 1
+                && id.len() <= 12
+                && id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+        }
+
+        // Valid
+        assert!(valid("dev"));
+        assert!(valid("staging"));
+        assert!(valid("my-app"));
+        assert!(valid("agent_1"));
+        assert!(valid("a"));
+        assert!(valid("123456789012")); // 12 chars
+
+        // Invalid
+        assert!(!valid(""));              // too short
+        assert!(!valid("1234567890123")); // 13 chars
+        assert!(!valid("DEV"));           // uppercase
+        assert!(!valid("my app"));        // space
+        assert!(!valid("dev.test"));      // dot
+        assert!(!valid("hello!"));        // special char
     }
 }

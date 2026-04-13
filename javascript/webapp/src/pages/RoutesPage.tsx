@@ -96,9 +96,11 @@ function RouteCard({
   onEdit: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const agentLabel = route.listener_id
-    ? agents.find((a) => a.listener_id === route.listener_id)?.label ?? route.listener_id
+  const matchedAgent = route.listener_id
+    ? agents.find((a) => a.listener_id === route.listener_id)
     : null;
+  const agentLabel = matchedAgent?.label ?? (route.listener_id || null);
+  const agentConnected = matchedAgent?.connected ?? false;
 
   return (
     <div
@@ -112,9 +114,15 @@ function RouteCard({
           <Badge variant="secondary" className="font-mono text-[10px] uppercase">
             {route.mode}
           </Badge>
-          {agentLabel && (
-            <Badge variant="outline" className="text-[10px]">
-              {agentLabel}
+          {route.listener_id && agentLabel && (
+            <Badge
+              variant="outline"
+              className={`text-[10px] ${!agentConnected ? "border-status-amber-border text-status-amber-text" : ""}`}
+            >
+              {agentConnected && (
+                <span className="mr-1 inline-block size-1.5 rounded-full bg-status-green-text" />
+              )}
+              {agentLabel}{!agentConnected ? " (offline)" : ""}
             </Badge>
           )}
           <span className="font-mono text-[10px] text-muted-foreground">
@@ -401,13 +409,21 @@ export function RoutesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none">All listeners</SelectItem>
-                  {agents.map((a) => (
+                  {[...agents].sort((a, b) => (b.connected ? 1 : 0) - (a.connected ? 1 : 0)).map((a) => (
                     <SelectItem key={a.listener_id} value={a.listener_id}>
-                      {a.label ? `${a.label} (${a.listener_id})` : a.listener_id}
+                      <span className="flex items-center gap-2">
+                        <span className={`inline-block size-1.5 rounded-full ${a.connected ? "bg-status-green-text" : "bg-muted-foreground/40"}`} />
+                        {a.label ? `${a.label} (${a.listener_id})` : a.listener_id}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {selectedAgent !== "_none" && !agents.find((a) => a.listener_id === selectedAgent)?.connected && (
+                <p className="text-xs text-status-amber-text">
+                  This listener is currently offline. Events will queue until it reconnects.
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Route events to a specific listener, or leave as "All listeners" to deliver to any connected SDK.
                 {agents.length === 0 && (

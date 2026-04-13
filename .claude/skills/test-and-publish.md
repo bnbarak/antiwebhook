@@ -17,7 +17,7 @@ Prerequisites:
 - `cd javascript/sdk/cli && npx tsc` (build CLI)
 - Test apps need `npm install` in each: express, fastify, hono, visualizer
 
-What it tests (16 checks):
+What it tests (19 checks):
 1. Server starts on :8413
 2. Project registration via `/api/register`
 3. @simplehook/express — WebSocket connect + Stripe webhook delivery
@@ -25,8 +25,9 @@ What it tests (16 checks):
 5. @simplehook/hono — WebSocket connect + Twilio webhook delivery
 6. Agent Pull API — pull events + status endpoint
 7. @simplehook/cli — `status` and `pull` commands
-8. boom.js — 50 concurrent webhooks (success rate)
-9. Webapp build — MPA output (3 HTML files) + SEO files
+8. Targeted routing — create targeted route, verify delivery to correct listener, verify event tagged with listener_id
+9. boom.js — 50 concurrent webhooks (success rate)
+10. Webapp build — MPA output (3 HTML files) + SEO files
 
 ## Running Individual Integration Tests
 
@@ -37,6 +38,9 @@ cd tests && node --test agent.test.js
 # Core webhook flow (20 tests)
 cd tests && node --test e2e.test.js
 
+# Targeted routing (8 tests)
+cd tests && node --test routing.test.js
+
 # Auth tests
 cd tests && node --test auth.test.js
 
@@ -44,7 +48,7 @@ cd tests && node --test auth.test.js
 cd tests && node --test stress.test.js
 
 # All integration tests
-cd tests && node --test e2e.test.js agent.test.js
+cd tests && node --test e2e.test.js agent.test.js routing.test.js
 ```
 
 Each test file spawns its own server on a unique port (8401-8406).

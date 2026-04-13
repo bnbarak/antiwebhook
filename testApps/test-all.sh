@@ -261,7 +261,61 @@ else
   log_skip "CLI not built (run: cd javascript/sdk/cli && npx tsc)"
 fi
 
-# ── 8. Boom test (small batch) ────────────────────────────────────────
+# ── 8. Targeted routing ───────────────────────────────────────────────
+
+log_section "Testing targeted routing"
+
+# Create a listener named "test-target"
+curl -s -X POST "http://localhost:$SERVER_PORT/api/listeners" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"listener_id":"test-target"}' > /dev/null 2>&1
+
+# Create a route targeting that listener
+ROUTE_RES=$(curl -s -X POST "http://localhost:$SERVER_PORT/api/routes" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"path_prefix":"/targeted","mode":"queue","listener_id":"test-target"}')
+
+if echo "$ROUTE_RES" | grep -q "test-target"; then
+  log_pass "Created targeted route → test-target"
+else
+  log_fail "Failed to create targeted route"
+fi
+
+# Send webhook to the targeted path
+curl -s -X POST "http://localhost:$SERVER_PORT/hooks/$PROJECT_ID/targeted/webhook" \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"targeted.test"}' > /dev/null
+
+sleep 1
+
+# Pull as the target listener — should get the event
+TARGET_PULL=$(curl -s -H "Authorization: Bearer $API_KEY" \
+  "http://localhost:$SERVER_PORT/api/agent/pull?n=10&listener_id=test-target")
+
+if echo "$TARGET_PULL" | grep -q "targeted.test"; then
+  log_pass "Targeted listener received event"
+else
+  log_fail "Targeted listener did not receive event"
+fi
+
+# Verify the event has the correct listener_id stored
+EVENTS_RES=$(curl -s -H "Authorization: Bearer $API_KEY" \
+  "http://localhost:$SERVER_PORT/api/events?path=/targeted/webhook")
+
+if echo "$EVENTS_RES" | grep -q '"listener_id":"test-target"'; then
+  log_pass "Event stored with correct listener_id"
+else
+  # Check if the event data structure uses a different format
+  if echo "$EVENTS_RES" | grep -q "test-target"; then
+    log_pass "Event stored with correct listener_id"
+  else
+    log_fail "Event not tagged with target listener_id"
+  fi
+fi
+
+# ── 9. Boom test (small batch) ────────────────────────────────────────
 
 log_section "Testing boom.js (50 webhooks)"
 

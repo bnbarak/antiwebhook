@@ -773,6 +773,23 @@ pub async fn get_listener(
         .await
 }
 
+pub async fn create_listener_if_not_exists(
+    pool: &PgPool,
+    project_id: &str,
+    listener_id: &str,
+) -> Result<Listener, sqlx::Error> {
+    sqlx::query_as(
+        "INSERT INTO listeners (project_id, listener_id)
+         VALUES ($1, $2)
+         ON CONFLICT (project_id, listener_id) DO UPDATE SET project_id = EXCLUDED.project_id
+         RETURNING *",
+    )
+    .bind(project_id)
+    .bind(listener_id)
+    .fetch_one(pool)
+    .await
+}
+
 pub async fn delete_listener(
     pool: &PgPool,
     project_id: &str,
