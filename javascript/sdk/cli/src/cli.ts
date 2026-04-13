@@ -3,6 +3,8 @@
 import { Command } from "commander";
 import { runPull } from "./commands/pull.js";
 import { runStatus } from "./commands/status.js";
+import { runRoutesList, runRoutesCreate, runRoutesDelete } from "./commands/routes.js";
+import { runListenersList, runListenersCreate, runListenersDelete } from "./commands/listeners.js";
 
 const program = new Command();
 
@@ -65,6 +67,128 @@ program
         key: resolveKey(opts),
         server: resolveServer(opts),
         json: opts.json,
+      });
+    } catch (err: any) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+// ── Routes ──────────────────────────────────────────────────────────
+
+const routes = program
+  .command("routes")
+  .description("List, create, or delete routes.")
+  .option("--json", "Output raw JSON")
+  .option("-k, --key <apiKey>", "API key (or set SIMPLEHOOK_KEY)")
+  .option("--server <url>", "Server URL (or set SIMPLEHOOK_SERVER)")
+  .action(async (opts) => {
+    try {
+      await runRoutesList({
+        key: resolveKey(opts),
+        server: resolveServer(opts),
+        json: opts.json,
+      });
+    } catch (err: any) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+routes
+  .command("create <path>")
+  .description("Create a new route.")
+  .option("-m, --mode <mode>", "Route mode: queue or passthrough")
+  .option("-l, --listener <id>", "Listener ID to bind")
+  .option("-t, --timeout <seconds>", "Timeout in seconds", parseInt)
+  .option("-k, --key <apiKey>", "API key (or set SIMPLEHOOK_KEY)")
+  .option("--server <url>", "Server URL (or set SIMPLEHOOK_SERVER)")
+  .action(async (path, opts) => {
+    try {
+      await runRoutesCreate({
+        key: resolveKey(opts),
+        server: resolveServer(opts),
+        path,
+        mode: opts.mode,
+        listener: opts.listener,
+        timeout: opts.timeout,
+      });
+    } catch (err: any) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+routes
+  .command("delete <id>")
+  .description("Delete a route by ID.")
+  .option("-k, --key <apiKey>", "API key (or set SIMPLEHOOK_KEY)")
+  .option("--server <url>", "Server URL (or set SIMPLEHOOK_SERVER)")
+  .action(async (id, opts) => {
+    try {
+      await runRoutesDelete({
+        key: resolveKey(opts),
+        server: resolveServer(opts),
+        id,
+      });
+    } catch (err: any) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+// ── Listeners ───────────────────────────────────────────────────────
+
+const listeners = program
+  .command("listeners")
+  .description("List, create, or delete listeners.")
+  .option("--json", "Output raw JSON")
+  .option("-k, --key <apiKey>", "API key (or set SIMPLEHOOK_KEY)")
+  .option("--server <url>", "Server URL (or set SIMPLEHOOK_SERVER)")
+  .action(async (opts) => {
+    try {
+      await runListenersList({
+        key: resolveKey(opts),
+        server: resolveServer(opts),
+        json: opts.json,
+      });
+    } catch (err: any) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+listeners
+  .command("create <id>")
+  .description("Create a new listener.")
+  .option("-l, --label <name>", "Human-readable label")
+  .option("-k, --key <apiKey>", "API key (or set SIMPLEHOOK_KEY)")
+  .option("--server <url>", "Server URL (or set SIMPLEHOOK_SERVER)")
+  .action(async (id, opts) => {
+    try {
+      await runListenersCreate({
+        key: resolveKey(opts),
+        server: resolveServer(opts),
+        id,
+        label: opts.label,
+      });
+    } catch (err: any) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+listeners
+  .command("delete <id>")
+  .description("Delete a listener by ID.")
+  .option("-k, --key <apiKey>", "API key (or set SIMPLEHOOK_KEY)")
+  .option("--server <url>", "Server URL (or set SIMPLEHOOK_SERVER)")
+  .action(async (id, opts) => {
+    try {
+      await runListenersDelete({
+        key: resolveKey(opts),
+        server: resolveServer(opts),
+        id,
       });
     } catch (err: any) {
       console.error(`Error: ${err.message}`);

@@ -257,6 +257,26 @@ if [ -f "$CLI_BIN" ]; then
   else
     log_fail "CLI pull command failed"
   fi
+
+  # Test CLI routes commands
+  CLI_ROUTES=$(SIMPLEHOOK_KEY="$API_KEY" SIMPLEHOOK_SERVER="http://localhost:$SERVER_PORT" \
+    node "$CLI_BIN" routes 2>&1)
+
+  if echo "$CLI_ROUTES" | grep -q -E "PATH|No routes"; then
+    log_pass "CLI routes list works"
+  else
+    log_fail "CLI routes list failed"
+  fi
+
+  # Test CLI listeners commands
+  CLI_LISTENERS=$(SIMPLEHOOK_KEY="$API_KEY" SIMPLEHOOK_SERVER="http://localhost:$SERVER_PORT" \
+    node "$CLI_BIN" listeners 2>&1)
+
+  if echo "$CLI_LISTENERS" | grep -q -E "ID|No listeners"; then
+    log_pass "CLI listeners list works"
+  else
+    log_fail "CLI listeners list failed"
+  fi
 else
   log_skip "CLI not built (run: cd javascript/sdk/cli && npx tsc)"
 fi

@@ -17,14 +17,14 @@ Prerequisites:
 - `cd javascript/sdk/cli && npx tsc` (build CLI)
 - Test apps need `npm install` in each: express, fastify, hono, visualizer
 
-What it tests (19 checks):
+What it tests (21 checks):
 1. Server starts on :8413
 2. Project registration via `/api/register`
 3. @simplehook/express — WebSocket connect + Stripe webhook delivery
 4. @simplehook/fastify — WebSocket connect + GitHub webhook delivery
 5. @simplehook/hono — WebSocket connect + Twilio webhook delivery
 6. Agent Pull API — pull events + status endpoint
-7. @simplehook/cli — `status` and `pull` commands
+7. @simplehook/cli — `status`, `pull`, `routes`, and `listeners` commands
 8. Targeted routing — create targeted route, verify delivery to correct listener, verify event tagged with listener_id
 9. boom.js — 50 concurrent webhooks (success rate)
 10. Webapp build — MPA output (3 HTML files) + SEO files

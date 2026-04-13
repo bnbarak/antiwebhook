@@ -114,6 +114,12 @@ app.listen(3000);</code></pre>
           <pre style="background:#1a1a2e;border-radius:12px;padding:20px;overflow-x:auto;font-size:13px;line-height:1.6"><code>curl -H "Authorization: Bearer ak_..." \
   "https://hook.simplehook.dev/api/agent/pull?wait=true"</code></pre>
 
+          <h2 style="font-size:24px;font-weight:500;margin:48px 0 16px">Listener Names &amp; Targeted Routing</h2>
+          <p style="color:#a1a1a1;margin-bottom:16px">Run multiple SDK instances and route events to specific listeners. Listeners auto-register when your SDK connects with a name — no dashboard setup required.</p>
+          <pre style="background:#1a1a2e;border-radius:12px;padding:20px;overflow-x:auto;font-size:13px;line-height:1.6"><code>// Pass a listener name as the third argument
+listenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "dev");</code></pre>
+          <p style="color:#a1a1a1;margin-top:12px;font-size:14px">Assign routes to listeners via the dashboard or CLI: <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;font-size:13px">simplehook routes create /stripe --listener dev</code></p>
+
           <h2 style="font-size:24px;font-weight:500;margin:48px 0 16px">Configuration</h2>
           <p style="color:#a1a1a1">Configure delivery mode (queue vs passthrough), route patterns, listener IDs, and more via the dashboard or SDK options.</p>
 

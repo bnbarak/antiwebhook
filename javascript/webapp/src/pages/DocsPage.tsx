@@ -182,6 +182,8 @@ const SECTIONS: Record<DocsView, Array<{ id: string; label: string }>> = {
     { id: "cli-install", label: "Install" },
     { id: "cli-pull", label: "simplehook pull" },
     { id: "cli-status", label: "simplehook status" },
+    { id: "cli-routes", label: "simplehook routes" },
+    { id: "cli-listeners", label: "simplehook listeners" },
     { id: "cli-env", label: "Environment Variables" },
   ],
 };
@@ -1023,7 +1025,7 @@ listenToWebhooks(app)`}
               Route events to specific SDK instances
             </h2>
             <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-              By default, all webhooks go to every connected SDK. Use listeners to run multiple
+              By default, all webhooks go to every connected SDK. Use listener names to run multiple
               SDK instances and control which one receives which events.
             </p>
 
@@ -1032,26 +1034,26 @@ listenToWebhooks(app)`}
               <ol className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="font-mono text-xs text-foreground/60">1.</span>
-                  Create a listener in the dashboard (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>)
+                  Pass a listener name as the third argument to <InlineCode>listenToWebhooks</InlineCode> — it auto-registers on connect, no dashboard setup needed
                 </li>
                 <li className="flex gap-2">
                   <span className="font-mono text-xs text-foreground/60">2.</span>
-                  Assign the listener to a route (e.g. <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">/stripe</code> → <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">staging</code>)
+                  Assign a route to that listener (e.g. <InlineCode>/stripe</InlineCode> → <InlineCode>dev</InlineCode>) in the dashboard or via CLI
                 </li>
                 <li className="flex gap-2">
                   <span className="font-mono text-xs text-foreground/60">3.</span>
-                  Pass the listener ID in your SDK call
+                  Only the named listener receives events matching that route
                 </li>
               </ol>
             </div>
 
             <div className="flex flex-col gap-6">
               <CopyableCode
-                code={`// Express\nlistenToWebhooks(app, "${project?.api_key ?? PLACEHOLDER_KEY}", "staging");`}
+                code={`// Express — listener "dev" auto-registers on connect\nlistenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "dev");`}
                 title="app.ts"
               />
               <CopyableCode
-                code={`# Flask\nlistenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"], "staging")`}
+                code={`# Flask — same pattern\nlistenToWebhooks(app, os.environ["SIMPLEHOOK_KEY"], "dev")`}
                 title="app.py"
               />
             </div>
@@ -1059,7 +1061,8 @@ listenToWebhooks(app)`}
             <div className="mt-8 rounded-lg border border-border bg-card/50 p-4">
               <p className="text-sm text-muted-foreground">
                 Your webhook URL stays the same — <strong>event routing is configured in the
-                dashboard</strong>, not the URL. Routes without a listener deliver to any connected SDK.
+                dashboard or via CLI</strong>, not the URL. Routes without a listener deliver to any connected SDK.
+                Listeners are created automatically the first time an SDK connects with that name.
               </p>
             </div>
           </section>
@@ -1152,6 +1155,20 @@ npx @simplehook/cli status`}
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div className="mb-8 rounded-lg border border-border bg-card/50 p-4">
+              <h3 className="mb-2 text-sm font-medium">Targeted routing with listener_id</h3>
+              <p className="mb-3 text-[13px] text-muted-foreground">
+                Each <InlineCode>listener_id</InlineCode> has its own independent cursor. Multiple agents can consume the same
+                queue without interfering with each other. Use the <InlineCode>--listener-id</InlineCode> flag in the CLI:
+              </p>
+              <CopyableCode
+                code={`# Each agent gets its own cursor position
+npx @simplehook/cli pull --listener-id my-agent --wait
+npx @simplehook/cli pull --listener-id billing-bot -n 10 --path "/stripe/*"`}
+                title="CLI"
+              />
             </div>
 
             <div className="mb-8">
@@ -1287,6 +1304,19 @@ const agent = new SimplehookAgent("ak_your_key", {
 });`}
               title="agent.ts"
             />
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-border">
+                  <th className="py-2 pr-4 text-left font-medium">Option</th>
+                  <th className="py-2 pr-4 text-left font-medium">Type</th>
+                  <th className="py-2 text-left font-medium">Description</th>
+                </tr></thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">serverUrl</td><td className="py-2 pr-4">string</td><td className="py-2">Server URL (default: https://hook.simplehook.dev)</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">listenerId</td><td className="py-2 pr-4">string</td><td className="py-2">Listener name for independent cursor tracking. Each listenerId maintains its own position in the event queue.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <SectionDivider />
@@ -1439,6 +1469,65 @@ simplehook status
 
 # Raw JSON output (for piping)
 simplehook status --json`}
+              title="terminal"
+            />
+          </section>
+
+          <SectionDivider />
+
+          {/* ── CLI: simplehook routes ── */}
+          <section id="cli-routes" ref={(el) => setSectionRef("cli-routes", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              <code className="font-mono">simplehook routes</code>
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              List, create, and manage routes. Assign listeners to control which SDK instance receives events for a given path.
+            </p>
+            <CopyableCode
+              code={`# List all routes
+simplehook routes
+
+# Create a route and assign it to a listener
+simplehook routes create /stripe --listener dev
+
+# Create a passthrough route
+simplehook routes create /twilio --mode passthrough --listener staging`}
+              title="terminal"
+            />
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-border">
+                  <th className="py-2 pr-4 text-left font-medium">Flag</th>
+                  <th className="py-2 text-left font-medium">Description</th>
+                </tr></thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">--listener</td><td className="py-2">Listener name to route events to</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">--mode</td><td className="py-2">queue (default) or passthrough</td></tr>
+                  <tr className="border-b border-border/50"><td className="py-2 pr-4 font-mono text-[11px]">--timeout</td><td className="py-2">Timeout in seconds (passthrough mode)</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          {/* ── CLI: simplehook listeners ── */}
+          <section id="cli-listeners" ref={(el) => setSectionRef("cli-listeners", el)} className="py-16">
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              <code className="font-mono">simplehook listeners</code>
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              List all listeners and their connection status. Listeners are auto-created when an SDK connects with a name.
+            </p>
+            <CopyableCode
+              code={`# List listeners with connected status
+simplehook listeners
+
+# Example output:
+# NAME        STATUS        LAST SEEN
+# default     connected     now
+# dev         connected     now
+# ci-agent    disconnected  2h ago`}
               title="terminal"
             />
           </section>
