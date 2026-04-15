@@ -46,13 +46,16 @@ export function EventsPage() {
   const [pathFilter, setPathFilter] = useState("");
   const [routeFilter, setRouteFilter] = useState("all");
   const [modeFilter, setModeFilter] = useState("all");
+  const [listenerFilter, setListenerFilter] = useState("all");
   const [routes, setRoutes] = useState<{ path_prefix: string }[]>([]);
+  const [listeners, setListeners] = useState<{ listener_id: string; connected: boolean }[]>([]);
   const [replayingId, setReplayingId] = useState<string | null>(null);
   const pageSize = 25;
 
-  // Fetch routes for the dropdown filter
+  // Fetch routes and listeners for dropdown filters
   useEffect(() => {
     api.routes.list().then((r) => setRoutes(r)).catch(() => {});
+    api.listeners.list().then((l) => setListeners(l)).catch(() => {});
   }, []);
 
   const fetchEvents = useCallback(async () => {
@@ -61,6 +64,7 @@ export function EventsPage() {
         status: statusFilter === "all" ? undefined : statusFilter,
         path: routeFilter !== "all" ? routeFilter : pathFilter || undefined,
         route_mode: modeFilter === "all" ? undefined : modeFilter,
+        listener_id: listenerFilter === "all" ? undefined : listenerFilter,
         limit: pageSize,
         offset: page * pageSize,
       });
@@ -71,7 +75,7 @@ export function EventsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, pathFilter, routeFilter, modeFilter, page]);
+  }, [statusFilter, pathFilter, routeFilter, modeFilter, listenerFilter, page]);
 
   // Initial fetch + polling
   useEffect(() => {
@@ -150,6 +154,25 @@ export function EventsPage() {
           </Select>
         )}
 
+        {listeners.length > 0 && (
+          <Select value={listenerFilter} onValueChange={(v) => { setListenerFilter(v); setPage(0); }}>
+            <SelectTrigger size="sm" className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All listeners</SelectItem>
+              {[...listeners].sort((a, b) => (b.connected ? 1 : 0) - (a.connected ? 1 : 0)).map((l) => (
+                <SelectItem key={l.listener_id} value={l.listener_id}>
+                  <span className="flex items-center gap-1.5">
+                    <span className={`inline-block size-1.5 rounded-full ${l.connected ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+                    {l.listener_id}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         <Input
           placeholder="Search paths..."
           value={pathFilter}
@@ -198,7 +221,7 @@ export function EventsPage() {
               <TableHead className="w-[90px]">Time</TableHead>
               <TableHead className="w-[70px]">Method</TableHead>
               <TableHead className="w-[180px]">Path</TableHead>
-              <TableHead className="w-[80px]">Agent</TableHead>
+              <TableHead className="w-[80px]">Listener</TableHead>
               <TableHead className="w-[90px]">Mode</TableHead>
               <TableHead className="w-[90px]">Status</TableHead>
               <TableHead className="w-[70px]">Response</TableHead>

@@ -700,7 +700,7 @@ export function HomePage() {
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Lock className="mb-2.5 size-5 text-muted-foreground" />
               <h3 className="mb-1.5 text-sm font-medium">Encrypted in transit</h3>
-              <p className="text-[13px] text-muted-foreground">All connections use TLS and secure WebSockets (WSS). Data is encrypted from provider to your app.</p>
+              <p className="text-[13px] text-muted-foreground">All connections use TLS and secure WebSockets (WSS). Webhook signatures from Stripe, GitHub, etc. are preserved — signature verification works as normal.</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Shield className="mb-2.5 size-5 text-muted-foreground" />

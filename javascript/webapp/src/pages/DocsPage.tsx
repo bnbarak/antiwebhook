@@ -194,8 +194,8 @@ const BOTTOM_SECTIONS = [
 ];
 
 const VIEW_LABELS: Record<DocsView, string> = {
-  integrations: "Server Integrations",
-  agents: "AI Agents (API/Skills)",
+  integrations: "Getting Started",
+  agents: "AI Agents",
   sdk: "SDK",
   cli: "CLI",
 };
@@ -270,9 +270,32 @@ function CopyableCode({ code, title }: { code: string; title?: string }) {
 }
 
 function InlineCode({ children }: { children: React.ReactNode }) {
+  const [copied, setCopied] = useState(false);
+  const text = typeof children === "string" ? children : "";
+
+  const handleCopy = () => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
-    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+    <code
+      className="group relative cursor-pointer rounded bg-muted px-1 py-0.5 font-mono text-[11px] transition-colors hover:bg-muted/80"
+      onClick={handleCopy}
+      title={text ? "Click to copy" : undefined}
+    >
       {children}
+      {text && (
+        <span className="pointer-events-none absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {copied ? (
+            <Check className="size-3 text-status-green-text" />
+          ) : (
+            <Copy className="size-3 text-muted-foreground" />
+          )}
+        </span>
+      )}
     </code>
   );
 }
@@ -983,14 +1006,14 @@ listenToWebhooks(app, "${displayKey}",
                 </h3>
                 <p className="mb-3 text-[13px] text-muted-foreground">
                   Instead of passing the key inline, you can set the{" "}
-                  <InlineCode>SIMPLEHOOK_API_KEY</InlineCode> environment variable
+                  <InlineCode>SIMPLEHOOK_KEY</InlineCode> environment variable
                   and pass only the app instance:
                 </p>
                 {/* Node env */}
                 <div className={activeLang === "node" ? "" : "hidden"}>
                   <CopyableCode
                     code={`# .env
-SIMPLEHOOK_API_KEY=${displayKey}
+SIMPLEHOOK_KEY=${displayKey}
 
 # then in code:
 listenToWebhooks(app);`}
@@ -1001,7 +1024,7 @@ listenToWebhooks(app);`}
                 <div className={activeLang === "python" ? "" : "hidden"}>
                   <CopyableCode
                     code={`# .env
-SIMPLEHOOK_API_KEY=${displayKey}
+SIMPLEHOOK_KEY=${displayKey}
 
 # then in code:
 listenToWebhooks(app)`}
@@ -1700,6 +1723,16 @@ console.log(response.text);`}
                   auto-expires after 30 days. We never sell or share your
                   webhook data with third parties and use no third-party
                   analytics or tracking.
+                </p>
+              </div>
+
+              {/* Rate limits */}
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">Rate limits</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  Free: 500 events/month, 500 API requests/minute per project.
+                  Pro: 50,000 events/month, 500 API requests/minute per project.
+                  Webhook signature headers from providers (e.g. Stripe's <InlineCode>X-Stripe-Signature</InlineCode>) are preserved end-to-end — signature verification works as normal.
                 </p>
               </div>
             </div>

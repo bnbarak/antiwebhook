@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/routes", label: "Routes", icon: GitBranch },
   { to: "/events", label: "Events", icon: Activity },
-  { to: "/listeners", label: "Listeners", icon: Radio },
+  { to: "/listeners", label: "Connections", icon: Radio },
 ];
 
 export function AppLayout() {
