@@ -101,7 +101,7 @@ function formatBody(provider, path, body) {
 
 // ── Table rendering ──────────────────────────────────────────────────
 
-const COL = { time: 10, provider: 10, path: 20, method: 8, status: 8, body: 36 };
+const COL = { time: 10, listener: 12, provider: 10, path: 20, method: 8, status: 8, body: 30 };
 
 function pad(str, len) {
   const visible = str.replace(/\x1b\[[0-9;]*m/g, ""); // strip ANSI for length calc
@@ -142,21 +142,23 @@ function renderNow() {
 
   // Header
   output += "\n";
-  output += `  ${chalk.bold("simplehook")} ${chalk.dim("— live webhook monitor")}`;
-  output += `${" ".repeat(Math.max(2, 60 - 33))}${chalk.bold.white(`${events.length}`)} ${chalk.dim("events received")}\n`;
+  const listenerLabel = listenerId ? chalk.magenta(listenerId) : chalk.dim("default");
+  output += `  ${chalk.bold("simplehook")} ${chalk.dim("—")} ${listenerLabel} ${chalk.dim("— live webhook monitor")}`;
+  output += `${" ".repeat(Math.max(2, 40 - (listenerId?.length || 7)))}${chalk.bold.white(`${events.length}`)} ${chalk.dim("events received")}\n`;
   output += `  ${bar}\n`;
   output += "\n";
 
   // Table header
-  const headerRow = `  ${chalk.dim("|")} ${chalk.bold(pad("Time", COL.time))}${chalk.dim("|")} ${chalk.bold(pad("Provider", COL.provider))}${chalk.dim("|")} ${chalk.bold(pad("Path", COL.path))}${chalk.dim("|")} ${chalk.bold(center("Method", COL.method))}${chalk.dim("|")} ${chalk.bold(center("Status", COL.status))}${chalk.dim("|")} ${chalk.bold(pad("Body Preview", COL.body))}${chalk.dim("|")}`;
+  const headerRow = `  ${chalk.dim("|")} ${chalk.bold(pad("Time", COL.time))}${chalk.dim("|")} ${chalk.bold(pad("Listener", COL.listener))}${chalk.dim("|")} ${chalk.bold(pad("Provider", COL.provider))}${chalk.dim("|")} ${chalk.bold(pad("Path", COL.path))}${chalk.dim("|")} ${chalk.bold(center("Method", COL.method))}${chalk.dim("|")} ${chalk.bold(center("Status", COL.status))}${chalk.dim("|")} ${chalk.bold(pad("Body Preview", COL.body))}${chalk.dim("|")}`;
   output += headerRow + "\n";
 
-  const sepRow = `  ${chalk.dim("|")}${chalk.dim("=".repeat(COL.time + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.provider + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.path + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.method + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.status + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.body + 1))}${chalk.dim("|")}`;
+  const sepRow = `  ${chalk.dim("|")}${chalk.dim("=".repeat(COL.time + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.listener + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.provider + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.path + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.method + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.status + 1))}${chalk.dim("|")}${chalk.dim("=".repeat(COL.body + 1))}${chalk.dim("|")}`;
   output += sepRow + "\n";
 
   // Event rows
   for (const ev of visibleEvents) {
     const time = chalk.dim(ev.time);
+    const listener = chalk.magenta(ev.listener);
     const colorFn = PROVIDER_COLORS[ev.provider] || chalk.gray;
     const provider = colorFn(ev.provider);
     const path = chalk.white(ev.path);
@@ -166,11 +168,12 @@ function renderNow() {
       : chalk.red(String(ev.status));
     const body = ev.bodyPreview;
 
-    output += `  ${chalk.dim("|")} ${pad(time, COL.time)}${chalk.dim("|")} ${pad(provider, COL.provider)}${chalk.dim("|")} ${pad(path, COL.path)}${chalk.dim("|")} ${center(method, COL.method)}${chalk.dim("|")} ${center(status, COL.status)}${chalk.dim("|")} ${pad(body, COL.body)}${chalk.dim("|")}\n`;
+    output += `  ${chalk.dim("|")} ${pad(time, COL.time)}${chalk.dim("|")} ${pad(listener, COL.listener)}${chalk.dim("|")} ${pad(provider, COL.provider)}${chalk.dim("|")} ${pad(path, COL.path)}${chalk.dim("|")} ${center(method, COL.method)}${chalk.dim("|")} ${center(status, COL.status)}${chalk.dim("|")} ${pad(body, COL.body)}${chalk.dim("|")}\n`;
   }
 
+  const totalCols = COL.time + COL.listener + COL.provider + COL.path + COL.method + COL.status + COL.body + 6;
   if (visibleEvents.length === 0) {
-    output += `  ${chalk.dim("|")} ${chalk.dim(center("Waiting for webhooks...", COL.time + COL.provider + COL.path + COL.method + COL.status + COL.body + 5))} ${chalk.dim("|")}\n`;
+    output += `  ${chalk.dim("|")} ${chalk.dim(center("Waiting for webhooks...", totalCols))} ${chalk.dim("|")}\n`;
   }
 
   // Footer
@@ -196,6 +199,7 @@ function addEvent(provider, req, status = 200) {
 
   events.push({
     time,
+    listener: listenerId || "default",
     provider,
     path: req.url,
     method: req.method,
