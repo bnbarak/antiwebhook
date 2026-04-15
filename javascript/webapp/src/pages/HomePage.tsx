@@ -559,9 +559,9 @@ export function HomePage() {
                     ["Runs as", "SDK in your app", "Separate process", "Cloud platform"],
                     ["Offline events", "Queued + replayed", "Lost", "Queued"],
                     ["Response passthrough", "Yes (passthrough mode)", "Yes", "No"],
-                    ["Event replay", "One click", "No", "Yes"],
+                    ["Event replay", "One click", "Yes (inspector)", "Yes"],
                     ["AI Agent API", "Yes (pull/stream)", "No", "No"],
-                    ["Price", "$5/mo flat", "Free tier / $8+/mo", "Free tier / $25+/mo"],
+                    ["Price", "$9/mo flat", "Free / $8+/mo", "Free / $39+/mo"],
                   ].map(([feature, aw, ngrok, hookdeck]) => (
                     <tr key={feature} className="border-b last:border-0">
                       <td className="px-3 py-2.5 font-medium text-foreground">{feature}</td>

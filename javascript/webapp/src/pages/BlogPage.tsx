@@ -10,6 +10,13 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "webhook-dx-is-broken",
+    title: "The Webhook Developer Experience Is Broken",
+    description:
+      "Why receiving webhooks locally is still painful in 2026, how ngrok and Hookdeck approach the problem differently, and what simplehook does instead.",
+    date: "April 2026",
+  },
+  {
     slug: "webhooks-that-never-change",
     title: "Webhooks That Never Change",
     description:

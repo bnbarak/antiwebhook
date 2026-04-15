@@ -26,6 +26,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://simplehook.dev/blog/webhook-dx-is-broken</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://simplehook.dev/blog/webhooks-that-never-change</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
