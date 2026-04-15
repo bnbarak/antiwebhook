@@ -5,11 +5,10 @@ import https from "node:https";
 
 interface Route {
   id: string;
-  path: string;
+  path_prefix: string;
   mode: string;
-  listener_id?: string;
-  timeout?: number;
-  pending?: number;
+  listener_id?: string | null;
+  timeout_seconds?: number;
   created_at?: string;
 }
 
@@ -116,20 +115,20 @@ export async function runRoutesList(flags: RoutesListFlags): Promise<void> {
     console.log(
       padRow(
         r.id,
-        r.path,
+        r.path_prefix,
         r.mode,
         r.listener_id ?? "-",
-        r.timeout !== undefined ? `${r.timeout}s` : "-",
+        r.timeout_seconds !== undefined ? `${r.timeout_seconds}s` : "-",
       ),
     );
   }
 }
 
 export async function runRoutesCreate(flags: RoutesCreateFlags): Promise<void> {
-  const payload: Record<string, unknown> = { path: flags.path };
+  const payload: Record<string, unknown> = { path_prefix: flags.path };
   if (flags.mode) payload.mode = flags.mode;
   if (flags.listener) payload.listener_id = flags.listener;
-  if (flags.timeout !== undefined) payload.timeout = flags.timeout;
+  if (flags.timeout !== undefined) payload.timeout_seconds = flags.timeout;
 
   const res = await request("POST", "/api/routes", flags.key, flags.server, payload);
   handleAuthError(res.status);
@@ -141,10 +140,10 @@ export async function runRoutesCreate(flags: RoutesCreateFlags): Promise<void> {
   const route: Route = JSON.parse(res.body);
   console.log(`Route created.`);
   console.log(`  ID:        ${route.id}`);
-  console.log(`  Path:      ${route.path}`);
+  console.log(`  Path:      ${route.path_prefix}`);
   console.log(`  Mode:      ${route.mode}`);
   if (route.listener_id) console.log(`  Listener:  ${route.listener_id}`);
-  if (route.timeout !== undefined) console.log(`  Timeout:   ${route.timeout}s`);
+  if (route.timeout_seconds !== undefined) console.log(`  Timeout:   ${route.timeout_seconds}s`);
 }
 
 export async function runRoutesDelete(flags: RoutesDeleteFlags): Promise<void> {

@@ -2,11 +2,6 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { ChevronDown } from "lucide-react";
 
-interface FaqItem {
-  q: string;
-  a: string;
-}
-
 const FAQS: FaqItem[] = [
   // Core concepts
   {
@@ -44,6 +39,7 @@ const FAQS: FaqItem[] = [
   {
     q: "How does targeted routing work?",
     a: "Create a route in the dashboard or CLI (e.g., /stripe → dev). When a webhook arrives at /stripe/*, it's delivered only to the 'dev' connection. Other connections don't see it. If no route targeting is set, webhooks go to any connected SDK — this is the default behavior.",
+    image: "/productExamples/addRoute.png",
   },
   {
     q: "What happens if a targeted connection is offline?",
@@ -80,6 +76,7 @@ const FAQS: FaqItem[] = [
   {
     q: "My webhook isn't arriving. What should I check?",
     a: "1) Is your SDK connected? Check the Connections page in the dashboard for a green status dot. 2) Is your API key correct? The key starts with ak_. 3) Is the webhook URL correct? It should be https://hook.simplehook.dev/hooks/<project_id>/<path>. 4) Check the Events page — if the event shows as 'pending', your SDK might not be connected. If it shows as 'delivered', check your app's route handlers.",
+    image: "/productExamples/eventsTable.png",
   },
   {
     q: "I see 'disconnected, reconnecting' in my terminal.",
@@ -88,10 +85,31 @@ const FAQS: FaqItem[] = [
   {
     q: "Events are stuck as 'pending'.",
     a: "This means the webhook arrived but hasn't been delivered to your SDK yet. Either your app isn't running, or the event is targeted to a specific connection that's offline. Check the Connections page to see which connections are online.",
+    image: "/productExamples/listeners.png",
+  },
+
+  // Signatures
+  {
+    q: "How does delivery verification work?",
+    a: "Every event delivered by simplehook is signed with HMAC-SHA256. The signing key is derived from your API key — no new secrets to manage. The SDK verifies signatures automatically. If you use the agent pull API, each event includes webhook_id, webhook_timestamp, and webhook_signature fields. You can verify with verifyWebhook() from @simplehook/core.",
+  },
+  {
+    q: "Is this the same as Stripe's webhook signature?",
+    a: "No. Stripe signs webhooks with their own secret so you can verify the event came from Stripe. simplehook preserves Stripe's signature AND adds its own. simplehook's signature proves the event was delivered through simplehook's infrastructure — not spoofed by someone who knows your webhook URL. Two separate trust chains, both work together.",
+  },
+  {
+    q: "Do I follow the Standard Webhooks spec?",
+    a: "Yes. simplehook's delivery signatures follow the Standard Webhooks specification (standardwebhooks.com) — using webhook-id, webhook-timestamp, and webhook-signature headers with HMAC-SHA256 signing.",
   },
 ];
 
-function FaqItem({ item }: { item: FaqItem }) {
+interface FaqItem {
+  q: string;
+  a: string;
+  image?: string;
+}
+
+function FaqItemComponent({ item }: { item: FaqItem }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -106,9 +124,18 @@ function FaqItem({ item }: { item: FaqItem }) {
         />
       </button>
       {open && (
-        <p className="pb-5 text-[14px] leading-relaxed text-muted-foreground">
-          {item.a}
-        </p>
+        <div className="pb-5">
+          <p className="text-[14px] leading-relaxed text-muted-foreground">
+            {item.a}
+          </p>
+          {item.image && (
+            <img
+              src={item.image}
+              alt={item.q}
+              className="mt-4 rounded-lg border border-border shadow-sm"
+            />
+          )}
+        </div>
       )}
     </div>
   );
@@ -139,7 +166,7 @@ export function FaqPage() {
 
           <div className="rounded-xl border border-border bg-card">
             {FAQS.map((faq, i) => (
-              <FaqItem key={i} item={faq} />
+              <FaqItemComponent key={i} item={faq} />
             ))}
           </div>
 

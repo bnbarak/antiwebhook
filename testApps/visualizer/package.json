@@ -6,7 +6,7 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "@simplehook/express": "^0.3.1",
+    "@simplehook/express": "^0.3.2",
     "chalk": "^5.4.1",
     "express": "^4.21.0",
     "log-update": "^8.0.0"

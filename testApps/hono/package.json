@@ -8,6 +8,6 @@
   "dependencies": {
     "hono": "^4.0.0",
     "@hono/node-server": "^1.13.0",
-    "@simplehook/hono": "^0.3.0"
+    "@simplehook/hono": "^0.3.1"
   }
 }

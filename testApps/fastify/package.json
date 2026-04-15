@@ -7,6 +7,6 @@
   },
   "dependencies": {
     "fastify": "^5.8.4",
-    "@simplehook/fastify": "^0.3.0"
+    "@simplehook/fastify": "^0.3.1"
   }
 }

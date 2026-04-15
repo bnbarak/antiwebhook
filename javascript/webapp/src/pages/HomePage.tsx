@@ -717,6 +717,20 @@ export function HomePage() {
             No third-party analytics. No tracking. We never sell or share your data.{" "}
             <a href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">Full privacy details</a>
           </p>
+
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <a
+              href="https://www.standardwebhooks.com/"
+              className="flex items-center gap-2.5 rounded-lg border border-border px-4 py-2.5 transition-colors hover:border-border-strong"
+            >
+              <img
+                src="https://www.standardwebhooks.com/_next/static/media/logo-icon-text-bw.963dab3a.svg"
+                alt="Standard Webhooks"
+                className="h-5 invert"
+              />
+              <span className="text-xs text-muted-foreground">compliant</span>
+            </a>
+          </div>
         </div>
       </section>
 
