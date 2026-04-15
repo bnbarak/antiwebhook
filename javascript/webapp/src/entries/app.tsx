@@ -21,6 +21,7 @@ import { PrivacyPage } from "@/pages/PrivacyPage.js";
 import { TermsPage } from "@/pages/TermsPage.js";
 import { FaqPage } from "@/pages/FaqPage.js";
 import { BlogPage } from "@/pages/BlogPage.js";
+import { BlogPostWebhooksThatNeverChange } from "@/pages/BlogPostWebhooksThatNeverChange.js";
 import { Webhook } from "lucide-react";
 import { MarketingShell } from "@/components/layout/MarketingShell.js";
 
@@ -89,6 +90,7 @@ createRoot(root).render(
               {/* Marketing pages with nav + footer */}
               <Route path="/faq" element={<MarketingShell><FaqPage /></MarketingShell>} />
               <Route path="/blog" element={<MarketingShell><BlogPage /></MarketingShell>} />
+              <Route path="/blog/webhooks-that-never-change" element={<MarketingShell><BlogPostWebhooksThatNeverChange /></MarketingShell>} />
 
               {/* Protected dashboard routes */}
               <Route element={<ProtectedRoute />}>
