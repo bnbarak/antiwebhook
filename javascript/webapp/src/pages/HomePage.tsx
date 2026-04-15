@@ -718,10 +718,16 @@ export function HomePage() {
             <a href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">Full privacy details</a>
           </p>
 
-          <p className="mt-6 text-center text-[12px] text-text-tertiary">
-            Delivery signatures follow the{" "}
-            <a href="https://www.standardwebhooks.com/" className="underline underline-offset-2 hover:text-foreground transition-colors">Standard Webhooks</a> spec.
-          </p>
+          <a
+            href="https://www.standardwebhooks.com/"
+            className="mt-8 mx-auto flex items-center gap-2 w-fit opacity-40 hover:opacity-70 transition-opacity"
+          >
+            <img
+              src="https://www.standardwebhooks.com/_next/static/media/logo-icon-text-bw.963dab3a.svg"
+              alt="Standard Webhooks"
+              className="h-7 invert"
+            />
+          </a>
         </div>
       </section>
 
