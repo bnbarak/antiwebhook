@@ -692,16 +692,16 @@ export function DocsPage() {
 
           {/* API key injection button */}
           {session && project?.api_key && (
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-3 h-10">
               {injectedKey ? (
                 <>
-                  <span className="inline-flex items-center gap-1.5 rounded-md border border-green-600/30 bg-green-600/10 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-400">
-                    <Check className="size-3.5" />
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-green-600/30 bg-green-600/10 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
+                    <Check className="size-4" />
                     API key active in examples
                   </span>
                   <button
                     onClick={handleResetKey}
-                    className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
                   >
                     Reset to placeholder
                   </button>
