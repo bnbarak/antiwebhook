@@ -720,12 +720,12 @@ export function HomePage() {
 
           <a
             href="https://www.standardwebhooks.com/"
-            className="mt-8 mx-auto flex items-center gap-2 w-fit opacity-40 hover:opacity-70 transition-opacity"
+            className="mt-5 mb-[-8px] mx-auto flex items-center gap-2 w-fit opacity-50 hover:opacity-80 transition-opacity"
           >
             <img
               src="https://www.standardwebhooks.com/_next/static/media/logo-icon-text-bw.963dab3a.svg"
               alt="Standard Webhooks"
-              className="h-7 invert"
+              className="h-6 invert"
             />
           </a>
         </div>
