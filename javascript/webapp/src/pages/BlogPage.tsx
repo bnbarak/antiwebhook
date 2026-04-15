@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
 
 export function BlogPage() {
   return (
@@ -33,6 +34,61 @@ export function BlogPage() {
               It's a small thing. But small things that happen every day are just big things you've
               stopped noticing.
             </p>
+            {/* Value cards */}
+            <div className="my-8 grid grid-cols-1 md:grid-cols-3 rounded-xl border border-border bg-card/30">
+              <div className="px-5 py-5 md:border-r md:border-border">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] text-muted-foreground">01</span>
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">Permanent URL</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  Set your webhook URL once in Stripe, GitHub, or any provider.
+                  It stays the same across restarts, machines, and teammates.
+                </p>
+              </div>
+              <div className="border-t border-border px-5 py-5 md:border-t-0 md:border-r md:border-border">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] text-muted-foreground">02</span>
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">Offline resilient</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  Close your laptop, events queue. Open it tomorrow, they replay
+                  automatically. Nothing is lost.
+                </p>
+              </div>
+              <div className="border-t border-border px-5 py-5 md:border-t-0">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] text-muted-foreground">03</span>
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">Signed delivery</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  Every event signed with HMAC-SHA256. Provider signatures preserved end-to-end.
+                  Follows the <a href="https://www.standardwebhooks.com/" className="underline underline-offset-2 hover:text-foreground transition-colors">Standard Webhooks</a> spec.
+                </p>
+              </div>
+            </div>
+
+            {/* How it works diagram */}
+            <div className="my-8">
+              <h3 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">How it works</h3>
+              <div className="font-mono text-[11px]">
+                <FlowRow>
+                  <FlowNode>Stripe / GitHub</FlowNode>
+                  <FlowArrow label="POST" />
+                  <FlowNode highlight>simplehook</FlowNode>
+                  <FlowArrow label="WS" />
+                  <FlowNode>Your app</FlowNode>
+                </FlowRow>
+                <FlowRow className="mt-1">
+                  <span className="shrink-0 px-2.5 text-[9px] text-muted-foreground/60" style={{ width: "calc(var(--node-w, 100px))" }}>webhook provider</span>
+                  <span className="flex-1" />
+                  <span className="shrink-0 px-2.5 text-center text-[9px] text-muted-foreground/60">cloud relay</span>
+                  <span className="flex-1" />
+                  <span className="shrink-0 px-2.5 text-right text-[9px] text-muted-foreground/60">localhost</span>
+                </FlowRow>
+              </div>
+            </div>
+
             <p>
               I built simplehook because I got tired of managing webhook URLs. The idea is simple:
               you get a URL that never changes. Set it once in Stripe, once in GitHub, and never
