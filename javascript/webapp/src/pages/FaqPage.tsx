@@ -113,7 +113,7 @@ function FaqItemComponent({ item }: { item: FaqItem }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-b border-border last:border-0">
+    <div className="border-b border-border px-6 last:border-0">
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between gap-4 py-5 text-left transition-colors hover:text-foreground"
