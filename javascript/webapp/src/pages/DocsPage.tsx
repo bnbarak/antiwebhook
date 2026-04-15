@@ -1716,6 +1716,61 @@ console.log(response.text);`}
 
           <SectionDivider />
 
+          {/* ── Delivery Verification ──────────────────────────────────── */}
+          <section className="py-16">
+            <Kicker>Security</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Delivery verification
+            </h2>
+            <p className="mb-6 max-w-[560px] text-[15px] text-muted-foreground">
+              Every event delivered by simplehook is signed with HMAC-SHA256 following the{" "}
+              <a href="https://www.standardwebhooks.com/" className="underline underline-offset-2 hover:text-foreground transition-colors">Standard Webhooks</a> spec.
+              The SDK verifies signatures automatically — no code needed.
+            </p>
+
+            <div className="flex flex-col gap-6">
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">How it works</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  The signing key is derived from your API key — no new secrets to manage.
+                  Each delivered event includes <InlineCode>webhook-id</InlineCode>,{" "}
+                  <InlineCode>webhook-timestamp</InlineCode>, and <InlineCode>webhook-signature</InlineCode> headers.
+                  The SDK verifies these before dispatching to your route handlers. Invalid events are rejected silently.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-2 text-sm font-medium">For agent pull API users</h3>
+                <p className="mb-3 text-[13px] text-muted-foreground">
+                  Each event in the pull response includes <InlineCode>webhook_signature</InlineCode>.
+                  Verify with one function call:
+                </p>
+                <CopyableCode
+                  code={`import { verifyWebhook } from "@simplehook/core";
+
+const valid = verifyWebhook(
+  process.env.SIMPLEHOOK_KEY,
+  event.webhook_id,
+  String(event.webhook_timestamp),
+  event.body ?? "",
+  event.webhook_signature
+);`}
+                  title="verify"
+                />
+              </div>
+
+              <div className="rounded-lg border border-border bg-card/50 p-4">
+                <p className="text-[13px] text-muted-foreground">
+                  <strong>Provider signatures are preserved.</strong> Stripe's <InlineCode>X-Stripe-Signature</InlineCode>,
+                  GitHub's HMAC — all original headers are forwarded as-is.
+                  simplehook's signature is an additional layer on top of the provider's own verification.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <SectionDivider />
+
           {/* ── Privacy & Security ─────────────────────────────────────── */}
           <section
             id="privacy"

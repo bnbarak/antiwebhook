@@ -699,8 +699,8 @@ export function HomePage() {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Lock className="mb-2.5 size-5 text-muted-foreground" />
-              <h3 className="mb-1.5 text-sm font-medium">Encrypted in transit</h3>
-              <p className="text-[13px] text-muted-foreground">All connections use TLS and secure WebSockets (WSS). Webhook signatures from Stripe, GitHub, etc. are preserved — signature verification works as normal.</p>
+              <h3 className="mb-1.5 text-sm font-medium">Signed delivery</h3>
+              <p className="text-[13px] text-muted-foreground">Every event is signed with HMAC-SHA256 before delivery. The SDK verifies automatically. Provider signatures (Stripe, GitHub) are also preserved end-to-end.</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-5 py-5 transition-all hover:border-border-strong hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Shield className="mb-2.5 size-5 text-muted-foreground" />
@@ -725,7 +725,7 @@ export function HomePage() {
             <img
               src="https://www.standardwebhooks.com/_next/static/media/logo-icon-text-bw.963dab3a.svg"
               alt="Standard Webhooks"
-              className="h-6 invert"
+              className="h-6"
             />
           </a>
         </div>
