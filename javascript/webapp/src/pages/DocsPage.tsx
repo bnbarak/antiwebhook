@@ -1435,6 +1435,23 @@ console.log(status.cursors);`}
               Pull events and check status from the terminal. Pipe JSON output to other tools.
             </p>
             <CopyableCode code="npm install -g @simplehook/cli" title="terminal" />
+
+            <div className="mt-6 rounded-lg border border-border bg-card p-5">
+              <h3 className="mb-2 text-sm font-medium">Authentication</h3>
+              <p className="mb-3 text-[13px] text-muted-foreground">
+                Set your API key as an environment variable. All CLI commands read from <InlineCode>SIMPLEHOOK_KEY</InlineCode> automatically — no need to pass <InlineCode>--key</InlineCode> every time.
+              </p>
+              <CopyableCode
+                code={`export SIMPLEHOOK_KEY=${displayKey}
+
+# Verify it works
+simplehook status`}
+                title="terminal"
+              />
+              <p className="mt-3 text-[12px] text-muted-foreground">
+                You can also pass <InlineCode>--key ak_...</InlineCode> directly to any command, or set <InlineCode>SIMPLEHOOK_SERVER</InlineCode> to point at a custom server.
+              </p>
+            </div>
           </section>
 
           <SectionDivider />
