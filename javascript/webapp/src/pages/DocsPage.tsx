@@ -180,10 +180,10 @@ const SECTIONS: Record<DocsView, Array<{ id: string; label: string }>> = {
   ],
   cli: [
     { id: "cli-install", label: "Install" },
-    { id: "cli-pull", label: "simplehook pull" },
-    { id: "cli-status", label: "simplehook status" },
-    { id: "cli-routes", label: "simplehook routes" },
-    { id: "cli-listeners", label: "simplehook listeners" },
+    { id: "cli-pull", label: "pull" },
+    { id: "cli-status", label: "status" },
+    { id: "cli-routes", label: "routes" },
+    { id: "cli-listeners", label: "listeners" },
     { id: "cli-env", label: "Environment Variables" },
   ],
 };
