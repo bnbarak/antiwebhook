@@ -742,7 +742,8 @@ export function DocsPage() {
               simplehook gives you a webhook URL that never changes. Point
               Stripe, GitHub, or any provider at it once — webhooks arrive on
               your local machine via SDK. No ngrok, no tunnels, no URL that
-              expires.
+              expires.{" "}
+              <a href="/blog" className="underline underline-offset-2 hover:text-foreground transition-colors">Read the full story</a>.
             </p>
             <div className="mb-10 grid grid-cols-1 md:grid-cols-3 rounded-xl border border-border bg-card/30">
               <div className="px-5 py-5 md:border-r md:border-border">

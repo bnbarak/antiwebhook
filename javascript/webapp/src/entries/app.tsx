@@ -20,6 +20,7 @@ import { AgentsPage } from "@/pages/AgentsPage.js";
 import { PrivacyPage } from "@/pages/PrivacyPage.js";
 import { TermsPage } from "@/pages/TermsPage.js";
 import { FaqPage } from "@/pages/FaqPage.js";
+import { BlogPage } from "@/pages/BlogPage.js";
 import { Webhook } from "lucide-react";
 import { MarketingShell } from "@/components/layout/MarketingShell.js";
 
@@ -85,8 +86,9 @@ createRoot(root).render(
                 <Route path="/terms" element={<TermsPage />} />
               </Route>
 
-              {/* FAQ with marketing shell (nav + footer) */}
+              {/* Marketing pages with nav + footer */}
               <Route path="/faq" element={<MarketingShell><FaqPage /></MarketingShell>} />
+              <Route path="/blog" element={<MarketingShell><BlogPage /></MarketingShell>} />
 
               {/* Protected dashboard routes */}
               <Route element={<ProtectedRoute />}>
