@@ -690,7 +690,6 @@ export function DashboardPage() {
 
         {/* Time Window Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Window:</span>
           <div className="inline-flex items-center rounded-lg border bg-card p-0.5 gap-0.5">
             {WINDOWS.map((w) => (
               <Button
