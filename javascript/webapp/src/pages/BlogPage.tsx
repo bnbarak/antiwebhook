@@ -57,6 +57,18 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
               waiting. No "can you resend that?" No clicking "Send test webhook" in the Stripe
               dashboard for the fifth time. They just show up.
             </p>
+            <div className="my-8 overflow-hidden rounded-xl border border-border shadow-lg">
+              <img
+                src="/productExamples/visualizer.gif"
+                alt="simplehook visualizer — live webhook events arriving in terminal"
+                className="w-full"
+                loading="lazy"
+              />
+              <p className="bg-card/50 px-4 py-2.5 text-center font-mono text-[11px] text-muted-foreground">
+                Live webhook events from Stripe, GitHub, Twilio arriving via simplehook
+              </p>
+            </div>
+
             <p>
               Your whole team shares the same URL. No more "which ngrok instance is the live one"
               in Slack. No more <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[13px]">.env</code> files
