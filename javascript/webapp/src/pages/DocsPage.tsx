@@ -744,18 +744,36 @@ export function DocsPage() {
               your local machine via SDK. No ngrok, no tunnels, no URL that
               expires.
             </p>
-            <div className="mb-8 flex flex-col gap-2 text-[13px] text-muted-foreground">
-              <div className="flex items-baseline gap-2">
-                <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
-                URL stays the same across restarts, machines, and teammates
+            <div className="mb-10 grid grid-cols-1 md:grid-cols-3 rounded-xl border border-border bg-card/30">
+              <div className="px-5 py-5 md:border-r md:border-border">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] text-muted-foreground">01</span>
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">Permanent URL</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  Set your webhook URL once in Stripe, GitHub, or any provider.
+                  It stays the same across restarts, machines, and teammates.
+                </p>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
-                Events queue when you're offline and replay on reconnect
+              <div className="border-t border-border px-5 py-5 md:border-t-0 md:border-r md:border-border">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] text-muted-foreground">02</span>
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">Offline resilient</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  Close your laptop, events queue. Open it tomorrow, they replay
+                  automatically. Nothing is lost.
+                </p>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
-                Webhook signatures (Stripe, GitHub) preserved end-to-end
+              <div className="border-t border-border px-5 py-5 md:border-t-0">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] text-muted-foreground">03</span>
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">Signatures intact</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  All headers forwarded as-is. Stripe's <InlineCode>X-Stripe-Signature</InlineCode>,
+                  GitHub's HMAC — verification works like production.
+                </p>
               </div>
             </div>
 
