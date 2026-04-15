@@ -1,5 +1,6 @@
 import http from "node:http";
 import https from "node:https";
+import { verifyWebhook } from "./verify.js";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -11,6 +12,11 @@ export interface WebhookEvent {
   body: string | null;
   status: string;
   received_at: string;
+  webhook_id?: string;
+  webhook_timestamp?: number;
+  webhook_signature?: string;
+  /** Set by the SDK after verifying the delivery signature. */
+  verified?: boolean;
 }
 
 export interface PullResult {
@@ -101,7 +107,20 @@ export class SimplehookAgent {
     if (res.status !== 200) {
       throw new Error(`Pull failed: HTTP ${res.status}`);
     }
-    return JSON.parse(res.body);
+    const result: PullResult = JSON.parse(res.body);
+    // Auto-verify delivery signatures
+    for (const event of result.events) {
+      if (event.webhook_id && event.webhook_timestamp && event.webhook_signature) {
+        event.verified = verifyWebhook(
+          this.apiKey,
+          event.webhook_id,
+          String(event.webhook_timestamp),
+          event.body ?? "",
+          event.webhook_signature,
+        );
+      }
+    }
+    return result;
   }
 
   /**
@@ -164,7 +183,19 @@ export class SimplehookAgent {
                 if (data === "{}" || !data) continue; // heartbeat
                 try {
                   const event: WebhookEvent = JSON.parse(data);
-                  if (event.id) handler(event);
+                  if (event.id) {
+                    // Auto-verify signature
+                    if (event.webhook_id && event.webhook_timestamp && event.webhook_signature) {
+                      event.verified = verifyWebhook(
+                        this.apiKey,
+                        event.webhook_id,
+                        String(event.webhook_timestamp),
+                        event.body ?? "",
+                        event.webhook_signature,
+                      );
+                    }
+                    handler(event);
+                  }
                 } catch {
                   // skip unparseable
                 }

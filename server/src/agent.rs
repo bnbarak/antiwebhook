@@ -88,15 +88,27 @@ pub struct PullEventResponse {
     pub body: Option<String>,
     pub status: String,
     pub received_at: DateTime<Utc>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub webhook_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub webhook_timestamp: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub webhook_signature: Option<String>,
 }
 
-impl From<db::Event> for PullEventResponse {
-    fn from(e: db::Event) -> Self {
+impl PullEventResponse {
+    pub fn from_event(e: db::Event, signing_key: Option<&[u8]>) -> Self {
         let body = e.body.map(|b| {
             String::from_utf8(b.clone()).unwrap_or_else(|_| {
                 base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &b)
             })
         });
+        let (wh_id, wh_ts, wh_sig) = if let Some(key) = signing_key {
+            let (ts, sig) = crate::signature::sign_event(key, &e.id, body.as_deref());
+            (Some(e.id.clone()), Some(ts), Some(sig))
+        } else {
+            (None, None, None)
+        };
         Self {
             id: e.id,
             path: e.path,
@@ -105,6 +117,9 @@ impl From<db::Event> for PullEventResponse {
             body,
             status: e.status,
             received_at: e.created_at,
+            webhook_id: wh_id,
+            webhook_timestamp: wh_ts,
+            webhook_signature: wh_sig,
         }
     }
 }
@@ -224,8 +239,9 @@ async fn pull_instant(
         0
     };
 
+    let signing_key = crate::signature::derive_signing_key(&project.api_key);
     Ok(PullResponse {
-        events: events.into_iter().map(PullEventResponse::from).collect(),
+        events: events.into_iter().map(|e| PullEventResponse::from_event(e, Some(&signing_key))).collect(),
         cursor: new_cursor_id.or_else(|| effective_cursor.map(String::from)),
         remaining,
     })
@@ -343,7 +359,8 @@ async fn pull_stream(
             if let Ok(events) = events {
                 for event in events {
                     let eid = event.id.clone();
-                    let resp = PullEventResponse::from(event);
+                    let stream_signing_key = crate::signature::derive_signing_key(&project.api_key);
+                    let resp = PullEventResponse::from_event(event, Some(&stream_signing_key));
                     if let Ok(json) = serde_json::to_string(&resp) {
                         yield Ok::<_, Infallible>(sse::Event::default().event("webhook").data(json));
                     }
@@ -582,7 +599,7 @@ mod tests {
             delivered_at: Some(Utc::now()),
         };
 
-        let resp = PullEventResponse::from(event);
+        let resp = PullEventResponse::from_event(event, None);
         assert_eq!(resp.id, "evt_123");
         assert_eq!(resp.path, "/stripe/webhook");
         assert_eq!(resp.method, "POST");
@@ -613,7 +630,7 @@ mod tests {
             delivered_at: None,
         };
 
-        let resp = PullEventResponse::from(event);
+        let resp = PullEventResponse::from_event(event, None);
         // Binary body should be base64 encoded
         assert!(resp.body.is_some());
         let body = resp.body.unwrap();
@@ -640,7 +657,7 @@ mod tests {
             delivered_at: Some(Utc::now()),
         };
 
-        let resp = PullEventResponse::from(event);
+        let resp = PullEventResponse::from_event(event, None);
         assert!(resp.body.is_none());
     }
 

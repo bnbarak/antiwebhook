@@ -23,8 +23,22 @@ async fn process_retries(state: &AppState) -> Result<(), sqlx::Error> {
     let events = db::get_retryable_events(&state.db, 50).await?;
 
     for event in events {
-        let headers: HashMap<String, String> =
+        let mut headers: HashMap<String, String> =
             serde_json::from_value(event.headers.clone()).unwrap_or_default();
+
+        let body_b64 = event
+            .body
+            .as_ref()
+            .map(|b| base64::engine::general_purpose::STANDARD.encode(b));
+
+        // Sign the delivery — look up project API key for signing
+        if let Ok(Some(project)) = db::get_project_by_id(&state.db, &event.project_id).await {
+            let signing_key = crate::signature::derive_signing_key(&project.api_key);
+            let (sig_ts, sig_val) = crate::signature::sign_event(&signing_key, &event.id, body_b64.as_deref());
+            headers.insert("webhook-id".into(), event.id.clone());
+            headers.insert("webhook-timestamp".into(), sig_ts.to_string());
+            headers.insert("webhook-signature".into(), sig_val);
+        }
 
         let frame = RequestFrame {
             frame_type: "request".into(),
@@ -32,10 +46,7 @@ async fn process_retries(state: &AppState) -> Result<(), sqlx::Error> {
             method: event.method.clone(),
             path: event.path.clone(),
             headers,
-            body: event
-                .body
-                .as_ref()
-                .map(|b| base64::engine::general_purpose::STANDARD.encode(b)),
+            body: body_b64,
         };
 
         match state

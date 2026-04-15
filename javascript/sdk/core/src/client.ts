@@ -7,6 +7,7 @@ import type {
   ResponseFrame,
 } from "./types.js";
 import { isExplicitlyDisabled, isProduction, parseFrame } from "./utils.js";
+import { extractSignatureHeaders, verifyWebhook } from "./verify.js";
 
 const DEFAULT_URL = "wss://hook.simplehook.dev";
 const MAX_BACKOFF = 30_000;
@@ -71,6 +72,23 @@ export function createClient(
   }
 
   async function handleRequest(ws: WebSocket, frame: RequestFrame) {
+    // Auto-verify delivery signature if present
+    const sig = extractSignatureHeaders(frame.headers ?? {});
+    if (sig) {
+      const valid = verifyWebhook(apiKey, sig.id, sig.timestamp, frame.body ?? "", sig.signature);
+      if (!valid) {
+        log("[simplehook] signature verification failed, rejecting event", frame.id);
+        sendResponse(ws, {
+          type: "response",
+          id: frame.id,
+          status: 401,
+          headers: {},
+          body: null,
+        });
+        return;
+      }
+    }
+
     try {
       const response = await dispatchFn(frame);
       sendResponse(ws, response);

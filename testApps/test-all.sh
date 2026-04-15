@@ -335,7 +335,27 @@ else
   fi
 fi
 
-# ── 9. Boom test (small batch) ────────────────────────────────────────
+# ── 9. Delivery signatures ────────────────────────────────────────────
+
+log_section "Testing delivery signatures"
+
+# Pull an event and check for signature fields
+SIG_PULL=$(curl -s -H "Authorization: Bearer $API_KEY" \
+  "http://localhost:$SERVER_PORT/api/agent/pull?n=1&listener_id=sig-test")
+
+if echo "$SIG_PULL" | grep -q "webhook_signature"; then
+  log_pass "Agent pull includes webhook_signature"
+else
+  log_fail "Agent pull missing webhook_signature"
+fi
+
+if echo "$SIG_PULL" | grep -q "webhook_id"; then
+  log_pass "Agent pull includes webhook_id"
+else
+  log_fail "Agent pull missing webhook_id"
+fi
+
+# ── 10. Boom test (small batch) ───────────────────────────────────────
 
 log_section "Testing boom.js (50 webhooks)"
 

@@ -10,6 +10,7 @@ mod error;
 mod proxy;
 mod queue;
 mod rate_limit;
+mod signature;
 mod trial_worker;
 mod tunnel;
 mod user_auth;

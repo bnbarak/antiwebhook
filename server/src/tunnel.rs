@@ -251,6 +251,13 @@ async fn handle_ws(socket: WebSocket, state: Arc<AppState>, project: db::Project
 
 /// On reconnect, immediately try to deliver any pending queued events.
 async fn drain_pending(state: &AppState, project_id: &str, listener_id: Option<&str>) {
+    // Fetch project for signing key
+    let project = match db::get_project_by_id(&state.db, project_id).await {
+        Ok(Some(p)) => p,
+        _ => return,
+    };
+    let signing_key = crate::signature::derive_signing_key(&project.api_key);
+
     let events = match db::get_pending_for_project(&state.db, project_id, listener_id).await {
         Ok(e) => e,
         Err(e) => {
@@ -266,8 +273,17 @@ async fn drain_pending(state: &AppState, project_id: &str, listener_id: Option<&
     tracing::info!(project_id = %project_id, listener_id = ?listener_id, count = events.len(), "draining pending events");
 
     for event in events {
-        let headers: HashMap<String, String> =
+        let mut headers: HashMap<String, String> =
             serde_json::from_value(event.headers.clone()).unwrap_or_default();
+
+        let body_b64 = event.body.as_ref().map(|b| {
+            use base64::Engine;
+            base64::engine::general_purpose::STANDARD.encode(b)
+        });
+        let (sig_ts, sig_val) = crate::signature::sign_event(&signing_key, &event.id, body_b64.as_deref());
+        headers.insert("webhook-id".into(), event.id.clone());
+        headers.insert("webhook-timestamp".into(), sig_ts.to_string());
+        headers.insert("webhook-signature".into(), sig_val);
 
         let frame = RequestFrame {
             frame_type: "request".into(),
@@ -275,10 +291,7 @@ async fn drain_pending(state: &AppState, project_id: &str, listener_id: Option<&
             method: event.method.clone(),
             path: event.path.clone(),
             headers,
-            body: event.body.as_ref().map(|b| {
-                use base64::Engine;
-                base64::engine::general_purpose::STANDARD.encode(b)
-            }),
+            body: body_b64,
         };
 
         match state

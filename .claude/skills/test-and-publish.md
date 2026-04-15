@@ -17,7 +17,7 @@ Prerequisites:
 - `cd javascript/sdk/cli && npx tsc` (build CLI)
 - Test apps need `npm install` in each: express, fastify, hono, visualizer
 
-What it tests (21 checks):
+What it tests (23 checks):
 1. Server starts on :8413
 2. Project registration via `/api/register`
 3. @simplehook/express — WebSocket connect + Stripe webhook delivery
@@ -41,6 +41,9 @@ cd tests && node --test e2e.test.js
 # Targeted routing (8 tests)
 cd tests && node --test routing.test.js
 
+# Delivery signatures (8 tests)
+cd tests && node --test signature.test.js
+
 # Auth tests
 cd tests && node --test auth.test.js
 
@@ -48,7 +51,7 @@ cd tests && node --test auth.test.js
 cd tests && node --test stress.test.js
 
 # All integration tests
-cd tests && node --test e2e.test.js agent.test.js routing.test.js
+cd tests && node --test e2e.test.js agent.test.js routing.test.js signature.test.js
 ```
 
 Each test file spawns its own server on a unique port (8401-8406).

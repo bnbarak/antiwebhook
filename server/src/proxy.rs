@@ -89,15 +89,23 @@ pub async fn handle_webhook(
     )
     .await?;
 
-    // 5. Build request frame
+    // 5. Build request frame with delivery signature
+    let body_b64 = body_bytes
+        .map(|b| base64::engine::general_purpose::STANDARD.encode(b));
+    let signing_key = crate::signature::derive_signing_key(&project.api_key);
+    let (sig_ts, sig_val) = crate::signature::sign_event(&signing_key, &event_id, body_b64.as_deref());
+    let mut signed_headers = header_map;
+    signed_headers.insert("webhook-id".into(), event_id.clone());
+    signed_headers.insert("webhook-timestamp".into(), sig_ts.to_string());
+    signed_headers.insert("webhook-signature".into(), sig_val);
+
     let frame = RequestFrame {
         frame_type: "request".into(),
         id: event_id.clone(),
         method: method.to_string(),
         path: full_path,
-        headers: header_map,
-        body: body_bytes
-            .map(|b| base64::engine::general_purpose::STANDARD.encode(b)),
+        headers: signed_headers,
+        body: body_b64,
     };
 
     // 6. Forward based on mode
