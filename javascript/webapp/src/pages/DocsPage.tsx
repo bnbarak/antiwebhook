@@ -738,10 +738,26 @@ export function DocsPage() {
             <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
               Up and running in 60 seconds
             </h2>
-            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
-              Pick your language, install the SDK, add one line, and start
-              receiving webhooks.
+            <p className="mb-4 max-w-[560px] text-[15px] text-muted-foreground">
+              simplehook gives you a webhook URL that never changes. Point
+              Stripe, GitHub, or any provider at it once — webhooks arrive on
+              your local machine via SDK. No ngrok, no tunnels, no URL that
+              expires.
             </p>
+            <div className="mb-8 flex flex-col gap-2 text-[13px] text-muted-foreground">
+              <div className="flex items-baseline gap-2">
+                <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
+                URL stays the same across restarts, machines, and teammates
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
+                Events queue when you're offline and replay on reconnect
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="shrink-0 text-[12px] font-semibold text-status-green-text">&#10003;</span>
+                Webhook signatures (Stripe, GitHub) preserved end-to-end
+              </div>
+            </div>
 
             {/* How it works diagram */}
             <div className="mb-10 rounded-xl border border-border bg-card/50 p-6">
