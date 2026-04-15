@@ -260,11 +260,18 @@ const connection = listenToWebhooks(app, key, listenerId, {
 
 const port = process.env.PORT || 3099;
 app.listen(port, () => {
+  // Enter alternate screen buffer (like vim/htop/claude)
+  process.stdout.write("\x1b[?1049h");
+  // Hide cursor
+  process.stdout.write("\x1b[?25l");
   renderNow(); // Initial render with empty table
 });
 
 process.on("SIGINT", () => {
+  // Show cursor
+  process.stdout.write("\x1b[?25h");
+  // Leave alternate screen buffer (restores previous terminal content)
+  process.stdout.write("\x1b[?1049l");
   connection.close();
-  console.log("\n");
   process.exit(0);
 });
