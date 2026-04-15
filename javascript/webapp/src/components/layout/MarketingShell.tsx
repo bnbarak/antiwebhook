@@ -35,7 +35,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             <a href="/faq" className="px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground rounded-md">
               FAQ
             </a>
-            <
+            <a
               href="/login"
               className="ml-1.5 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
             >
