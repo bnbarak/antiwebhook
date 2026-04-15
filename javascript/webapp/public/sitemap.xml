@@ -21,6 +21,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://simplehook.dev/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://simplehook.dev/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

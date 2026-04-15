@@ -6,7 +6,7 @@ simplehook gives developers and AI agents stable, persistent webhook URLs that f
 
 ## What it does
 
-simplehook replaces tools like ngrok for webhook development. You add one line of code to your app (Express, Fastify, Flask, FastAPI, Hono), and webhooks from providers like Stripe, GitHub, Twilio, and Shopify are delivered to your local development server over WebSocket.
+simplehook replaces tools like ngrok for webhook development. You add one line of code to your app (Express, Fastify, Flask, FastAPI, Hono), and webhooks from providers like Stripe, GitHub, Twilio, and Shopify are delivered to your local development server over WebSocket. Webhook signature headers are preserved — signature verification works as normal.
 
 ## Key features
 
@@ -14,43 +14,72 @@ simplehook replaces tools like ngrok for webhook development. You add one line o
 - WebSocket-based delivery (outbound only, no port forwarding)
 - One-line SDK integration for Express, Fastify, Hono (Node.js), Flask, FastAPI (Python)
 - AI agent HTTP pull API (instant, long-poll, or SSE stream)
+- CLI for route and listener management
 - Automatic retries with exponential backoff
 - Request/response passthrough (caller gets your actual response)
-- End-to-end encryption in transit
+- Targeted routing: assign webhook paths to specific named connections
+- Connections auto-register when SDK connects with a name
 
 ## Two consumption modes
 
 ### Developer mode (SDK)
 Add one line to your Express/Fastify/Flask/FastAPI app. Webhooks arrive as normal HTTP requests to your local routes. Your response flows back to the original caller.
 
-### Agent mode (HTTP API)
-AI agents pull webhooks via simple HTTP — instant poll, long-poll, or SSE stream. No SDK needed, just HTTP requests with an API key.
+### Agent mode (CLI / HTTP API)
+AI agents pull webhooks via simple HTTP — instant poll, long-poll, or SSE stream. No SDK needed, just HTTP requests with an API key. Or use the CLI: `npx @simplehook/cli pull --wait --path "/stripe/*"`
 
-## How it works
+## Two delivery modes
 
-1. Sign up at https://simplehook.dev and get an API key
-2. Point your webhook provider (Stripe, GitHub, etc.) to your stable simplehook URL
-3. Add `listenToWebhooks(app, apiKey)` to your app — or use the HTTP pull API for agents
-4. Webhooks are delivered to your local dev server in real-time
+### Queue mode (default)
+Returns 200 to the provider immediately. Events queue and forward to your app with automatic retries. Best for Stripe, Shopify, most providers.
+
+### Passthrough mode
+Proxies the request to your app and returns your actual response to the provider. Best for Twilio (TwiML), GitHub status checks.
+
+## Connections (listeners)
+
+Run multiple SDK instances and route events to specific ones. Pass a name when connecting:
+`listenToWebhooks(app, process.env.SIMPLEHOOK_KEY, "dev")`
+
+The connection auto-registers on first connect. Assign routes to connections via dashboard or CLI:
+`npx @simplehook/cli routes create /stripe --listener dev`
 
 ## SDKs
 
-- Node.js: `npm install @simplehook/express` (Express), `npm install @simplehook/fastify` (Fastify)
+- Node.js: `npm install @simplehook/express` (Express), `npm install @simplehook/fastify` (Fastify), `npm install @simplehook/hono` (Hono)
 - Python: `pip install simplehook-flask` (Flask), `pip install simplehook-fastapi` (FastAPI)
-- Go: `go get github.com/bnbarak/antiwebhook/go`
+- CLI: `npm install -g @simplehook/cli`
+- AI Agent SDK: `npm install @simplehook/core` (SimplehookAgent class)
+- Mastra: `npm install @simplehook/mastra`
+
+## CLI commands
+
+- `simplehook pull` — Pull webhook events (instant, --wait, --stream)
+- `simplehook status` — Queue health, cursors, connected listeners
+- `simplehook routes` — List routes
+- `simplehook routes create <path> --listener <id>` — Create targeted route
+- `simplehook listeners` — List connections with status
 
 ## Links
 
 - Website: https://simplehook.dev
 - Documentation: https://simplehook.dev/docs
+- FAQ: https://simplehook.dev/faq
 - Agent docs: https://simplehook.dev/docs?mode=agents
 - GitHub: https://github.com/bnbarak/antiwebhook
 - npm: https://www.npmjs.com/package/@simplehook/express
+- Claude Code Skill: `claude skills add bnbarak/simplewehbook-skills`
 
 ## Pricing
 
-- Free tier: 1 project, 500 events/month
-- Pro: $9/month — unlimited projects, 50k events/month, priority support
+- Free tier: 1 project, 500 events/month, 3 routes, 3 connections
+- Pro ($9/month): unlimited projects, 50k events/month, unlimited routes/connections
+
+## Rate limits
+
+- 500 API requests/minute per project (all plans)
+- Free: 500 events/month
+- Pro: 50,000 events/month
 
 ## API reference
 
@@ -63,10 +92,12 @@ Query parameters:
 - wait=true — long-poll (blocks until a webhook arrives, up to 25s)
 - stream=true — SSE stream of incoming webhooks
 - path=/stripe/* — filter by webhook path (glob pattern)
+- listener_id=my-agent — consumer identity (each has own cursor)
+- n=10 — number of events to return (1-100)
 
 ### Agent status API
 
 GET https://hook.simplehook.dev/api/agent/status
 Authorization: Bearer ak_...
 
-Returns listener count, recent event stats, and connection health.
+Returns listener count, queue health, cursor positions, and per-route breakdown.

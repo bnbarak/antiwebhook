@@ -19,6 +19,7 @@ import { DashboardPage } from "@/pages/DashboardPage.js";
 import { AgentsPage } from "@/pages/AgentsPage.js";
 import { PrivacyPage } from "@/pages/PrivacyPage.js";
 import { TermsPage } from "@/pages/TermsPage.js";
+import { FaqPage } from "@/pages/FaqPage.js";
 import { Webhook } from "lucide-react";
 
 function ProtectedRoute() {
@@ -77,10 +78,11 @@ createRoot(root).render(
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
               </Route>
 
-              {/* Legal pages */}
+              {/* Legal + FAQ pages */}
               <Route element={<SimpleLayout />}>
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
+                <Route path="/faq" element={<FaqPage />} />
               </Route>
 
               {/* Protected dashboard routes */}

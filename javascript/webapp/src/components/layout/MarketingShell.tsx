@@ -52,6 +52,9 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             <a href={`/docs${modeQuery}`} className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Docs
             </a>
+            <a href="/faq" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+              FAQ
+            </a>
             <a href="/privacy" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Privacy
             </a>
