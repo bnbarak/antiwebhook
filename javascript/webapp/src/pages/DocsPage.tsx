@@ -778,7 +778,7 @@ export function DocsPage() {
             </div>
 
             {/* How it works diagram */}
-            <div className="mb-10 rounded-xl border border-border bg-card/50 p-6">
+            <div className="mb-10">
               <h3 className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">How it works</h3>
               <div className="font-mono text-[11px]">
                 <FlowRow>
