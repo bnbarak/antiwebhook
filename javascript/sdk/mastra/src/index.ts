@@ -18,7 +18,8 @@ export interface SimplehookToolsOptions extends AgentOptions {
  * ```ts
  * import { createSimplehookTools } from "@simplehook/mastra";
  *
- * const tools = createSimplehookTools({ apiKey: "ak_..." });
+ * // Reads SIMPLEHOOK_KEY from the environment by default
+ * const tools = createSimplehookTools();
  * const agent = new Agent({ tools });
  * ```
  */

@@ -16,7 +16,8 @@ Requires `@mastra/core` as a peer dependency (`>=0.10.0`).
 import { Agent } from "@mastra/core/agent";
 import { createSimplehookTools } from "@simplehook/mastra";
 
-const tools = createSimplehookTools({ apiKey: process.env.SIMPLEHOOK_KEY });
+// Reads SIMPLEHOOK_KEY from the environment by default
+const tools = createSimplehookTools();
 
 const agent = new Agent({
   name: "webhook-agent",
@@ -32,12 +33,17 @@ The agent now has two tools: `simplehook_pull` and `simplehook_status`.
 ### `createSimplehookTools(options?)`
 
 Returns `{ simplehook_pull, simplehook_status }` ready to pass to a Mastra agent.
+Called with no arguments, it reads `SIMPLEHOOK_KEY` from the environment.
 
 ```typescript
+// Defaults — reads SIMPLEHOOK_KEY from env
+createSimplehookTools();
+
+// Override anything you need
 createSimplehookTools({
-  apiKey: "ak_...",         // API key (or set SIMPLEHOOK_KEY env var)
+  apiKey: "ak_...",         // Optional — falls back to SIMPLEHOOK_KEY env var
   serverUrl: "...",         // Override server URL
-  listenerId: "agent-1",   // Cursor tracking ID (default: "default")
+  listenerId: "agent-1",    // Cursor tracking ID (default: "default")
 });
 ```
 

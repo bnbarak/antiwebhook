@@ -1660,9 +1660,8 @@ simplehook listeners
                 code={`import { Agent } from "@mastra/core/agent";
 import { createSimplehookTools } from "@simplehook/mastra";
 
-const tools = createSimplehookTools({
-  apiKey: process.env.SIMPLEHOOK_KEY,
-});
+// Reads SIMPLEHOOK_KEY from the environment by default
+const tools = createSimplehookTools();
 
 const agent = new Agent({
   name: "webhook-processor",

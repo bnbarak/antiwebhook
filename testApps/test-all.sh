@@ -233,6 +233,27 @@ else
   log_fail "Agent status failed"
 fi
 
+# ── 6b. Test @simplehook/mastra smoke test ────────────────────────────
+
+log_section "Testing @simplehook/mastra (smoke)"
+
+cd "$ROOT/testApps/mastra"
+
+if [ -d node_modules/@simplehook/mastra ] && [ -x node_modules/.bin/tsx ]; then
+  MASTRA_OUT=$(SIMPLEHOOK_KEY="$API_KEY" \
+    SIMPLEHOOK_SERVER="http://localhost:$SERVER_PORT" \
+    SIMPLEHOOK_PROJECT="$PROJECT_ID" \
+    node_modules/.bin/tsx smoke-test.ts 2>&1)
+  if echo "$MASTRA_OUT" | grep -q "^OK:"; then
+    log_pass "Mastra tools pull + status work"
+  else
+    log_fail "Mastra smoke test failed"
+    echo "$MASTRA_OUT" | sed 's/^/    /'
+  fi
+else
+  log_skip "Mastra deps not installed (cd testApps/mastra && npm install)"
+fi
+
 # ── 7. Test CLI ───────────────────────────────────────────────────────
 
 log_section "Testing @simplehook/cli"
