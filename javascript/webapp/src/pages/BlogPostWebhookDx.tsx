@@ -1,44 +1,9 @@
-import { Helmet } from "react-helmet-async";
+import { BlogPostShell } from "@/components/blog/BlogPostShell.js";
 
 export function BlogPostWebhookDx() {
   return (
-    <div>
-      <Helmet>
-        <title>The Webhook Developer Experience Is Broken — simplehook</title>
-        <meta name="description" content="Why receiving webhooks locally is still painful in 2026, how ngrok and Hookdeck approach the problem differently, and what simplehook does instead." />
-        <link rel="canonical" href="https://simplehook.dev/blog/webhook-dx-is-broken" />
-        <meta property="og:title" content="The Webhook Developer Experience Is Broken" />
-        <meta property="og:description" content="Why receiving webhooks locally is still painful in 2026." />
-        <meta property="og:url" content="https://simplehook.dev/blog/webhook-dx-is-broken" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          "headline": "The Webhook Developer Experience Is Broken",
-          "description": "Why receiving webhooks locally is still painful in 2026, how ngrok and Hookdeck approach the problem differently, and what simplehook does instead.",
-          "image": "https://simplehook.dev/logos/og-image.png",
-          "datePublished": "2026-04-08",
-          "dateModified": "2026-04-16",
-          "author": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev" },
-          "publisher": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev", "logo": { "@type": "ImageObject", "url": "https://simplehook.dev/logos/simplehook-wordmark-dark.png" } },
-          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://simplehook.dev/blog/webhook-dx-is-broken" }
-        })}</script>
-      </Helmet>
-
-      <article className="px-6 py-20">
-        <div className="mx-auto max-w-[640px]">
-          <p className="mb-4 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
-            <span className="inline-block h-px w-5 bg-border-strong mr-2.5 align-middle" />
-            Blog
-          </p>
-          <h1 className="mb-6 text-[clamp(32px,5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em]">
-            The Webhook Developer Experience Is Broken
-          </h1>
-
-          <div className="space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
+    <BlogPostShell slug="webhook-dx-is-broken">
+      <div className="space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
             <p>
               It's 2026. You can deploy a full-stack app to the edge in under a minute. You can spin
               up a database with a single CLI command. You can have an AI write your tests. But
@@ -185,22 +150,20 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
             </p>
           </div>
 
-          <div className="mt-12 flex items-center gap-4">
-            <a
-              href="/docs"
-              className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
-            >
-              Read the docs
-            </a>
-            <a
-              href="/blog"
-              className="text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
-            >
-              All posts
-            </a>
-          </div>
-        </div>
-      </article>
-    </div>
+      <div className="mt-12 flex items-center gap-4">
+        <a
+          href="/docs"
+          className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
+        >
+          Read the docs
+        </a>
+        <a
+          href="/blog"
+          className="text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
+        >
+          All posts
+        </a>
+      </div>
+    </BlogPostShell>
   );
 }

@@ -1,45 +1,13 @@
-import { Helmet } from "react-helmet-async";
 import { FlowNode, FlowArrow, FlowRow } from "@/components/shared/FlowDiagram.js";
+import { BlogPostShell } from "@/components/blog/BlogPostShell.js";
 
 export function BlogPostWebhooksThatNeverChange() {
   return (
-    <div>
-      <Helmet>
-        <title>Let's kill webhooks — simplehook</title>
-        <meta name="description" content="We need to kill webhooks in the way we think about them. One permanent URL. One line of code. Events that survive going offline." />
-        <link rel="canonical" href="https://simplehook.dev/blog/webhooks-that-never-change" />
-        <meta property="og:title" content="Let's kill webhooks — simplehook" />
-        <meta property="og:description" content="We need to kill webhooks in the way we think about them." />
-        <meta property="og:url" content="https://simplehook.dev/blog/webhooks-that-never-change" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          "headline": "Let's kill webhooks",
-          "description": "We need to kill webhooks in the way we think about them. One permanent URL. One line of code. Events that survive going offline.",
-          "image": "https://simplehook.dev/logos/og-image.png",
-          "datePublished": "2026-04-01",
-          "dateModified": "2026-04-16",
-          "author": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev" },
-          "publisher": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev", "logo": { "@type": "ImageObject", "url": "https://simplehook.dev/logos/simplehook-wordmark-dark.png" } },
-          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://simplehook.dev/blog/webhooks-that-never-change" }
-        })}</script>
-      </Helmet>
-
-      <article className="px-6 py-20">
-        <div className="mx-auto max-w-[640px]">
-          <p className="mb-4 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
-            <span className="inline-block h-px w-5 bg-border-strong mr-2.5 align-middle" />
-            Blog
-          </p>
-          <h1 className="mb-6 text-[clamp(32px,5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em]">
-            Let's kill webhooks
-          </h1>
-
-          <div className="prose-simplehook space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
+    <BlogPostShell
+      slug="webhooks-that-never-change"
+      metaDescription="We need to kill webhooks in the way we think about them. One permanent URL. One line of code. Events that survive going offline."
+    >
+      <div className="prose-simplehook space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
             <p>
               We need to kill webhooks in the way we think about them. Not the protocol. The mental model.
               The one where every integration starts with you opening Stripe or GitHub or Twilio, pasting a
@@ -162,22 +130,20 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
             </p>
           </div>
 
-          <div className="mt-12 flex items-center gap-4">
-            <a
-              href="/docs"
-              className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
-            >
-              Read the docs
-            </a>
-            <a
-              href="/"
-              className="text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
-            >
-              Back to homepage
-            </a>
-          </div>
-        </div>
-      </article>
-    </div>
+      <div className="mt-12 flex items-center gap-4">
+        <a
+          href="/docs"
+          className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
+        >
+          Read the docs
+        </a>
+        <a
+          href="/"
+          className="text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
+        >
+          Back to homepage
+        </a>
+      </div>
+    </BlogPostShell>
   );
 }

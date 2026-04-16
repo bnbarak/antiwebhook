@@ -1,36 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { ArrowRight } from "lucide-react";
-
-export interface BlogPost {
-  slug: string;
-  title: string;
-  description: string;
-  date: string;
-}
-
-export const BLOG_POSTS: BlogPost[] = [
-  {
-    slug: "agent-webhooks",
-    title: "How to Give Your AI Agent Access to Webhooks",
-    description:
-      "Step-by-step guide to connecting AI agents to real-time webhook events using simplehook's CLI and SDK. Pull, filter, stream, and never miss an event.",
-    date: "April 2026",
-  },
-  {
-    slug: "webhook-dx-is-broken",
-    title: "The Webhook Developer Experience Is Broken",
-    description:
-      "Why receiving webhooks locally is still painful in 2026, how ngrok and Hookdeck approach the problem differently, and what simplehook does instead.",
-    date: "April 2026",
-  },
-  {
-    slug: "webhooks-that-never-change",
-    title: "Webhooks That Never Change",
-    description:
-      "Why webhook URLs should be permanent, how simplehook works, and what it means for your daily development workflow.",
-    date: "April 2026",
-  },
-];
+import { BLOG_POSTS } from "@/lib/blog-posts.js";
 
 export function BlogPage() {
   return (

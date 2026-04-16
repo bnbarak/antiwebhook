@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>simplehook — Stripe webhooks on localhost. Pull events with the SDK or CLI.</title>
-    <meta name="description" content="Receive Stripe, GitHub, Twilio webhook events on localhost with one line of code. SDK for Express, Fastify, Flask, FastAPI. Pull events from the API for AI agents. npx @simplehook/cli pull. Passthrough mode. No ngrok." />
+    <meta name="description" content="Receive Stripe, GitHub, Twilio webhooks on localhost. One SDK line for Express, Fastify, Flask, FastAPI. Pull events with the CLI for AI agents." />
 
     <!-- Canonical -->
     <link rel="canonical" href="https://simplehook.dev/" />
@@ -200,9 +200,28 @@ app.post("/stripe/events", (req, res) =&gt; {
             </div>
           </div>
 
+          <div style="margin-top:80px">
+            <p style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#737373;margin-bottom:16px">From the blog</p>
+            <h2 style="font-size:22px;font-weight:500;margin:0 0 20px">Recent writing</h2>
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px">
+              <li>
+                <a href="/blog/agent-webhooks" style="color:#e5e5e5;text-decoration:none;font-size:15px">How to Give Your AI Agent Access to Webhooks</a>
+                <span style="color:#737373;font-size:13px;margin-left:8px">— pull, filter, stream events with the CLI</span>
+              </li>
+              <li>
+                <a href="/blog/webhook-dx-is-broken" style="color:#e5e5e5;text-decoration:none;font-size:15px">The Webhook Developer Experience Is Broken</a>
+                <span style="color:#737373;font-size:13px;margin-left:8px">— how ngrok and Hookdeck compare</span>
+              </li>
+              <li>
+                <a href="/blog/webhooks-that-never-change" style="color:#e5e5e5;text-decoration:none;font-size:15px">Let's kill webhooks</a>
+                <span style="color:#737373;font-size:13px;margin-left:8px">— why webhook URLs should be permanent</span>
+              </li>
+            </ul>
+          </div>
+
           <div style="margin-top:80px;text-align:center">
             <h2 style="font-size:22px;font-weight:500;margin:0 0 20px">Start receiving webhooks in 30 seconds</h2>
-            <p style="font-size:15px;color:#a1a1a1;margin:0 0 24px">One install. One line of code. Every webhook provider works.</p>
+            <p style="font-size:15px;color:#a1a1a1;margin:0 0 24px">One install. One line of code. Every webhook provider works. Read the <a href="/docs" style="color:#a1a1a1;text-decoration:underline">docs</a> or check the <a href="/faq" style="color:#a1a1a1;text-decoration:underline">FAQ</a>.</p>
             <a href="/login" style="display:inline-flex;align-items:center;gap:8px;padding:12px 32px;font-size:15px;font-weight:500;color:#fff;background:#7c3aed;border-radius:8px;text-decoration:none">Get started</a>
           </div>
         </main>

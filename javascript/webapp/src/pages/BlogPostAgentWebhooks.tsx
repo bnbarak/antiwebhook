@@ -1,44 +1,9 @@
-import { Helmet } from "react-helmet-async";
+import { BlogPostShell } from "@/components/blog/BlogPostShell.js";
 
 export function BlogPostAgentWebhooks() {
   return (
-    <div>
-      <Helmet>
-        <title>How to Give Your AI Agent Access to Webhooks</title>
-        <meta name="description" content="A step-by-step guide to connecting AI agents to real-time webhook events using simplehook's CLI and SDK. Pull Stripe charges, GitHub pushes, and more." />
-        <link rel="canonical" href="https://simplehook.dev/blog/agent-webhooks" />
-        <meta property="og:title" content="How to Give Your AI Agent Access to Webhooks" />
-        <meta property="og:description" content="Step-by-step: connect AI agents to real-time webhook events with simplehook CLI and SDK." />
-        <meta property="og:url" content="https://simplehook.dev/blog/agent-webhooks" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          "headline": "How to Give Your AI Agent Access to Webhooks",
-          "description": "A step-by-step guide to connecting AI agents to real-time webhook events using simplehook's CLI and SDK. Pull Stripe charges, GitHub pushes, and more.",
-          "image": "https://simplehook.dev/logos/og-image.png",
-          "datePublished": "2026-04-15",
-          "dateModified": "2026-04-16",
-          "author": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev" },
-          "publisher": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev", "logo": { "@type": "ImageObject", "url": "https://simplehook.dev/logos/simplehook-wordmark-dark.png" } },
-          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://simplehook.dev/blog/agent-webhooks" }
-        })}</script>
-      </Helmet>
-
-      <article className="px-6 py-20">
-        <div className="mx-auto max-w-[640px]">
-          <p className="mb-4 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
-            <span className="inline-block h-px w-5 bg-border-strong mr-2.5 align-middle" />
-            How To
-          </p>
-          <h1 className="mb-6 text-[clamp(32px,5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em]">
-            How to Give Your AI Agent Access to Webhooks
-          </h1>
-
-          <div className="space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
+    <BlogPostShell slug="agent-webhooks" kicker="How To">
+      <div className="space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
             <p>
               Your AI agent can call APIs, write code, send messages. But it can't react to
               something that just happened in the real world unless you give it a way to listen.
@@ -218,22 +183,20 @@ while (true) {
             </p>
           </div>
 
-          <div className="mt-12 flex items-center gap-4">
-            <a
-              href="/docs?mode=agents"
-              className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
-            >
-              Agent docs
-            </a>
-            <a
-              href="/blog"
-              className="text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
-            >
-              All posts
-            </a>
-          </div>
-        </div>
-      </article>
-    </div>
+      <div className="mt-12 flex items-center gap-4">
+        <a
+          href="/docs?mode=agents"
+          className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-85"
+        >
+          Agent docs
+        </a>
+        <a
+          href="/blog"
+          className="text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
+        >
+          All posts
+        </a>
+      </div>
+    </BlogPostShell>
   );
 }
