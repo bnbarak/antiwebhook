@@ -5,11 +5,11 @@ export function BlogPostWebhooksThatNeverChange() {
   return (
     <div>
       <Helmet>
-        <title>Webhooks That Never Change — simplehook</title>
-        <meta name="description" content="simplehook gives you a webhook URL that never changes. Set it once in Stripe, GitHub, or any provider. Webhooks arrive on your local machine via SDK." />
+        <title>Let's kill webhooks — simplehook</title>
+        <meta name="description" content="We need to kill webhooks in the way we think about them. One permanent URL. One line of code. Events that survive going offline." />
         <link rel="canonical" href="https://simplehook.dev/blog/webhooks-that-never-change" />
-        <meta property="og:title" content="Webhooks That Never Change — simplehook" />
-        <meta property="og:description" content="Set your webhook URL once. It stays the same across restarts, machines, and teammates." />
+        <meta property="og:title" content="Let's kill webhooks — simplehook" />
+        <meta property="og:description" content="We need to kill webhooks in the way we think about them." />
         <meta property="og:url" content="https://simplehook.dev/blog/webhooks-that-never-change" />
       </Helmet>
 

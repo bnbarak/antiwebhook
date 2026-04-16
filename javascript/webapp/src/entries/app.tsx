@@ -20,10 +20,6 @@ import { AgentsPage } from "@/pages/AgentsPage.js";
 import { PrivacyPage } from "@/pages/PrivacyPage.js";
 import { TermsPage } from "@/pages/TermsPage.js";
 import { FaqPage } from "@/pages/FaqPage.js";
-import { BlogPage } from "@/pages/BlogPage.js";
-import { BlogPostWebhooksThatNeverChange } from "@/pages/BlogPostWebhooksThatNeverChange.js";
-import { BlogPostWebhookDx } from "@/pages/BlogPostWebhookDx.js";
-import { BlogPostAgentWebhooks } from "@/pages/BlogPostAgentWebhooks.js";
 import { Webhook } from "lucide-react";
 import { MarketingShell } from "@/components/layout/MarketingShell.js";
 
@@ -89,12 +85,8 @@ createRoot(root).render(
                 <Route path="/terms" element={<TermsPage />} />
               </Route>
 
-              {/* Marketing pages with nav + footer */}
+              {/* FAQ with marketing shell (nav + footer) */}
               <Route path="/faq" element={<MarketingShell><FaqPage /></MarketingShell>} />
-              <Route path="/blog" element={<MarketingShell><BlogPage /></MarketingShell>} />
-              <Route path="/blog/webhooks-that-never-change" element={<MarketingShell><BlogPostWebhooksThatNeverChange /></MarketingShell>} />
-              <Route path="/blog/webhook-dx-is-broken" element={<MarketingShell><BlogPostWebhookDx /></MarketingShell>} />
-              <Route path="/blog/agent-webhooks" element={<MarketingShell><BlogPostAgentWebhooks /></MarketingShell>} />
 
               {/* Protected dashboard routes */}
               <Route element={<ProtectedRoute />}>

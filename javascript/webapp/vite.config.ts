@@ -12,6 +12,8 @@ function mpaDevRewrites(): Plugin {
         const url = (req.url ?? "").split("?")[0];
         if (url === "/docs") {
           req.url = "/docs.html";
+        } else if (url === "/blog" || url.startsWith("/blog/")) {
+          req.url = "/blog.html";
         } else if (
           url !== "/" &&
           !url.includes(".") &&
@@ -39,6 +41,7 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, "index.html"),
         docs: path.resolve(__dirname, "docs.html"),
+        blog: path.resolve(__dirname, "blog.html"),
         app: path.resolve(__dirname, "app.html"),
       },
     },
