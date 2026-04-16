@@ -15,16 +15,17 @@
 
 import { createSimplehookTools } from "@simplehook/mastra";
 
-const apiKey = process.env.SIMPLEHOOK_KEY;
 const server = process.env.SIMPLEHOOK_SERVER;
 const projectId = process.env.SIMPLEHOOK_PROJECT;
 
-if (!apiKey || !server || !projectId) {
+if (!process.env.SIMPLEHOOK_KEY || !server || !projectId) {
   console.error("smoke-test requires SIMPLEHOOK_KEY, SIMPLEHOOK_SERVER, SIMPLEHOOK_PROJECT");
   process.exit(2);
 }
 
-const tools = createSimplehookTools({ apiKey, serverUrl: server, listenerId: "mastra-smoke" });
+// apiKey + serverUrl come from SIMPLEHOOK_KEY + SIMPLEHOOK_SERVER env vars.
+// We only override listenerId for test isolation.
+const tools = createSimplehookTools({ listenerId: "mastra-smoke" });
 
 if (!tools.simplehook_pull || !tools.simplehook_status) {
   console.error("FAIL: createSimplehookTools did not return both tools");
