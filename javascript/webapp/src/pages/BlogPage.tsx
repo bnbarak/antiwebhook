@@ -10,6 +10,13 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "agent-webhooks",
+    title: "How to Give Your AI Agent Access to Webhooks",
+    description:
+      "Step-by-step guide to connecting AI agents to real-time webhook events using simplehook's CLI and SDK. Pull, filter, stream, and never miss an event.",
+    date: "April 2026",
+  },
+  {
     slug: "webhook-dx-is-broken",
     title: "The Webhook Developer Experience Is Broken",
     description:
