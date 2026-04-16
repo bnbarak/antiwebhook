@@ -548,9 +548,17 @@ export function HomePage() {
                 <thead>
                   <tr className="border-b">
                     <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">Feature</th>
-                    <th className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-green-text">simplehook</th>
-                    <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">ngrok</th>
-                    <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">Hookdeck</th>
+                    <th className="border-l-2 border-status-green-dot/30 bg-status-green-bg/30 px-3 py-2.5 text-left">
+                      <img src="/logos/simplehook-mark-dark.svg" alt="simplehook" className="h-5 inline-block mr-1.5 align-middle" />
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-status-green-text align-middle">simplehook</span>
+                    </th>
+                    <th className="px-3 py-2.5 text-left">
+                      <img src="/logos/ngrok.svg" alt="ngrok" className="h-4 inline-block align-middle opacity-60" />
+                    </th>
+                    <th className="px-3 py-2.5 text-left">
+                      <img src="/logos/hookdeck.png" alt="Hookdeck" className="h-5 inline-block mr-1.5 align-middle rounded-sm opacity-60" />
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary align-middle">Hookdeck</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

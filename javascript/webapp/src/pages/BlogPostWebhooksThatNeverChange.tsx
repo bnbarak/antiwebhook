@@ -105,7 +105,7 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
               <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[13px]">app.post("/stripe/events", ...)</code>{" "}
               fires the same way whether the request came from the internet or through simplehook.
               There's no tunnel binary, no background process, no port to expose. The SDK connects
-              outbound, so it works behind NATs, firewalls, hotel Wi-Fi — wherever you write code.
+              outbound, so it works behind NATs, firewalls, hotel Wi-Fi. Wherever you write code.
             </p>
             <p>
               The part that changed how I work: when your app is offline, events queue. Open your
@@ -138,7 +138,7 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
               constant. Everything else can change.
             </p>
             <p>
-              There are SDKs for Express, Fastify, Hono, Flask, and FastAPI. Same pattern everywhere —
+              There are SDKs for Express, Fastify, Hono, Flask, and FastAPI. Same pattern everywhere:
               one import, one function call, your existing routes handle the rest. AI agents can also
               pull events from the same URL via CLI if that's your thing, but honestly, the core value
               is just this: a webhook URL you set once and forget.

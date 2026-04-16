@@ -51,15 +51,15 @@ export function BlogPostWebhookDx() {
             <p>
               On the free tier, the URL changes every time you restart ngrok. So you repeat the
               copy-paste-into-Stripe dance every session. On the paid tier ($8/month), you get a
-              persistent domain — but you're still running a separate process, and if your laptop
+              persistent domain. But you're still running a separate process, and if your laptop
               sleeps or your Wi-Fi drops, the tunnel dies silently. Events sent during that window
               are gone.
             </p>
             <p>
-              ngrok has added features over the years — a traffic inspector, an agent SDK for
+              ngrok has added features over the years: a traffic inspector, an agent SDK for
               embedding the tunnel in-process, even an AI gateway for LLM routing. But at its core,
               it's still a tunnel. It forwards HTTP requests. It doesn't understand webhooks as a
-              concept — there's no queueing, no replay from the webhook provider's perspective, no
+              concept. There's no queueing, no replay from the webhook provider's perspective, no
               awareness that you're building an integration that needs to survive restarts.
             </p>
 
@@ -68,7 +68,7 @@ export function BlogPostWebhookDx() {
             </h2>
             <p>
               Hookdeck takes the opposite approach. It's a full cloud platform for webhook
-              infrastructure — sources, connections, destinations, transformations, retries,
+              infrastructure: sources, connections, destinations, transformations, retries,
               alerting. You get a permanent URL, durable queueing, and event replay out of the box.
             </p>
             <p>
@@ -83,7 +83,7 @@ export function BlogPostWebhookDx() {
               is asynchronous by design. When Stripe sends a webhook, Hookdeck returns its own 200
               response. Your app's actual response never goes back to Stripe. For most providers
               that's fine. But for Twilio (which reads your TwiML response), Shopify (which checks
-              your response for verification), or any provider that uses the response — Hookdeck
+              your response for verification), or any provider that uses the response, Hookdeck
               can't help.
             </p>
 
@@ -109,7 +109,7 @@ export function BlogPostWebhookDx() {
               </li>
               <li className="flex items-baseline gap-2">
                 <span className="shrink-0 text-[13px] text-muted-foreground/60">—</span>
-                <span>Works in the framework they already use. Express, Fastify, Flask — not a new paradigm.</span>
+                <span>Works in the framework they already use. Express, Fastify, Flask. Not a new paradigm.</span>
               </li>
               <li className="flex items-baseline gap-2">
                 <span className="shrink-0 text-[13px] text-muted-foreground/60">—</span>
@@ -131,7 +131,7 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
 
             <p>
               That's the entire setup. Your Express routes handle webhooks the same way they do in
-              production. The SDK opens an outbound WebSocket to simplehook's cloud — no port
+              production. The SDK opens an outbound WebSocket to simplehook's cloud. No port
               forwarding, no firewall rules, no tunnel binary. Your webhook URL is permanent. It
               survives restarts, machine switches, and team changes.
             </p>
@@ -151,14 +151,14 @@ listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
               The right tool for the job
             </h2>
             <p>
-              ngrok is a great tunnel. If you need to expose any local port to the internet — not
-              just webhooks — ngrok is the right choice. Hookdeck is strong production webhook
+              ngrok is a great tunnel. If you need to expose any local port to the internet, not
+              just webhooks, ngrok is the right choice. Hookdeck is strong production webhook
               infrastructure. If you need transformations, fan-out, and enterprise-grade routing
               at scale, it's worth evaluating.
             </p>
             <p>
               But if your problem is "I'm building a Stripe integration and I need webhooks on
-              localhost" — you shouldn't need a tunnel or a cloud platform. You should add one line
+              localhost," you shouldn't need a tunnel or a cloud platform. You should add one line
               of code and move on to the actual work.
             </p>
             <p>
