@@ -17,17 +17,16 @@ Prerequisites:
 - `cd javascript/sdk/cli && npx tsc` (build CLI)
 - Test apps need `npm install` in each: express, fastify, hono, visualizer
 
-What it tests (23 checks):
-1. Server starts on :8413
-2. Project registration via `/api/register`
-3. @simplehook/express — WebSocket connect + Stripe webhook delivery
-4. @simplehook/fastify — WebSocket connect + GitHub webhook delivery
-5. @simplehook/hono — WebSocket connect + Twilio webhook delivery
-6. Agent Pull API — pull events + status endpoint
-7. @simplehook/cli — `status`, `pull`, `routes`, and `listeners` commands
-8. Targeted routing — create targeted route, verify delivery to correct listener, verify event tagged with listener_id
-9. boom.js — 50 concurrent webhooks (success rate)
-10. Webapp build — MPA output (3 HTML files) + SEO files
+What it covers:
+- Server boots + project registration via `/api/register`
+- SDK adapters connect over WebSocket and receive webhooks (`@simplehook/express`, `/fastify`, `/hono`)
+- Agent Pull API (`/api/agent/pull` + `/status`)
+- `@simplehook/mastra` smoke test — calls the tool `execute()` directly (no LLM)
+- `@simplehook/cli` — `status`, `pull`, `routes`, `listeners`
+- Targeted routing — listener-specific delivery, listener_id tagging
+- Delivery signatures — `webhook_signature` + `webhook_id` present on pulled events
+- boom.js — concurrent burst of webhooks
+- Webapp build — MPA HTML entries + SEO files
 
 ## Running Individual Integration Tests
 
@@ -131,7 +130,7 @@ Tests Express, Fastify, Hono, Flask, FastAPI, Go, Agent Pull, and SDK+Agent coex
 | testApps/fastify | Fastify | 3096 | @simplehook/fastify |
 | testApps/hono | Hono | 3095 | @simplehook/hono |
 | testApps/visualizer | Express | 3099 | @simplehook/express |
-| testApps/mastra | Mastra | — | @simplehook/mastra |
+| testApps/mastra | Mastra | — | @simplehook/mastra (has `smoke-test.ts` for CI, `index.ts` for LLM demo) |
 | testApps/flask | Flask | 3097 | simplehook-flask (pip) |
 | testApps/fastapi | FastAPI | 3094 | simplehook-fastapi (pip) |
 
