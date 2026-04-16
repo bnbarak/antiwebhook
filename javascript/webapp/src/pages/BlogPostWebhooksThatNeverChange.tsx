@@ -11,6 +11,22 @@ export function BlogPostWebhooksThatNeverChange() {
         <meta property="og:title" content="Let's kill webhooks — simplehook" />
         <meta property="og:description" content="We need to kill webhooks in the way we think about them." />
         <meta property="og:url" content="https://simplehook.dev/blog/webhooks-that-never-change" />
+        <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "Let's kill webhooks",
+          "description": "We need to kill webhooks in the way we think about them. One permanent URL. One line of code. Events that survive going offline.",
+          "image": "https://simplehook.dev/logos/og-image.png",
+          "datePublished": "2026-04-01",
+          "dateModified": "2026-04-16",
+          "author": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev" },
+          "publisher": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev", "logo": { "@type": "ImageObject", "url": "https://simplehook.dev/logos/simplehook-wordmark-dark.png" } },
+          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://simplehook.dev/blog/webhooks-that-never-change" }
+        })}</script>
       </Helmet>
 
       <article className="px-6 py-20">
@@ -20,15 +36,16 @@ export function BlogPostWebhooksThatNeverChange() {
             Blog
           </p>
           <h1 className="mb-6 text-[clamp(32px,5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em]">
-            Webhooks That Never Change
+            Let's kill webhooks
           </h1>
 
           <div className="prose-simplehook space-y-5 text-[16px] leading-[1.75] text-muted-foreground">
             <p>
-              Every webhook integration starts the same way. You go to Stripe or GitHub or Twilio,
-              paste a URL into a settings field, and start building. Then you restart your machine.
-              Or switch to a coffee shop. Or your teammate needs to test the same flow. And suddenly
-              you're back in that settings field, updating the URL again.
+              We need to kill webhooks in the way we think about them. Not the protocol. The mental model.
+              The one where every integration starts with you opening Stripe or GitHub or Twilio, pasting a
+              URL into a settings field, and then doing it again every time something changes. Restart your
+              machine. Switch to a coffee shop. Hand the project to a teammate. Back into that settings field,
+              updating the URL.
             </p>
             <p>
               It's a small thing. But small things that happen every day are just big things you've

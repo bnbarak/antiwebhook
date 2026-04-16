@@ -10,6 +10,22 @@ export function BlogPostAgentWebhooks() {
         <meta property="og:title" content="How to Give Your AI Agent Access to Webhooks" />
         <meta property="og:description" content="Step-by-step: connect AI agents to real-time webhook events with simplehook CLI and SDK." />
         <meta property="og:url" content="https://simplehook.dev/blog/agent-webhooks" />
+        <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "How to Give Your AI Agent Access to Webhooks",
+          "description": "A step-by-step guide to connecting AI agents to real-time webhook events using simplehook's CLI and SDK. Pull Stripe charges, GitHub pushes, and more.",
+          "image": "https://simplehook.dev/logos/og-image.png",
+          "datePublished": "2026-04-15",
+          "dateModified": "2026-04-16",
+          "author": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev" },
+          "publisher": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev", "logo": { "@type": "ImageObject", "url": "https://simplehook.dev/logos/simplehook-wordmark-dark.png" } },
+          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://simplehook.dev/blog/agent-webhooks" }
+        })}</script>
       </Helmet>
 
       <article className="px-6 py-20">

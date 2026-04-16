@@ -10,6 +10,22 @@ export function BlogPostWebhookDx() {
         <meta property="og:title" content="The Webhook Developer Experience Is Broken" />
         <meta property="og:description" content="Why receiving webhooks locally is still painful in 2026." />
         <meta property="og:url" content="https://simplehook.dev/blog/webhook-dx-is-broken" />
+        <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "The Webhook Developer Experience Is Broken",
+          "description": "Why receiving webhooks locally is still painful in 2026, how ngrok and Hookdeck approach the problem differently, and what simplehook does instead.",
+          "image": "https://simplehook.dev/logos/og-image.png",
+          "datePublished": "2026-04-08",
+          "dateModified": "2026-04-16",
+          "author": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev" },
+          "publisher": { "@type": "Organization", "name": "simplehook", "url": "https://simplehook.dev", "logo": { "@type": "ImageObject", "url": "https://simplehook.dev/logos/simplehook-wordmark-dark.png" } },
+          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://simplehook.dev/blog/webhook-dx-is-broken" }
+        })}</script>
       </Helmet>
 
       <article className="px-6 py-20">

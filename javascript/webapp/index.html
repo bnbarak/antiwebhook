@@ -3,31 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simplehook — Webhooks that just work</title>
-    <meta name="description" content="Stable webhook URLs for localhost. One line of code to receive Stripe, GitHub, Twilio webhooks locally. No ngrok, no CLI, no tunnels. SDKs for Express, Fastify, Flask, FastAPI." />
+    <title>simplehook — Stripe webhooks on localhost. Pull events with the SDK or CLI.</title>
+    <meta name="description" content="Receive Stripe, GitHub, Twilio webhook events on localhost with one line of code. SDK for Express, Fastify, Flask, FastAPI. Pull events from the API for AI agents. npx @simplehook/cli pull. Passthrough mode. No ngrok." />
 
     <!-- Canonical -->
     <link rel="canonical" href="https://simplehook.dev/" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="simplehook — Webhooks that just work" />
-    <meta property="og:description" content="Stable webhook URLs for localhost. One line of code to receive Stripe, GitHub, Twilio webhooks locally. No ngrok, no CLI, no tunnels." />
+    <meta property="og:title" content="simplehook — Stripe webhooks on localhost. Pull events with the SDK or CLI." />
+    <meta property="og:description" content="Receive Stripe, GitHub, Twilio webhook events on localhost. One line of code with the SDK. Or pull events from the API with the CLI for AI agents. No ngrok." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://simplehook.dev/" />
     <meta property="og:site_name" content="simplehook" />
-    <meta property="og:image" content="https://simplehook.dev/logos/simplehook-wordmark-dark.png" />
+    <meta property="og:image" content="https://simplehook.dev/logos/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="simplehook — Webhooks that just work" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="simplehook — Webhooks that just work" />
-    <meta name="twitter:description" content="Stable webhook URLs for localhost. One line of code. No ngrok, no CLI, no tunnels." />
-    <meta name="twitter:image" content="https://simplehook.dev/logos/simplehook-wordmark-dark.png" />
+    <meta name="twitter:title" content="simplehook — Stripe webhooks on localhost. Pull events with SDK or CLI." />
+    <meta name="twitter:description" content="One line of code to receive webhook events on localhost. Or pull events from the API with the CLI for AI agents. No ngrok." />
+    <meta name="twitter:image" content="https://simplehook.dev/logos/og-image.png" />
 
     <!-- Additional SEO -->
-    <meta name="keywords" content="webhooks, localhost, development, ngrok alternative, webhook tunnel, Stripe webhooks, GitHub webhooks, Express, Fastify, Flask, FastAPI, AI agents, webhook forwarding" />
+    <meta name="keywords" content="webhooks, webhook events, pull events, Stripe webhook, GitHub webhook, Twilio, get webhook, localhost, ngrok alternative, webhook SDK, Express, Fastify, Flask, FastAPI, AI agent webhook, npx simplehook cli, passthrough mode" />
     <meta name="author" content="simplehook" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#1e1834" />
@@ -116,12 +116,12 @@
         </nav>
 
         <main style="max-width:960px;margin:0 auto;padding:96px 24px 80px">
-          <p style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#737373;margin-bottom:16px">Webhooks for everyone</p>
+          <p style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#737373;margin-bottom:16px">Webhooks for developers and AI agents</p>
           <h1 style="font-size:clamp(36px,5.5vw,60px);font-weight:400;line-height:1.08;letter-spacing:-0.015em;margin:0 0 24px;max-width:680px">
-            Stable webhook URLs. <span style="color:#737373">Zero infrastructure.</span>
+            Stripe webhooks on localhost. <span style="color:#737373">Pull events with the SDK or CLI.</span>
           </h1>
-          <p style="font-size:18px;color:#a1a1a1;max-width:480px;line-height:1.6;margin-bottom:40px">
-            Stop using ngrok. Add one SDK call and your local app receives real webhooks over WebSocket.
+          <p style="font-size:18px;color:#a1a1a1;max-width:560px;line-height:1.6;margin-bottom:40px">
+            Stop using ngrok. Add one SDK call and your local app receives real webhook events over WebSocket. Or pull events from the API with <code style="font-family:monospace;font-size:14px;background:#1a1a2e;padding:2px 6px;border-radius:4px">npx @simplehook/cli pull</code> — perfect for AI agents.
           </p>
 
           <div style="display:flex;gap:10px;margin-bottom:64px">
@@ -208,8 +208,10 @@ app.post("/stripe/events", (req, res) =&gt; {
         </main>
 
         <footer style="border-top:1px solid #262626;padding:32px 24px;max-width:960px;margin:0 auto;display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;gap:20px">
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
             <a href="/docs" style="font-size:12px;color:#737373;text-decoration:none">Docs</a>
+            <a href="/blog" style="font-size:12px;color:#737373;text-decoration:none">Blog</a>
+            <a href="/faq" style="font-size:12px;color:#737373;text-decoration:none">FAQ</a>
             <a href="/privacy" style="font-size:12px;color:#737373;text-decoration:none">Privacy</a>
             <a href="/terms" style="font-size:12px;color:#737373;text-decoration:none">Terms</a>
             <a href="https://github.com/bnbarak/antiwebhook" style="font-size:12px;color:#737373;text-decoration:none">GitHub</a>

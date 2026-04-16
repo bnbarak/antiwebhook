@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "../index.css";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
@@ -11,17 +11,29 @@ import { LoginPage } from "@/pages/LoginPage.js";
 import { SignupPage } from "@/pages/SignupPage.js";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage.js";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage.js";
-import { EventsPage } from "@/pages/EventsPage.js";
-import { EventDetailPage } from "@/pages/EventDetailPage.js";
-import { RoutesPage } from "@/pages/RoutesPage.js";
-import { SettingsPage } from "@/pages/SettingsPage.js";
-import { DashboardPage } from "@/pages/DashboardPage.js";
-import { AgentsPage } from "@/pages/AgentsPage.js";
-import { PrivacyPage } from "@/pages/PrivacyPage.js";
-import { TermsPage } from "@/pages/TermsPage.js";
-import { FaqPage } from "@/pages/FaqPage.js";
 import { Webhook } from "lucide-react";
 import { MarketingShell } from "@/components/layout/MarketingShell.js";
+
+// Lazy-load dashboard pages — they're only needed after login, no reason to ship them in the initial bundle
+const DashboardPage = lazy(() => import("@/pages/DashboardPage.js").then(m => ({ default: m.DashboardPage })));
+const EventsPage = lazy(() => import("@/pages/EventsPage.js").then(m => ({ default: m.EventsPage })));
+const EventDetailPage = lazy(() => import("@/pages/EventDetailPage.js").then(m => ({ default: m.EventDetailPage })));
+const AgentsPage = lazy(() => import("@/pages/AgentsPage.js").then(m => ({ default: m.AgentsPage })));
+const RoutesPage = lazy(() => import("@/pages/RoutesPage.js").then(m => ({ default: m.RoutesPage })));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage.js").then(m => ({ default: m.SettingsPage })));
+
+// Lazy-load secondary pages
+const PrivacyPage = lazy(() => import("@/pages/PrivacyPage.js").then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import("@/pages/TermsPage.js").then(m => ({ default: m.TermsPage })));
+const FaqPage = lazy(() => import("@/pages/FaqPage.js").then(m => ({ default: m.FaqPage })));
+
+function PageFallback() {
+  return (
+    <div className="flex h-svh items-center justify-center bg-background">
+      <Webhook className="size-8 text-foreground animate-pulse" />
+    </div>
+  );
+}
 
 function ProtectedRoute() {
   const { session, loading } = useAuth();
@@ -70,39 +82,41 @@ createRoot(root).render(
         <Toaster position="bottom-right" richColors />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              {/* Auth — redirect to dashboard if already logged in */}
-              <Route element={<GuestOnly />}>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-              </Route>
-
-              {/* Legal pages */}
-              <Route element={<SimpleLayout />}>
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-              </Route>
-
-              {/* FAQ with marketing shell (nav + footer) */}
-              <Route path="/faq" element={<MarketingShell><FaqPage /></MarketingShell>} />
-
-              {/* Protected dashboard routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/events" element={<EventsPage />} />
-                  <Route path="/events/:id" element={<EventDetailPage />} />
-                  <Route path="/listeners" element={<AgentsPage />} />
-                  <Route path="/routes" element={<RoutesPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                {/* Auth — redirect to dashboard if already logged in */}
+                <Route element={<GuestOnly />}>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                 </Route>
-              </Route>
 
-              {/* Catch-all */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
+                {/* Legal pages */}
+                <Route element={<SimpleLayout />}>
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                </Route>
+
+                {/* FAQ with marketing shell (nav + footer) */}
+                <Route path="/faq" element={<MarketingShell><FaqPage /></MarketingShell>} />
+
+                {/* Protected dashboard routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AppLayout />}>
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route path="/events/:id" element={<EventDetailPage />} />
+                    <Route path="/listeners" element={<AgentsPage />} />
+                    <Route path="/routes" element={<RoutesPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                  </Route>
+                </Route>
+
+                {/* Catch-all */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
