@@ -85,6 +85,18 @@ export function BlogPostWebhooksThatNeverChange() {
 listenToWebhooks(app, process.env.SIMPLEHOOK_KEY);`}</code>
             </pre>
 
+            <div className="my-8 overflow-hidden rounded-xl border border-border shadow-lg">
+              <img
+                src="/productExamples/dashboard.png"
+                alt="simplehook dashboard showing the permanent webhook URL and API key with language picker"
+                className="w-full"
+                loading="lazy"
+              />
+              <p className="bg-card/50 px-4 py-2.5 text-center font-mono text-[11px] text-muted-foreground">
+                Your permanent webhook URL and API key. Set once, use forever.
+              </p>
+            </div>
+
             <p>
               Your routes work exactly like they do in production.{" "}
               <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[13px]">app.post("/stripe/events", ...)</code>{" "}
