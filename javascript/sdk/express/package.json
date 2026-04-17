@@ -1,6 +1,6 @@
 {
   "name": "@simplehook/express",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Stable webhook URLs for localhost. One line of code. Express adapter.",
   "repository": {
     "type": "git",

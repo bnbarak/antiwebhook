@@ -1,6 +1,6 @@
 {
   "name": "@simplehook/cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "CLI for simplehook — pull webhook events, check queue status.",
   "repository": {
     "type": "git",

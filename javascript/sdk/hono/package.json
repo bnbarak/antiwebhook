@@ -1,6 +1,6 @@
 {
   "name": "@simplehook/hono",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Stable webhook URLs for localhost. One line of code. Hono adapter.",
   "repository": {
     "type": "git",

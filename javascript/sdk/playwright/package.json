@@ -1,6 +1,6 @@
 {
   "name": "@simplehook/playwright",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Playwright WebhookProvider for simplehook — test real webhooks in E2E tests.",
   "repository": {
     "type": "git",
