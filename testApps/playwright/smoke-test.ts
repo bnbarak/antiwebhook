@@ -1,16 +1,10 @@
 /**
  * Smoke test for @simplehook/playwright.
  *
- * Calls the provider methods directly (no Playwright browser needed),
- * so it's deterministic and fast enough for CI.
- *
- * Verifies:
- *   1. Provider creates without error (reads SIMPLEHOOK_KEY from env)
- *   2. getReceivedWebhooks() returns events after a webhook is sent
- *   3. getCount() reflects journal size
- *   4. deleteById() removes an event from the journal
- *   5. resetJournal() clears and provides a fresh cursor
- *   6. URL pattern filtering works
+ * Tests the provider both directly AND through the actual WebhookRegistry
+ * + webhookTemplate system from @seontechnologies/playwright-utils.
+ * No Playwright browser needed, but exercises the full fixture-compatible
+ * lifecycle: setup → registry.waitFor → cleanup → teardown.
  *
  * Required env:
  *   SIMPLEHOOK_KEY     — API key
@@ -19,6 +13,10 @@
  */
 
 import { SimplehookWebhookProvider } from "@simplehook/playwright";
+import {
+  WebhookRegistry,
+  webhookTemplate,
+} from "@seontechnologies/playwright-utils/webhook";
 
 const server = process.env.SIMPLEHOOK_SERVER;
 const projectId = process.env.SIMPLEHOOK_PROJECT;
@@ -28,65 +26,146 @@ if (!process.env.SIMPLEHOOK_KEY || !server || !projectId) {
   process.exit(2);
 }
 
+let passed = 0;
+let failed = 0;
+
+function pass(msg: string) { passed++; console.log(`  ✓ ${msg}`); }
+function fail(msg: string, detail?: string) {
+  failed++;
+  console.error(`  ✗ ${msg}`);
+  if (detail) console.error(`    ${detail}`);
+}
+
+async function sendWebhook(path: string, body: Record<string, unknown>) {
+  await fetch(`${server}/hooks/${projectId}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// ── 1. Provider direct tests ─────────────────────────────────────────
+
+console.log("Provider direct tests:");
+
 const provider = new SimplehookWebhookProvider({ serverUrl: server });
 
-// Send two webhooks to different paths
 const marker = `pw-smoke-${Date.now()}`;
-await fetch(`${server}/hooks/${projectId}/stripe/events`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ type: "charge.succeeded", marker }),
-});
-await fetch(`${server}/hooks/${projectId}/github/push`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ ref: "refs/heads/main", marker }),
-});
+await sendWebhook("/stripe/events", { type: "charge.succeeded", marker });
+await sendWebhook("/github/push", { ref: "refs/heads/main", marker });
+await sleep(500);
 
-await new Promise((r) => setTimeout(r, 500));
-
-// 1. getReceivedWebhooks — should return both events
+// getReceivedWebhooks
 const all = await provider.getReceivedWebhooks();
-if (all.length < 2) {
-  console.error(`FAIL: expected at least 2 events, got ${all.length}`);
-  process.exit(1);
-}
+all.length >= 2
+  ? pass(`getReceivedWebhooks returned ${all.length} events`)
+  : fail(`getReceivedWebhooks returned ${all.length}, expected >= 2`);
 
-// 2. getCount
+// getCount
 const count = await provider.getCount();
-if (count < 2) {
-  console.error(`FAIL: getCount() returned ${count}, expected >= 2`);
-  process.exit(1);
-}
+count >= 2
+  ? pass(`getCount returned ${count}`)
+  : fail(`getCount returned ${count}, expected >= 2`);
 
-// 3. URL pattern filter
+// URL pattern filter
 const stripeOnly = await provider.getReceivedWebhooks({ urlPattern: "/stripe/*" });
-if (stripeOnly.length === 0) {
-  console.error("FAIL: filter by /stripe/* returned 0 events");
-  process.exit(1);
-}
-const hasStripe = stripeOnly.every((e) => e.url.startsWith("/stripe"));
-if (!hasStripe) {
-  console.error("FAIL: filter returned non-stripe events");
-  process.exit(1);
-}
+stripeOnly.length > 0 && stripeOnly.every((e) => e.url.startsWith("/stripe"))
+  ? pass(`urlPattern filter: ${stripeOnly.length} stripe events`)
+  : fail("urlPattern filter failed");
 
-// 4. deleteById
+// deleteById
 const firstId = all[0].id;
 await provider.deleteById(firstId);
 const afterDelete = await provider.getReceivedWebhooks();
-if (afterDelete.some((e) => e.id === firstId)) {
-  console.error("FAIL: deleteById did not remove the event");
-  process.exit(1);
-}
+afterDelete.every((e) => e.id !== firstId)
+  ? pass("deleteById removed event")
+  : fail("deleteById did not remove event");
 
-// 5. resetJournal
+// resetJournal
 await provider.resetJournal();
 const afterReset = await provider.getReceivedWebhooks();
-// After reset with a fresh listener, should see events again
-if (afterReset.length === 0) {
-  console.error("FAIL: after resetJournal, expected events from fresh cursor");
-  process.exit(1);
+afterReset.length > 0
+  ? pass("resetJournal provides fresh cursor")
+  : fail("resetJournal returned 0 events");
+
+// ── 2. WebhookRegistry + webhookTemplate integration ────────────────
+
+console.log("\nWebhookRegistry integration tests:");
+
+const provider2 = new SimplehookWebhookProvider({ serverUrl: server });
+await provider2.setup?.();
+
+const registry = new WebhookRegistry(provider2, {
+  defaultTimeout: 10_000,
+  defaultInterval: 500,
+  cleanupStrategy: "matched-only",
+});
+
+// Send a webhook with a unique marker for this test
+const registryMarker = `registry-${Date.now()}`;
+await sendWebhook("/stripe/events", { type: "invoice.paid", test_id: registryMarker });
+await sleep(500);
+
+// waitFor with webhookTemplate
+try {
+  const template = webhookTemplate("invoice-paid")
+    .matchField("type", "invoice.paid")
+    .matchField("test_id", registryMarker)
+    .withTimeout(10_000)
+    .build();
+
+  const matched = await registry.waitFor(template);
+  matched.body && (matched.body as any).type === "invoice.paid"
+    ? pass("waitFor matched invoice.paid event")
+    : fail("waitFor returned wrong event", JSON.stringify(matched.body));
+} catch (err: any) {
+  fail("waitFor threw", err.message);
 }
 
-console.log(`OK: ${all.length} events pulled, filter/delete/reset all work`);
+// waitForCount
+const countMarker = `count-${Date.now()}`;
+await sendWebhook("/stripe/events", { type: "payment_intent.created", batch: countMarker });
+await sendWebhook("/stripe/events", { type: "payment_intent.succeeded", batch: countMarker });
+await sleep(500);
+
+try {
+  const countTemplate = webhookTemplate("batch-payments")
+    .matchField("batch", countMarker)
+    .withTimeout(10_000)
+    .build();
+
+  const matches = await registry.waitForCount(countTemplate, 2);
+  matches.length === 2
+    ? pass("waitForCount returned 2 events")
+    : fail(`waitForCount returned ${matches.length}, expected 2`);
+} catch (err: any) {
+  fail("waitForCount threw", err.message);
+}
+
+// cleanup (matched-only strategy)
+try {
+  await registry.cleanup();
+  pass("cleanup (matched-only) completed");
+} catch (err: any) {
+  fail("cleanup threw", err.message);
+}
+
+// teardown
+try {
+  await provider2.teardown?.();
+  pass("teardown completed");
+} catch (err: any) {
+  fail("teardown threw", err.message);
+}
+
+// ── Summary ─────────────────────────────────────────────────────────
+
+console.log("");
+if (failed > 0) {
+  console.error(`FAIL: ${passed} passed, ${failed} failed`);
+  process.exit(1);
+} else {
+  console.log(`OK: ${passed} passed, 0 failed`);
+}
