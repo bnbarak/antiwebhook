@@ -254,6 +254,27 @@ else
   log_skip "Mastra deps not installed (cd testApps/mastra && npm install)"
 fi
 
+# ── 6c. Test @simplehook/playwright smoke test ───────────────────────
+
+log_section "Testing @simplehook/playwright (smoke)"
+
+cd "$ROOT/testApps/playwright"
+
+if [ -d node_modules/@simplehook/playwright ] && [ -x node_modules/.bin/tsx ]; then
+  PW_OUT=$(SIMPLEHOOK_KEY="$API_KEY" \
+    SIMPLEHOOK_SERVER="http://localhost:$SERVER_PORT" \
+    SIMPLEHOOK_PROJECT="$PROJECT_ID" \
+    node_modules/.bin/tsx smoke-test.ts 2>&1)
+  if echo "$PW_OUT" | grep -q "^OK:"; then
+    log_pass "Playwright provider pull + filter + delete + reset work"
+  else
+    log_fail "Playwright smoke test failed"
+    echo "$PW_OUT" | sed 's/^/    /'
+  fi
+else
+  log_skip "Playwright deps not installed (cd testApps/playwright && npm install)"
+fi
+
 # ── 7. Test CLI ───────────────────────────────────────────────────────
 
 log_section "Testing @simplehook/cli"

@@ -22,6 +22,7 @@ What it covers:
 - SDK adapters connect over WebSocket and receive webhooks (`@simplehook/express`, `/fastify`, `/hono`)
 - Agent Pull API (`/api/agent/pull` + `/status`)
 - `@simplehook/mastra` smoke test — calls the tool `execute()` directly (no LLM)
+- `@simplehook/playwright` smoke test — provider pull, filter, delete, reset (no browser)
 - `@simplehook/cli` — `status`, `pull`, `routes`, `listeners`
 - Targeted routing — listener-specific delivery, listener_id tagging
 - Delivery signatures — `webhook_signature` + `webhook_id` present on pulled events
@@ -96,6 +97,7 @@ Tests Express, Fastify, Hono, Flask, FastAPI, Go, Agent Pull, and SDK+Agent coex
 ./scripts/publish.sh hono      # @simplehook/hono
 ./scripts/publish.sh cli       # @simplehook/cli
 ./scripts/publish.sh mastra    # @simplehook/mastra
+./scripts/publish.sh playwright # @simplehook/playwright
 ```
 
 ### Publish Python packages
@@ -108,7 +110,7 @@ Tests Express, Fastify, Hono, Flask, FastAPI, Go, Agent Pull, and SDK+Agent coex
 ### Publish everything
 
 ```bash
-./scripts/publish.sh all       # All 8 packages (6 npm + 2 pip)
+./scripts/publish.sh all       # All packages (npm + pip)
 ```
 
 ## Package Versions
@@ -121,6 +123,7 @@ Tests Express, Fastify, Hono, Flask, FastAPI, Go, Agent Pull, and SDK+Agent coex
 | @simplehook/hono | 0.3.0 | [npmjs.com](https://www.npmjs.com/package/@simplehook/hono) |
 | @simplehook/cli | 0.1.0 | [npmjs.com](https://www.npmjs.com/package/@simplehook/cli) |
 | @simplehook/mastra | 0.1.0 | [npmjs.com](https://www.npmjs.com/package/@simplehook/mastra) |
+| @simplehook/playwright | 0.1.0 | [npmjs.com](https://www.npmjs.com/package/@simplehook/playwright) |
 
 ## Test Apps
 
@@ -131,6 +134,7 @@ Tests Express, Fastify, Hono, Flask, FastAPI, Go, Agent Pull, and SDK+Agent coex
 | testApps/hono | Hono | 3095 | @simplehook/hono |
 | testApps/visualizer | Express | 3099 | @simplehook/express |
 | testApps/mastra | Mastra | — | @simplehook/mastra (has `smoke-test.ts` for CI, `index.ts` for LLM demo) |
+| testApps/playwright | Playwright | — | @simplehook/playwright (has `smoke-test.ts` for CI) |
 | testApps/flask | Flask | 3097 | simplehook-flask (pip) |
 | testApps/fastapi | FastAPI | 3094 | simplehook-fastapi (pip) |
 

@@ -1,0 +1,15 @@
+{
+  "name": "simplehook-playwright-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@simplehook/core": "^0.2.1",
+    "@simplehook/playwright": "^0.1.0",
+    "@seontechnologies/playwright-utils": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0"
+  }
+}

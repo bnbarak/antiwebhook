@@ -2,7 +2,20 @@
 
 Core WebSocket client and HTTP pull API for [simplehook](https://simplehook.dev) -- receive webhooks locally without tunnels.
 
-> Most users should install a framework adapter (`@simplehook/express`, `@simplehook/fastify`, `@simplehook/hono`) instead of using this package directly. Use `@simplehook/core` when you need the low-level WebSocket client or the `SimplehookAgent` HTTP pull API.
+> **Most users should install a framework adapter, not this package directly.** Pick the one that matches your use case:
+>
+> | Package | Use case | Install |
+> |---------|----------|---------|
+> | [`@simplehook/express`](https://www.npmjs.com/package/@simplehook/express) | Receive webhooks in Express | `npm i @simplehook/express` |
+> | [`@simplehook/fastify`](https://www.npmjs.com/package/@simplehook/fastify) | Receive webhooks in Fastify | `npm i @simplehook/fastify` |
+> | [`@simplehook/hono`](https://www.npmjs.com/package/@simplehook/hono) | Receive webhooks in Hono | `npm i @simplehook/hono` |
+> | [`@simplehook/cli`](https://www.npmjs.com/package/@simplehook/cli) | Pull/stream webhooks from the terminal | `npx @simplehook/cli pull` |
+> | [`@simplehook/mastra`](https://www.npmjs.com/package/@simplehook/mastra) | Mastra AI agent tools | `npm i @simplehook/mastra` |
+> | [`@simplehook/playwright`](https://www.npmjs.com/package/@simplehook/playwright) | Test real webhooks in Playwright E2E | `npm i @simplehook/playwright` |
+> | [`simplehook-flask`](https://pypi.org/project/simplehook-flask/) | Receive webhooks in Flask | `pip install simplehook-flask` |
+> | [`simplehook-fastapi`](https://pypi.org/project/simplehook-fastapi/) | Receive webhooks in FastAPI | `pip install simplehook-fastapi` |
+>
+> Use `@simplehook/core` when you need the low-level WebSocket client or the `SimplehookAgent` HTTP pull API.
 
 ## Install
 
