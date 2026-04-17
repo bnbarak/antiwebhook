@@ -170,6 +170,7 @@ const SECTIONS: Record<DocsView, Array<{ id: string; label: string }>> = {
   agents: [
     { id: "ai-agent-api", label: "Pull API" },
     { id: "mastra", label: "Mastra" },
+    { id: "playwright", label: "Playwright" },
   ],
   sdk: [
     { id: "sdk-install", label: "Install" },
@@ -1708,6 +1709,73 @@ console.log(response.text);`}
                 <a href="https://github.com/bnbarak/antiwebhook/tree/main/testApps/mastra" className="underline underline-offset-2 hover:text-foreground transition-colors">
                   Stripe webhook agent with Mastra on GitHub
                 </a>
+              </p>
+            </div>
+          </section>
+
+          {/* ── Playwright ──────────────────────────────────────────── */}
+          <section
+            id="playwright"
+            className="scroll-mt-24 border-t border-border pt-16"
+          >
+            <Kicker>Testing</Kicker>
+            <h2 className="mb-2 text-[22px] font-medium tracking-[-0.015em]">
+              Playwright E2E testing
+            </h2>
+            <p className="mb-8 max-w-[560px] text-[15px] text-muted-foreground">
+              Test your app against real webhook events in Playwright. Works with the{" "}
+              <a href="https://seontechnologies.github.io/playwright-utils/webhook.html" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                @seontechnologies/playwright-utils
+              </a>{" "}
+              webhook module.
+            </p>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Install</h3>
+              <CopyableCode
+                code="npm install @simplehook/playwright @seontechnologies/playwright-utils"
+                title="terminal"
+              />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-medium">Quick start</h3>
+              <CopyableCode
+                code={`import { test } from "@seontechnologies/playwright-utils/webhook/fixtures";
+import { SimplehookWebhookProvider } from "@simplehook/playwright";
+import { WebhookTemplate } from "@seontechnologies/playwright-utils/webhook";
+
+// Reads SIMPLEHOOK_KEY from the environment by default
+const webhookTest = test.extend({
+  webhookProvider: async ({}, use) => {
+    await use(new SimplehookWebhookProvider());
+  },
+});
+
+webhookTest.use({ webhookConfig: { cleanupStrategy: "matched-only" } });
+
+webhookTest("Stripe charge creates an order", async ({ webhookRegistry }) => {
+  // Wait for a real Stripe webhook to arrive through simplehook
+  const webhook = await webhookRegistry.waitFor(
+    WebhookTemplate.create("stripe-charge")
+      .withUrlMatching("/stripe/events")
+      .withBodyMatching({ type: "charge.succeeded" })
+  );
+
+  expect(webhook.body.data.object.amount).toBe(500);
+});`}
+                title="tests/stripe.spec.ts"
+              />
+            </div>
+
+            <div className="rounded-lg border border-border bg-card/50 p-4">
+              <p className="text-sm text-muted-foreground">
+                Each provider instance gets a unique listener ID, so parallel test workers never collide.
+                See the{" "}
+                <a href="https://www.npmjs.com/package/@simplehook/playwright" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                  README on npm
+                </a>{" "}
+                for the full API.
               </p>
             </div>
           </section>

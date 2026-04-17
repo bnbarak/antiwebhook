@@ -51,6 +51,7 @@ The connection auto-registers on first connect. Assign routes to connections via
 - CLI: `npm install -g @simplehook/cli`
 - AI Agent SDK: `npm install @simplehook/core` (SimplehookAgent class)
 - Mastra: `npm install @simplehook/mastra`
+- Playwright: `npm install @simplehook/playwright` (WebhookProvider for E2E testing with real webhooks)
 
 ## CLI commands
 
