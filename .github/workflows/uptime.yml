@@ -1,0 +1,16 @@
+name: Uptime
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check server health
+        run: |
+          curl -sf --max-time 10 https://hook.simplehook.dev/health
+      - name: Check webapp
+        run: |
+          curl -sf --max-time 10 -o /dev/null https://simplehook.dev/
