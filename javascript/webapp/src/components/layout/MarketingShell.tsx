@@ -67,7 +67,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             <a href="/terms" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               Terms
             </a>
-            <a href="https://github.com/bnbarak/antiwebhook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
+            <a href="https://github.com/bnbarak/simplehook" className="text-xs text-text-tertiary transition-colors hover:text-foreground">
               GitHub
             </a>
             <a href="https://www.npmjs.com/package/@simplehook/express" className="text-xs text-text-tertiary transition-colors hover:text-foreground">

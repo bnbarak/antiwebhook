@@ -68,7 +68,7 @@ The connection auto-registers on first connect. Assign routes to connections via
 - FAQ: https://simplehook.dev/faq
 - Blog: https://simplehook.dev/blog
 - Agent docs: https://simplehook.dev/docs?mode=agents
-- GitHub: https://github.com/bnbarak/antiwebhook
+- GitHub: https://github.com/bnbarak/simplehook
 - npm: https://www.npmjs.com/package/@simplehook/express
 - Claude Code Skill: `claude skills add bnbarak/simplewehbook-skills`
 

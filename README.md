@@ -140,7 +140,7 @@ node --test stress.test.js
 | **@simplehook/mastra** | `npm install @simplehook/mastra` | Published |
 | **simplehook-flask** | `pip install simplehook-flask` | Published |
 | **simplehook-fastapi** | `pip install simplehook-fastapi` | Published |
-| Go SDK | `go get github.com/bnbarak/antiwebhook/go` | Not actively maintained |
+| Go SDK | `go get github.com/bnbarak/simplehook/go` | Not actively maintained |
 | Rust SDK | `simplehook` crate | Not actively maintained |
 
 > **Note:** Go and Rust SDKs exist but are not actively maintained. Focus is on the JavaScript and Python ecosystems.

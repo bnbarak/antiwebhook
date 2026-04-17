@@ -82,7 +82,7 @@ Pass your API key via `--key` or the `SIMPLEHOOK_KEY` environment variable. Get 
 
 - [Documentation](https://simplehook.dev/docs)
 - [Dashboard](https://simplehook.dev/dashboard)
-- [GitHub](https://github.com/bnbarak/antiwebhook)
+- [GitHub](https://github.com/bnbarak/simplehook)
 
 ## License
 

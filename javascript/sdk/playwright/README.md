@@ -84,7 +84,7 @@ Each `SimplehookWebhookProvider` instance generates a unique listener ID (`pw-<r
 
 - [Documentation](https://simplehook.dev/docs)
 - [playwright-utils webhook docs](https://seontechnologies.github.io/playwright-utils/webhook.html)
-- [GitHub](https://github.com/bnbarak/antiwebhook)
+- [GitHub](https://github.com/bnbarak/simplehook)
 
 ## License
 

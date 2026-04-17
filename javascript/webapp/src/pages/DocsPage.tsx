@@ -1706,7 +1706,7 @@ console.log(response.text);`}
             <div className="rounded-lg border border-border bg-card/50 p-4">
               <p className="text-sm text-muted-foreground">
                 Full example:{" "}
-                <a href="https://github.com/bnbarak/antiwebhook/tree/main/testApps/mastra" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                <a href="https://github.com/bnbarak/simplehook/tree/main/testApps/mastra" className="underline underline-offset-2 hover:text-foreground transition-colors">
                   Stripe webhook agent with Mastra on GitHub
                 </a>
               </p>

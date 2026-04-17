@@ -2,6 +2,13 @@
   "name": "@simplehook/hono",
   "version": "0.3.1",
   "description": "Stable webhook URLs for localhost. One line of code. Hono adapter.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bnbarak/simplehook",
+    "directory": "javascript/sdk/hono"
+  },
+  "homepage": "https://simplehook.dev",
+  "bugs": "https://github.com/bnbarak/simplehook/issues",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

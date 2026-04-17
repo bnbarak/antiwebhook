@@ -2,6 +2,13 @@
   "name": "@simplehook/playwright",
   "version": "0.1.0",
   "description": "Playwright WebhookProvider for simplehook — test real webhooks in E2E tests.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bnbarak/simplehook",
+    "directory": "javascript/sdk/playwright"
+  },
+  "homepage": "https://simplehook.dev",
+  "bugs": "https://github.com/bnbarak/simplehook/issues",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

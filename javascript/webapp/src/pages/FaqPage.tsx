@@ -173,7 +173,7 @@ export function FaqPage() {
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Still have questions?{" "}
             <a
-              href="https://github.com/bnbarak/antiwebhook/issues"
+              href="https://github.com/bnbarak/simplehook/issues"
               className="underline underline-offset-2 transition-colors hover:text-foreground"
             >
               Open an issue on GitHub

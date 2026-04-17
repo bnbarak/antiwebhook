@@ -2,6 +2,13 @@
   "name": "@simplehook/core",
   "version": "0.2.1",
   "description": "Core WebSocket client for simplehook SDKs.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bnbarak/simplehook",
+    "directory": "javascript/sdk/core"
+  },
+  "homepage": "https://simplehook.dev",
+  "bugs": "https://github.com/bnbarak/simplehook/issues",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

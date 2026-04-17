@@ -10,7 +10,7 @@ Rust SDK for [simplehook](https://simplehook.dev) -- receive webhooks in local d
 [dependencies]
 simplehook = { path = "../rust-sdk" }
 # or from git:
-# simplehook = { git = "https://github.com/bnbarak/antiwebhook", subdirectory = "rust-sdk" }
+# simplehook = { git = "https://github.com/bnbarak/simplehook", subdirectory = "rust-sdk" }
 ```
 
 ## Quick start (axum)
@@ -108,4 +108,4 @@ let _conn = listen_to_webhooks(dispatch, api_key, ListenOptions {
 - [simplehook.dev](https://simplehook.dev)
 - [Dashboard](https://simplehook.dev/dashboard)
 - [JavaScript SDK](https://www.npmjs.com/package/@simplehook/express)
-- [Go SDK](https://github.com/bnbarak/antiwebhook/tree/main/go)
+- [Go SDK](https://github.com/bnbarak/simplehook/tree/main/go)

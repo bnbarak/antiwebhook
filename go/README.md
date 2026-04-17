@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-go get github.com/bnbarak/antiwebhook/go
+go get github.com/bnbarak/simplehook/go
 ```
 
 ## Quick start
@@ -18,7 +18,7 @@ import (
     "net/http"
     "os"
 
-    simplehook "github.com/bnbarak/antiwebhook/go"
+    simplehook "github.com/bnbarak/simplehook/go"
 )
 
 func main() {

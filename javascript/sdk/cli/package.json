@@ -2,6 +2,13 @@
   "name": "@simplehook/cli",
   "version": "0.1.2",
   "description": "CLI for simplehook — pull webhook events, check queue status.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bnbarak/simplehook",
+    "directory": "javascript/sdk/cli"
+  },
+  "homepage": "https://simplehook.dev",
+  "bugs": "https://github.com/bnbarak/simplehook/issues",
   "type": "module",
   "main": "dist/cli.js",
   "bin": {

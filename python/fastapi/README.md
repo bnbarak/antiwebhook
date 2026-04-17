@@ -73,7 +73,7 @@ Production is detected when `FASTAPI_ENV === "production"` or `ENV === "producti
 
 ## Links
 
-- [GitHub](https://github.com/bnbarak/antiwebhook)
+- [GitHub](https://github.com/bnbarak/simplehook)
 
 - [Documentation](https://www.simplehook.dev/docs)
 - [Dashboard](https://www.simplehook.dev/dashboard)
