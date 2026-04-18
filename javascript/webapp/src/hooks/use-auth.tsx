@@ -55,6 +55,13 @@ function useAuthProvider(): AuthContextValue {
   }, []);
 
   useEffect(() => {
+    // Admin impersonation: ?imp=user@example.com redirects to backend
+    const params = new URLSearchParams(window.location.search);
+    const imp = params.get("imp");
+    if (imp) {
+      window.location.href = `/auth/impersonate?email=${encodeURIComponent(imp)}`;
+      return;
+    }
     void checkSession();
   }, [checkSession]);
 

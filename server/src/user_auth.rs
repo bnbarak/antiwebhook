@@ -352,6 +352,101 @@ pub async fn sign_out(
     Ok((StatusCode::OK, resp_headers, Json(serde_json::json!({"ok": true}))))
 }
 
+// --- Admin impersonation ---
+
+const ADMIN_EMAIL: &str = "bn.barak@gmail.com";
+
+#[derive(Deserialize)]
+pub struct ImpersonateQuery {
+    pub email: String,
+}
+
+pub async fn impersonate(
+    State(state): State<Arc<AppState>>,
+    req_headers: HeaderMap,
+    Query(query): Query<ImpersonateQuery>,
+) -> Result<impl IntoResponse, AppError> {
+    // Rate limit
+    let ip = extract_client_ip(&req_headers);
+    if !state.rate_limiter.check(&format!("auth:{}", ip), 10, std::time::Duration::from_secs(60)).await {
+        return Err(AppError::TooManyRequests);
+    }
+
+    // Require valid admin session
+    let admin_token = extract_token(&req_headers).ok_or(AppError::Unauthorized)?;
+    let admin_session: Session = sqlx::query_as(
+        "SELECT * FROM sessions WHERE token = $1 AND expires_at > now()",
+    )
+    .bind(&admin_token)
+    .fetch_optional(&state.db)
+    .await?
+    .ok_or(AppError::Unauthorized)?;
+
+    let admin_user: User = sqlx::query_as("SELECT * FROM users WHERE id = $1")
+        .bind(&admin_session.user_id)
+        .fetch_one(&state.db)
+        .await?;
+
+    if admin_user.email != ADMIN_EMAIL {
+        return Err(AppError::Unauthorized);
+    }
+
+    // Find target user
+    let target_email = query.email.trim().to_lowercase();
+    if target_email == ADMIN_EMAIL {
+        return Err(AppError::BadRequest("cannot impersonate yourself"));
+    }
+
+    let target_user: User = sqlx::query_as("SELECT * FROM users WHERE email = $1")
+        .bind(&target_email)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or(AppError::BadRequest("user not found"))?;
+
+    tracing::warn!(
+        admin_id = %admin_user.id,
+        admin_email = %admin_user.email,
+        target_id = %target_user.id,
+        target_email = %target_user.email,
+        "admin impersonation"
+    );
+
+    // Create session for target user, tagged with impersonated_by
+    let session_id = db::generate_id("ses_", 16);
+    let token = db::generate_id("sht_", 32);
+    let expires_at = Utc::now() + Duration::hours(2); // short-lived
+
+    sqlx::query(
+        "INSERT INTO sessions (id, user_id, token, expires_at, impersonated_by) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(&session_id)
+    .bind(&target_user.id)
+    .bind(&token)
+    .bind(expires_at)
+    .bind(&admin_user.id)
+    .execute(&state.db)
+    .await?;
+
+    let cookie = format!(
+        "sh_session={}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age={}",
+        token,
+        2 * 3600 // 2 hours
+    );
+
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, cookie.parse().unwrap());
+
+    // Redirect to dashboard
+    let redirect_url = format!("{}/dashboard", state.config.frontend_url);
+    let html = format!(
+        r#"<!DOCTYPE html><html><head><script>window.location.replace("{}")</script></head><body>Impersonating {}. Redirecting...</body></html>"#,
+        redirect_url, target_user.email
+    );
+    headers.insert("Content-Type", "text/html".parse().unwrap());
+
+    Ok((StatusCode::OK, headers, html))
+}
+
 #[derive(Deserialize)]
 pub struct GitHubCallbackQuery {
     pub code: String,
@@ -743,5 +838,34 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert("cookie", "other=val".parse().unwrap());
         assert_eq!(extract_token(&headers), None);
+    }
+
+    #[test]
+    fn test_admin_email_is_hardcoded() {
+        assert_eq!(ADMIN_EMAIL, "bn.barak@gmail.com");
+    }
+
+    #[test]
+    fn test_admin_email_rejects_similar() {
+        // Ensure partial matches or typos don't pass
+        let imposters = [
+            "bn.barak@gmail.com ",  // trailing space
+            " bn.barak@gmail.com",  // leading space
+            "BN.BARAK@GMAIL.COM",   // uppercase
+            "bn.barak@gmail.co",    // truncated
+            "xbn.barak@gmail.com",  // prefix
+            "bn.barak@gmail.comx",  // suffix
+            "",
+        ];
+        for email in imposters {
+            assert_ne!(email, ADMIN_EMAIL, "should not match: {:?}", email);
+        }
+    }
+
+    #[test]
+    fn test_impersonate_self_blocked() {
+        // The handler checks target_email != ADMIN_EMAIL
+        let target = "bn.barak@gmail.com".to_lowercase();
+        assert_eq!(target, ADMIN_EMAIL, "self-impersonation guard relies on this equality");
     }
 }

@@ -1,0 +1,12 @@
+{
+  "name": "simplehook-list-users",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "pg": "^8.13.1"
+  }
+}
